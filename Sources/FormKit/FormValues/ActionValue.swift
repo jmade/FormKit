@@ -4,7 +4,7 @@ import UIKit
 // MARK: - ActionValue -
 public struct ActionValue: Equatable {
     
-    enum ActionState {
+    public enum ActionState {
         case ready, operating, complete
     }
     
@@ -27,20 +27,20 @@ public struct ActionValue: Equatable {
     
     private var customOperatingTitle:String? = nil
     
-    enum ActionStyle {
+    public enum ActionStyle {
        case none, discolosure, moderate
     }
     var style:ActionStyle = .discolosure
     
     public var customKey:String? = "ActionValue"
     
-    typealias ActionValueClosure = ( (ActionValue,IndexPath) -> Void )
+    public typealias ActionValueClosure = ( (ActionValue,IndexPath) -> Void )
     var action: ActionValueClosure? = nil
     
-    typealias ActionValueDataClosure = ( (ActionValue,FormDataSource,IndexPath) -> Void )
+    public typealias ActionValueDataClosure = ( (ActionValue,FormDataSource,IndexPath) -> Void )
     var dataAction: ActionValueDataClosure? = nil
     
-    typealias ActionValueFormClosure = ( (ActionValue,FormController,IndexPath) -> Void )
+    public typealias ActionValueFormClosure = ( (ActionValue,FormController,IndexPath) -> Void )
     var formClosure: ActionValueFormClosure? = nil
     
     var title:String = "Action"
@@ -49,7 +49,7 @@ public struct ActionValue: Equatable {
 
 }
 
-extension ActionValue {
+public extension ActionValue {
     
     init(title: String,color:UIColor,style:ActionStyle = .discolosure,action: @escaping ActionValueClosure) {
         self.title = title
@@ -79,7 +79,7 @@ extension ActionValue {
 
 
 // MARK: - Demo -
-extension ActionValue {
+public extension ActionValue {
     
     static func Demo() -> ActionValue {
         return ActionValue(title: "Demo Action", color: .purple, style: .moderate) {_,_ in
@@ -146,9 +146,9 @@ extension ActionValue {
 
 
 
-extension ActionValue {
+public extension ActionValue {
     
-    func operatingVersion(_ newColor:UIColor? = FormConstant.Color.operating) -> ActionValue {
+    func operatingVersion(_ newColor:UIColor? = .operating) -> ActionValue {
         ActionValue(
             state: .operating,
             customOperatingTitle: self.customOperatingTitle,

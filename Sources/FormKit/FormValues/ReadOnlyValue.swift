@@ -16,7 +16,7 @@ public struct ReadOnlyValue: Equatable, Hashable {
 }
 
 
-extension ReadOnlyValue {
+public extension ReadOnlyValue {
     
     init(title: String, value:String,_ disabled:Bool = true) {
         self.title = title
@@ -48,7 +48,7 @@ extension ReadOnlyValue {
 }
 
 // MARK: - ValueDisplayStyle -
-extension ReadOnlyValue {
+public extension ReadOnlyValue {
     
     var valueAttributedText:NSAttributedString {
         let mutableAttribString = NSMutableAttributedString(string: value)

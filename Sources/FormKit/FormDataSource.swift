@@ -21,6 +21,7 @@ public class FormSection: Equatable {
     var updateClosure:FormSectionUpdateClosure = { _ in }
 }
 
+
 extension FormSection {
     
     public convenience init(title:String,rows:[FormItem]) {
@@ -54,8 +55,6 @@ extension FormSection {
 
 
 extension FormSection {
-    
-    
     
     public convenience init(_ title:String,_ values:[FormValue]) {
         self.init()
@@ -131,7 +130,7 @@ extension FormSection: Hashable {
 
 extension FormSection {
     
-    func newAddingRows(_ newRows:[FormItem]) -> FormSection {
+   public func newAddingRows(_ newRows:[FormItem]) -> FormSection {
         FormSection(
             self.title,
             [self.rows,newRows].reduce([],+)
@@ -139,7 +138,7 @@ extension FormSection {
     }
     
     
-    func newWithRows(_ newRows:[FormItem]) -> FormSection {
+   public func newWithRows(_ newRows:[FormItem]) -> FormSection {
            FormSection(
                self.title,
                newRows
@@ -222,11 +221,11 @@ extension FormSection {
 // MARK: - encodedValues -
 extension FormSection {
     
-    var encodedValues:[String:String] {
+   public var encodedValues:[String:String] {
         return rows.map({ $0.encodedValues }).merged()
     }
     
-    var encodedSection:[String:[String:String]] {
+   public var encodedSection:[String:[String:String]] {
         return [
             title : encodedValues
         ]
@@ -356,7 +355,7 @@ extension FormDataSource {
 
 extension FormDataSource {
     
-    func newWithSection(_ section:FormSection, at sectionIndex:Int) -> FormDataSource {
+   public func newWithSection(_ section:FormSection, at sectionIndex:Int) -> FormDataSource {
         
         var newSections: [FormSection] = []
         
