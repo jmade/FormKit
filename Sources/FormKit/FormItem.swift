@@ -1,12 +1,17 @@
 //
 //  FormItem.swift
-//  FW Device
 //
 //  Created by Justin Madewell on 12/18/18.
 //  Copyright © 2018 Jmade Technologies. All rights reserved.
 //
 
 import UIKit
+
+/// TODO: make something like a `FormItemDescriptor` that is a Codable object that can be used to initialize a `FormItem` which can be used to be stored and sent as JSON objects.
+
+
+
+
 
 // MARK: - FormItem -
 public enum FormItem {
@@ -140,19 +145,26 @@ extension FormItem {
 
 
 extension FormItem {
+    
     public static func Random() -> FormItem {
-        return [
-            StepperValue.Random().formItem,
-            TextValue.Random().formItem,
-            TimeValue.Random().formItem,
-            ButtonValue.Random().formItem,
-            NoteValue.Random().formItem,
-            SegmentValue.Random().formItem,
-            NumericalValue.Random().formItem,
-            ReadOnlyValue.Random().formItem,
-            PickerSelectionValue.Random().formItem,
-            ].randomElement()!
+        
+        let randomValues: [FormValue] = [
+            StepperValue.Random(),
+            TextValue.Random(),
+            TimeValue.Random(),
+            ButtonValue.Random(),
+            NoteValue.Random(),
+            SegmentValue.Random(),
+            NumericalValue.Random(),
+            ReadOnlyValue.Random(),
+            PickerSelectionValue.Random(),
+        ]
+        
+        return randomValues
+            .map({ $0.formItem })
+            .randomElement()!
     }
+    
 }
 
 

@@ -77,10 +77,8 @@ public struct FormConstant {
     }
     
     static public func selectedTextBackground() -> UIColor {
-        return #colorLiteral(red: 0.9254902005, green: 0.2352941185, blue: 0.1019607857, alpha: 1)
+        return .clear
     }
-    
-    
     
     public struct Color {
         
@@ -181,9 +179,15 @@ public struct FormCellDescriptor {
         ) {
         self.cellClass = Cell.self
         self.reuseIdentifier = reuseIdentifier
-        self.configure = { controller,cell,path in configure( (controller as! Controller),(cell as! Cell),path) }
+        self.configure = { controller,cell,path in configure( (controller as! Controller), (cell as! Cell),path) }
         self.didSelect = { controller,path in didSelect( (controller as! Controller), path) }
     }
+}
+
+
+// MARK: - FormItemReprsentable -
+public protocol FormItemRepresentable {
+    var formItem:FormItem { get }
 }
 
 
@@ -192,17 +196,11 @@ public protocol FormCellDescriptable {
     var cellDescriptor:FormCellDescriptor { get }
 }
 
+
+// MARK: - FormValueDisplayable -
 public typealias FormValueDisplayable = FormConfigurable & FormCellDescriptable
 
-
-
-
-
-
-
 /// EXTENTIONS
-
-
 
 // MARK: - IndexSet -
 extension IndexSet {

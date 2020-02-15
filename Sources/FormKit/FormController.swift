@@ -7,6 +7,7 @@ protocol CustomTransitionable: class {
 }
 
 
+
 // MARK: - BottomBarActionItem -
 public struct BottomBarActionItem {
     
@@ -39,10 +40,6 @@ extension BottomBarActionItem {
 
 
 
-
-
-
-
 // MARK: - FormTableViewController -
 open class FormController: UITableViewController, CustomTransitionable {
     
@@ -54,6 +51,7 @@ open class FormController: UITableViewController, CustomTransitionable {
 
     var selectedIndexPath: IndexPath?
     var reuseIdentifiers: Set<String> = []
+    
     
     public var dataSource = FormDataSource(sections: []) {
         didSet {
@@ -165,13 +163,21 @@ open class FormController: UITableViewController, CustomTransitionable {
     }
     
     /// Loading
+    
     public typealias FormDataLoadingClosure = ( () -> (FormDataSource) )
     public var loadingClosure: FormDataLoadingClosure? = nil
+    
     private var loadingMessage: String? = nil
     
     private var checkInMessage: String? = nil
     
+    
+    // MARK: - shouldRefresh -
     public var shouldRefresh:Bool = false
+    // MARK: - DoneButton -
+    public var showsDoneButton:Bool = false
+    
+    
     
     
     // MARK: - init -
@@ -203,22 +209,25 @@ open class FormController: UITableViewController, CustomTransitionable {
         self.checkInMessage = checkInMessage
         controllerInitialize()
     }
-    
-    
-    
+
+    // MARK: - Controller Base Initialize -
     private func controllerInitialize() {
+        
         // Header Cell
         tableView.register(FormHeaderCell.self, forHeaderFooterViewReuseIdentifier: FormHeaderCell.identifier)
         tableView.keyboardDismissMode = .interactive
         tableView.estimatedRowHeight = 44.0
         tableView.rowHeight = UITableView.automaticDimension
         tableView.tableFooterView = ItemsLoadingView()
+        tableView.contentInset = UIEdgeInsets(top: 22.0, left: 0, bottom: 0, right: 0)
         
         /*
         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Reload", style: .plain, target: self, action: #selector(cancelPressed))
         */
         
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(donePressed))
+        if showsDoneButton {
+            navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(barButtonItemPressed(_:)))
+        }
         
         if shouldRefresh {
             let refreshControl = UIRefreshControl()
@@ -229,6 +238,7 @@ open class FormController: UITableViewController, CustomTransitionable {
         setupToolBar()
     }
     
+
     open override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -280,6 +290,25 @@ open class FormController: UITableViewController, CustomTransitionable {
         }
         self.dataSource = FormDataSource()
     }
+    
+    
+    @objc
+    private func barButtonItemPressed(_ barButtonItem:UIBarButtonItem) {
+        
+        if let barButtonTitle = barButtonItem.title {
+            print("Bar Button Item Pressed: \(barButtonTitle)")
+            switch barButtonTitle  {
+            case "Done":
+                donePressed()
+            default:
+                ()
+            }
+        }
+        
+        
+    }
+    
+    
     
 }
 
