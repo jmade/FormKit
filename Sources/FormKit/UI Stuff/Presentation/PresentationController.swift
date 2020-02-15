@@ -104,7 +104,7 @@ public final class PresentationController: UIPresentationController {
     override public var frameOfPresentedViewInContainerView: CGRect {
        return descriptor.presentedFrame(containerView!.bounds,size(forChildContentContainer: presentedViewController, withParentContainerSize: containerView!.bounds.size))
     }
-    
+   
     // MARK: - Initializers
     init(_ presentedViewController: UIViewController,_ presentingViewController: UIViewController?,_ descriptor:PresentationAnimationDescriptor) {
         self.descriptor = descriptor
@@ -120,11 +120,9 @@ public final class PresentationController: UIPresentationController {
     
     override public func presentationTransitionWillBegin() {
         
-        
         containerView?.insertSubview(dimmingView, at: 0)
-        NSLayoutConstraint.activate(NSLayoutConstraint.constraints(withVisualFormat: "V:|[dimmingView]|", options: [], metrics: nil, views: ["dimmingView": dimmingView]))
-        NSLayoutConstraint.activate(NSLayoutConstraint.constraints(withVisualFormat: "H:|[dimmingView]|", options: [], metrics: nil, views: ["dimmingView": dimmingView]))
-        
+        NSLayoutConstraint.activate(NSLayoutConstraint.constraints(withVisualFormat: "V:|[dimmingView]|", options: [], metrics: nil, views: ["dimmingView": (dimmingView) ??  UIView()]))
+        NSLayoutConstraint.activate(NSLayoutConstraint.constraints(withVisualFormat: "H:|[dimmingView]|", options: [], metrics: nil, views: ["dimmingView": (dimmingView) ??  UIView()]))
         
         guard let coordinator = presentedViewController.transitionCoordinator else {
             dimmingView.alpha = 1.0

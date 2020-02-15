@@ -103,9 +103,14 @@ public final class StepperCell: UITableViewCell {
         return stepper
     }()
     
+    
     private lazy var stepperLabel: BadgeSwift = {
         let badge = BadgeSwift()
-        badge.badgeColor = .systemGray4
+        if #available(iOS 13.0, *) {
+            badge.badgeColor = .systemGray4
+        } else {
+            badge.badgeColor = .lightGray
+        }
         return badge
     }()
     

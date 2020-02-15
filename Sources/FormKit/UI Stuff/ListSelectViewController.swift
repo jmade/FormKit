@@ -31,7 +31,11 @@ struct ListSelectionControllerDescriptor {
         self.selectedIndicies = selected
         self.selectionChangeClosure = changeClosure
         self.allowsMultipleSelection = allowsMultipleSelection
-        self.tableViewStyle = .insetGrouped
+        if #available(iOS 13.0, *) {
+            self.tableViewStyle = .insetGrouped
+        } else {
+            self.tableViewStyle = .grouped
+        }
         self.selectionMessage = message
     }
 }

@@ -184,7 +184,11 @@ open class FormController: UITableViewController, CustomTransitionable {
     }
     
     public init(formData: FormDataSource) {
-        super.init(style: .insetGrouped)
+        if #available(iOS 13.0, *) {
+            super.init(style: .insetGrouped)
+        } else {
+            super.init(style: .grouped)
+        }
         controllerInitialize()
         defer {
             self.dataSource = formData
@@ -192,7 +196,11 @@ open class FormController: UITableViewController, CustomTransitionable {
     }
     
     public init(checkInMessage:String) {
-        super.init(style: .insetGrouped)
+         if #available(iOS 13.0, *) {
+                   super.init(style: .insetGrouped)
+               } else {
+                   super.init(style: .grouped)
+               }
         self.checkInMessage = checkInMessage
         controllerInitialize()
     }
@@ -227,8 +235,11 @@ open class FormController: UITableViewController, CustomTransitionable {
         
         if let loadingMessage = checkInMessage {
             print("[FormController] we got `checkInMessage`")
-            tableView.tableFooterView = ItemsLoadingView(message: loadingMessage, textStyle: .body, color: .label)
-            EventFormData.CheckInOn(self)
+            if #available(iOS 13.0, *) {
+                tableView.tableFooterView = ItemsLoadingView(message: loadingMessage, textStyle: .body, color: .label)
+            } else {
+                tableView.tableFooterView = ItemsLoadingView(message: loadingMessage, textStyle: .body, color: .black)
+            }
         }
         
     }
@@ -585,9 +596,15 @@ extension FormController: ButtonActionDelegate {
     }
     
     func pushNewRandomForm(){
-        let newFormController = FormController(style: .insetGrouped)
-        newFormController.dataSource = FormDataSource.Random()
-        navigationController?.pushViewController(newFormController, animated: true)
+        if #available(iOS 13.0, *) {
+            let newFormController = FormController(style: .insetGrouped)
+            newFormController.dataSource = FormDataSource.Random()
+            navigationController?.pushViewController(newFormController, animated: true)
+        } else {
+            let newFormController = FormController(style: .grouped)
+            newFormController.dataSource = FormDataSource.Random()
+            navigationController?.pushViewController(newFormController, animated: true)
+        }
     }
     
 }

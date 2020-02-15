@@ -82,14 +82,14 @@ extension ActionValue {
 extension ActionValue {
     
     static func Demo() -> ActionValue {
-        return ActionValue(title: "Demo Action", color: .systemIndigo, style: .moderate) {_,_ in
+        return ActionValue(title: "Demo Action", color: .purple, style: .moderate) {_,_ in
             print("[ActionValueClosure] Hello!")
         }
     }
     
     
     static func DemoForm() -> ActionValue {
-        ActionValue(title: "Demo Form", color: .systemPurple, formClosure: { (actionValue, form, path) in
+        ActionValue(title: "Demo Form", color: .purple, formClosure: { (actionValue, form, path) in
             form.navigationController?.pushViewController(
                 FormController(formData: .Demo()),
                 animated: true
@@ -100,7 +100,7 @@ extension ActionValue {
     
     static func DemoAdd() -> ActionValue {
         
-        ActionValue(title: "Add", color: .systemBlue, formClosure: { (actionValue, form, path) in
+        ActionValue(title: "Add", color: .blue, formClosure: { (actionValue, form, path) in
             
             if let lastSection = form.dataSource.sections.last {
                 
@@ -359,7 +359,11 @@ public final class ActionCell: UITableViewCell {
         operatingTitleLabel.translatesAutoresizingMaskIntoConstraints = false
         
         let progressView = UIActivityIndicatorView()
-        progressView.style = .medium
+        if #available(iOS 13.0, *) {
+            progressView.style = .medium
+        } else {
+            progressView.style = .gray
+        }
         progressView.translatesAutoresizingMaskIntoConstraints = false
         
         stackView.addArrangedSubview(operatingTitleLabel)

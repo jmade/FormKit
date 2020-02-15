@@ -39,9 +39,15 @@ extension ButtonValue: FormValueDisplayable {
     }
 
     public func didSelect(_ formController: Controller, _ path: IndexPath) {
-        let newFormController = FormController(style: .insetGrouped)
-        newFormController.dataSource = FormDataSource.Random()
-        formController.navigationController?.pushViewController(newFormController, animated: true)
+        if #available(iOS 13.0, *) {
+            let newFormController = FormController(style: .insetGrouped)
+            newFormController.dataSource = FormDataSource.Random()
+            formController.navigationController?.pushViewController(newFormController, animated: true)
+        } else {
+            let newFormController = FormController(style: .grouped)
+            newFormController.dataSource = FormDataSource.Random()
+            formController.navigationController?.pushViewController(newFormController, animated: true)
+        }
     }
     
 }

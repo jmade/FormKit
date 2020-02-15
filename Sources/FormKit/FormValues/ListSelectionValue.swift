@@ -27,13 +27,22 @@ public struct ListSelectionValue: Equatable, Hashable {
 
 extension ListSelectionValue {
     
-    public init(title:String,values:[String],_ color:UIColor = .label,_ selectedIndex:Int = 0,_ selectionMessage:String = "Select a Value"){
+    public init(title:String,values:[String],_ color:UIColor = .black,_ selectedIndex:Int = 0,_ selectionMessage:String = "Select a Value"){
         self.values = values
         self.selectedIndicies = [selectedIndex]
         self.title = title
         self.selectionType = .single
         self.selectionMessage = selectionMessage
-        self.color = color
+        
+        if color == UIColor.black {
+            if #available(iOS 13.0, *) {
+                self.color = .label
+            } else {
+                self.color = color
+            }
+        }
+        
+        
     }
     
     /// Single Selection

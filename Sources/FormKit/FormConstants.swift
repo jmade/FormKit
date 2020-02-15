@@ -277,6 +277,7 @@ extension UISearchBar {
 //: MARK: - UIDevice -
 public extension UIDevice {
     
+    /*
     func deviceDataUsing(_ userId:Int) -> DeviceData {
         DeviceData(userId: userId,
                    deviceId: UIDevice.current.identifierForVendor?.uuidString ?? "-",
@@ -286,7 +287,7 @@ public extension UIDevice {
                    pushToken: nil
         )
     }
-
+     */
     
     var payload:[String:String] {
         [

@@ -44,7 +44,9 @@ public class ItemsLoadingView : UIView {
         addSubview(progress)
         addSubview(loadingLabel)
         
-        progress.topAnchor.constraint(equalTo: topAnchor, constant: 8.0).isActive = true
+        if #available(iOS 9.0, *) {
+            progress.topAnchor.constraint(equalTo: topAnchor, constant: 8.0).isActive = true
+        }
         progress.centerXAnchor.constraint(equalTo: centerXAnchor).isActive = true
         
         loadingLabel.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
