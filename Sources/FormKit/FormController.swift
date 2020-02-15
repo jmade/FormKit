@@ -58,19 +58,18 @@ open class FormController: UITableViewController, CustomTransitionable {
     public var dataSource = FormDataSource(sections: []) {
         didSet {
             
-            
             guard !dataSource.isEmpty else {
                 /*
                 if let loadingView = tableView.tableFooterView as? ItemsLoadingView {
                     loadingView.displayMessage("No Data")
                 }
                 */
-                print("[FromController] Empty dataSource loaded")
+                print("[FromController] Empty `FormDataSource` loaded")
                 return
             }
             
             title = dataSource.title
-            //tableView.tableFooterView = nil
+            tableView.tableFooterView = nil
             
             if oldValue.isEmpty {
                 DispatchQueue.main.async(execute: { [weak self] in
