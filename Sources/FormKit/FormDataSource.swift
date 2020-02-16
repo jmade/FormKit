@@ -1,245 +1,5 @@
 import Foundation
 
-
-// MARK: - FormSection -
-
-// MARK: - FormSectionUpdateClosure -
-public typealias FormSectionUpdateClosure = ( (FormSection) -> Void )
-
-public class FormSection: Equatable {
-    
-    var title:String = " "
-    
-    var rows:[FormItem] = [] {
-        didSet {
-            if oldValue != rows {
-                updateClosure(self)
-            }
-        }
-    }
-    
-    var updateClosure:FormSectionUpdateClosure = { _ in }
-}
-
-
-extension FormSection {
-    
-    public convenience init(title:String,rows:[FormItem]) {
-        self.init()
-        self.title = title
-        self.rows = rows
-    }
-    
-    public convenience init(_ rows:[FormItem]) {
-        self.init()
-        self.title = " "
-        self.rows = rows
-    }
-    
-    public convenience init(_ title:String) {
-        self.init()
-        self.title = title
-        self.rows = []
-    }
-    
-    public convenience init(_ title:String,_ rows:[FormItem]) {
-        self.init()
-        self.title = title
-        self.rows = rows
-    }
-    
-    
-}
-
-
-
-
-extension FormSection {
-    
-    public convenience init(_ title:String,_ values:[FormValue]) {
-        self.init()
-        self.title = title
-        self.rows = values.map({ $0.formItem })
-    }
-    
-    
-    public convenience init(_ values:[FormValue]) {
-        self.init()
-        self.title = " "
-        self.rows = values.map({ $0.formItem })
-    }
-    
-    public convenience init(_ value:FormValue) {
-        self.init()
-        self.title = " "
-        self.rows = [value.formItem]
-    }
-    
-    
-    
-}
-
-
-
-extension FormSection {
-    
-    var inputRows:[Int] {
-        var indicies:[Int] = []
-        for (i,v) in rows.enumerated() {
-            switch v {
-            case .text(_),.note(_) ,.numerical(_):
-                indicies.append(i)
-            default:
-                break
-            }
-        }
-        return indicies
-    }
-    
-    
-    func itemForRowAt(_ row:Int) -> FormItem? {
-        if rows.count-1 >= row {
-            return rows[row]
-        } else {
-            return nil
-        }
-    }
-    
-}
-
-
-
-// MARK: - Hashable -
-extension FormSection: Hashable {
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(hash)
-    }
-    
-    public var hash: Int {
-        return  "\(rows)".hashValue
-    }
-    
-    public static func == (lhs: FormSection, rhs: FormSection) -> Bool {
-        return lhs.hash == rhs.hash
-    }
-
-}
-
-
-
-extension FormSection {
-    
-   public func newAddingRows(_ newRows:[FormItem]) -> FormSection {
-        FormSection(
-            self.title,
-            [self.rows,newRows].reduce([],+)
-        )
-    }
-    
-    
-   public func newWithRows(_ newRows:[FormItem]) -> FormSection {
-           FormSection(
-               self.title,
-               newRows
-           )
-       }
-    
-}
-
-
-
-extension FormSection {
-    
-    public class func Random() -> FormSection {
-        
-        let randomFormItems:[FormItem] = stride(from: 0, to: Int.random(in: 2...6), by: 1).map({ _ in return FormItem.Random() })
-        
-        //var randomItems = Array( (0...Int.random(in: 2...6)) ).map({ _ in FormItem.Random() })
-        let randomTitle = [
-    "Sunrise","Planning","Additional","Northern","Southern","Dynamic","Properties","Information","Status","Results"
-        ].randomElement()!
-        return FormSection(randomTitle, randomFormItems)
-    }
-    
-    
-    public class func Demo() -> FormSection {
-        
-        let formValues: [FormValue] = [
-            TimeValue.Random(),
-            PickerSelectionValue.Demo(),
-            StepperValue(title: "Demo Stepper", value: 4),
-        ]
-        
-        return FormSection("Demo Form Section", formValues.map({ $0.formItem }) )
-    }
-    
-    
-    public class func OtherDemo() -> FormSection {
-            let formValues: [FormValue] = [
-                      TimeValue.Random(),
-                      PickerSelectionValue.Demo(),
-                      SegmentValue.Demo(),
-                      StepperValue.Demo(),
-                      ButtonValue.DemoBar(),
-                      ActionValue.Demo(),
-                      ListSelectionValue.DemoSingle(),
-                      ListSelectionValue.DemoMulti()
-                  ]
-           return FormSection("Other", formValues.map({ $0.formItem }))
-       }
-    
-    
-    public class func TextDemo() -> FormSection {
-           let textFormValues: [FormValue] = [
-            TextValue(title: "Text HD", value: "value", .horizontalDiscrete, true),
-            TextValue(title: "Text V", value: "value", .vertical, true),
-            NoteValue(value: "Note Demo..."),
-           ]
-           return FormSection("Text", textFormValues.map({ $0.formItem }))
-       }
-    
-    public class func NumericsDemo() -> FormSection {
-        let numericFormValues: [FormValue] = [
-            NumericalValue.DemoInt(),
-            NumericalValue.DemoFloat()
-        ]
-        return FormSection("Numerics", numericFormValues.map({ $0.formItem }))
-    }
-    
-    public class func TestingSection() -> FormSection {
-        FormSection("Testing", [
-            TimeInputValue.Demo().formItem,
-            ActionValue.DemoAdd().formItem,
-            ActionValue.DemoExp().formItem
-        ])
-    }
-    
-}
-
-
-// MARK: - encodedValues -
-extension FormSection {
-    
-   public var encodedValues:[String:String] {
-        return rows.map({ $0.encodedValues }).merged()
-    }
-    
-   public var encodedSection:[String:[String:String]] {
-        return [
-            title : encodedValues
-        ]
-    }
-    
-}
-
-
-
-
-
-
-
-
 // MARK: - FormDataSource -
 
 
@@ -249,12 +9,11 @@ public typealias FormDataSourceUpdateClosure = ( (FormDataSource) -> Void )
 
 /// TODO: Consider turning this into a struct? and make the function a mutating one? would it change automattically?
 
-
 public class FormDataSource {
     
-    var title:String = ""
+    public var title:String = ""
     
-    var sections:[FormSection] = [] {
+    public var sections:[FormSection] = [] {
         didSet {
             if oldValue != sections {
                 updateClosure(self)
@@ -262,22 +21,22 @@ public class FormDataSource {
         }
     }
     
-    var updateClosure: FormDataSourceUpdateClosure = { _ in }
+    public var updateClosure: FormDataSourceUpdateClosure = { _ in }
     
 }
 
 
 extension FormDataSource {
     
-    func generateFormController() -> FormController {
+    public func generateFormController() -> FormController {
         FormController(formData: self)
     }
     
-    func formController() -> FormController {
+    public func formController() -> FormController {
         FormController(formData: self)
     }
     
-    func controller() -> FormController {
+    public func controller() -> FormController {
         FormController(formData: self)
     }
    
@@ -472,11 +231,11 @@ extension FormDataSource {
     
     
     
-    var isEmpty:Bool {
+    public var isEmpty:Bool {
         return sections.isEmpty
     }
     
-    func rowsForSection(_ section:Int) -> [FormItem] {
+    public func rowsForSection(_ section:Int) -> [FormItem] {
         if sections.count-1 >= section {
             return sections[section].rows
         } else {
@@ -484,18 +243,18 @@ extension FormDataSource {
         }
     }
     
-    func updateFirstSection(_ section:FormSection) {
+    public func updateFirstSection(_ section:FormSection) {
         let existingSections = self.sections.dropFirst()
         self.sections = [[section],existingSections].reduce([],+)
     }
     
     
-    func updateWith(formValue:FormValue,at path:IndexPath) {
+    public func updateWith(formValue:FormValue,at path:IndexPath) {
         sections[path.section].rows[path.row] = formValue.formItem
     }
     
     
-    func itemAt(_ path:IndexPath) -> FormItem? {
+    public func itemAt(_ path:IndexPath) -> FormItem? {
         if sections.count-1 >= path.section {
             return sections[path.section].itemForRowAt(path.row)
         } else {
@@ -508,7 +267,7 @@ extension FormDataSource {
 
 extension FormDataSource {
     
-    var inputIndexPaths:[IndexPath] {
+    public var inputIndexPaths:[IndexPath] {
         var values:[IndexPath] = []
         Array(0..<sections.count).forEach({
             let sectionIndex = $0
@@ -519,7 +278,7 @@ extension FormDataSource {
         return values
     }
     
-    var firstInputIndexPath: IndexPath? {
+    public var firstInputIndexPath: IndexPath? {
         return inputIndexPaths.first
     }
     
@@ -559,7 +318,7 @@ extension FormDataSource {
           )
       }
     
-    static func Demo() -> FormDataSource {
+    public static func Demo() -> FormDataSource {
         return FormDataSource(sections: [
             .OtherDemo(),
             .NumericsDemo(),
