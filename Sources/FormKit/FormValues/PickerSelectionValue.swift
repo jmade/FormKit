@@ -86,11 +86,21 @@ extension PickerSelectionValue {
         }
     }
     
-    func selectedValue() -> String? {
+    public func selectedValue() -> String? {
         var result:String? = nil
         result = values[selectedIndex]
         return result
     }
+    
+    public var selectedValueDefinitive: String {
+        get {
+            if let selectedValue = selectedValue() {
+                return selectedValue
+            }
+            return "?"
+        }
+    }
+
 }
 
 

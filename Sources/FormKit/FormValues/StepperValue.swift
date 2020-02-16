@@ -20,8 +20,8 @@ public struct StepperValue: FormValue, TableViewSelectable, Equatable, Hashable 
     
     public var customKey:String? = nil
     
-    var title:String
-    var value:Double
+    public var title:String
+    public var value:Double
 }
 
 

@@ -12,20 +12,20 @@ public struct TextValue {
     }
     
     //TODO: fully implement this
-    var characterSet = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: " .?!,()[]$*%#-=/:;"))
+    public var characterSet = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: " .?!,()[]$*%#-=/:;"))
     
     /// TableSelectable
     public var isSelectable: Bool = false
     /// CustomKeyProviable
     public var customKey: String? = nil
     
-    var textConfigurationClosure: TextFieldConfigurationClosure = { _ in }
+    public var textConfigurationClosure: TextFieldConfigurationClosure = { _ in }
     
-    let title:String
-    let value:String
-    var style:Style = .horizontalDiscrete
-    var useDirectionButtons:Bool = true
-    var uuid:String = UUID().uuidString
+    public let title:String
+    public let value:String
+    public var style:Style = .horizontalDiscrete
+    public var useDirectionButtons:Bool = true
+    public var uuid:String = UUID().uuidString
 }
 
 
