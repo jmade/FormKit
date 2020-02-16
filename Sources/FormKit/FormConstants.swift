@@ -191,6 +191,12 @@ public protocol FormItemRepresentable {
 }
 
 
+// MARK: - FormDataRepresentable -
+protocol FormDataRepresentable {
+    var dataSource:FormDataSource { get }
+}
+
+
 // MARK: - FormCellDescriptable Protocol -
 public protocol FormCellDescriptable {
     var cellDescriptor:FormCellDescriptor { get }

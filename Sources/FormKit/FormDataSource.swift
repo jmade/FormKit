@@ -413,6 +413,14 @@ extension FormDataSource {
     }
     
     
+    public func valueForKey(_ key:String) -> String? {
+        if let value = encodedValuesForKeys([key])[key] {
+            return value
+        }
+        return nil
+    }
+    
+    
     
 }
 
