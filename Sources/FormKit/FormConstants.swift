@@ -185,16 +185,26 @@ public struct FormCellDescriptor {
 }
 
 
-// MARK: - FormItemReprsentable -
+// MARK: - FormRepresentable -
+
+// MARK: - FormItem -
 public protocol FormItemRepresentable {
     var formItem:FormItem { get }
 }
 
 
-// MARK: - FormDataRepresentable -
+// MARK: - FormData-
 protocol FormDataRepresentable {
     var dataSource:FormDataSource { get }
 }
+
+
+// MARK: - FormSection -
+protocol FormSectionRepresentable {
+    var fromSection:FormSection { get }
+}
+
+
 
 
 // MARK: - FormCellDescriptable Protocol -
