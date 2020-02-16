@@ -76,6 +76,11 @@ extension StepperValue {
 
 extension StepperValue {
     
+    public var intValue: Int {
+        Int(value)
+    }
+    
+    
     public static func Random() -> StepperValue {
         return StepperValue(title: "Stepper \(UUID().uuidString.split(separator: "-")[1])", value: Double.random(in: 0...99) )
     }
