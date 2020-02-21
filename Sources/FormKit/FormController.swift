@@ -478,16 +478,32 @@ extension FormController {
 
 
 extension FormController {
-    // MARK: - updateSection -
-    public func updateSection(_ newSection:FormSection,at path:IndexPath,_ activateInputs:Bool = true) {
-        dataSource.sections[path.section] = newSection
+    // MARK: - Update FormSection -
+    
+    public func updateSection(_ newSection:FormSection, at path:IndexPath,_ activateInputs:Bool = true) {
+        self.update(newSection, path: path, activateInputs: activateInputs, preservingTitle: false)
+    }
+    
+    public func reloadSection(_ newSection:FormSection, at path:IndexPath, preservingTitle:Bool,_ activateInputs:Bool = true) {
+        self.update(newSection, path: path, activateInputs: activateInputs, preservingTitle: preservingTitle)
+    }
+    
+    // Update
+    private func update(_ newSection:FormSection, path:IndexPath, activateInputs:Bool = true, preservingTitle:Bool) {
+        // Title
+        var section = newSection
+        if preservingTitle {
+            section = FormSection(dataSource.sections[path.section].title, newSection.rows)
+        }
+        
+        dataSource.sections[path.section] = section
         tableView.reloadSections(IndexSet(integer: path.section), with: .automatic)
         
         guard activateInputs else {
             return
         }
         /// Check for Inputs and Activate them
-        if let inputRow = newSection.firstInputRow {
+        if let inputRow = section.firstInputRow {
             let firstInputPath = IndexPath(row: inputRow, section: path.section)
             if let nextCell = tableView.cellForRow(at: firstInputPath) {
                 if let activatabelCell = nextCell as? Activatable {
@@ -495,7 +511,6 @@ extension FormController {
                 }
             }
         }
-        
     }
     
 }
