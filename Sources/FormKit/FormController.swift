@@ -163,7 +163,6 @@ open class FormController: UITableViewController, CustomTransitionable {
     }
     
     /// Loading
-    
     public typealias FormDataLoadingClosure = ( () -> (FormDataSource) )
     public var loadingClosure: FormDataLoadingClosure? = nil
     
@@ -176,9 +175,6 @@ open class FormController: UITableViewController, CustomTransitionable {
     public var shouldRefresh:Bool = false
     // MARK: - DoneButton -
     public var showsDoneButton:Bool = false
-    
-    
-    
     
     // MARK: - init -
     required public init?(coder aDecoder: NSCoder) {fatalError()}
@@ -263,6 +259,7 @@ open class FormController: UITableViewController, CustomTransitionable {
         }
         
     }
+    
     
     override open func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
@@ -481,10 +478,24 @@ extension FormController {
 
 
 extension FormController {
-    
-    public func updateSection(_ newSection:FormSection,at path:IndexPath) {
+    // MARK: - updateSection -
+    public func updateSection(_ newSection:FormSection,at path:IndexPath,_ activateInputs:Bool = true) {
         dataSource.sections[path.section] = newSection
         tableView.reloadSections(IndexSet(integer: path.section), with: .automatic)
+        
+        guard activateInputs else {
+            return
+        }
+        /// Check for Inputs and Activate them
+        if let inputRow = newSection.firstInputRow {
+            let firstInputPath = IndexPath(row: inputRow, section: path.section)
+            if let nextCell = tableView.cellForRow(at: firstInputPath) {
+                if let activatabelCell = nextCell as? Activatable {
+                    activatabelCell.activate()
+                }
+            }
+        }
+        
     }
     
 }

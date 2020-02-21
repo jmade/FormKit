@@ -104,6 +104,12 @@ extension FormSection {
     }
     
     
+    public var firstInputRow:Int? {
+        return inputRows.first
+    }
+    
+    
+    
     public func itemForRowAt(_ row:Int) -> FormItem? {
         if rows.count-1 >= row {
             return rows[row]

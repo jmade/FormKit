@@ -28,7 +28,7 @@ public struct ActionValue: Equatable {
     private var customOperatingTitle:String? = nil
     
     public enum ActionStyle {
-       case none, discolosure, moderate
+       case none, discolosure, moderate, readOnly
     }
     var style:ActionStyle = .discolosure
     
@@ -46,20 +46,24 @@ public struct ActionValue: Equatable {
     var title:String = "Action"
     var color:UIColor = .systemBlue
     var uuid:String = UUID().uuidString
+    
+    public var readOnlyValue:ReadOnlyValue? = nil
 
 }
 
-public extension ActionValue {
+
+
+extension ActionValue {
+    
     
     init(title: String,color:UIColor,style:ActionStyle = .discolosure,action: @escaping ActionValueClosure) {
         self.title = title
         self.color = color
         self.action = action
         self.style = style
-        self.uuid = UUID().uuidString
     }
     
-    init(title: String,color:UIColor, formClosure: @escaping ActionValueFormClosure) {
+    public init(title: String, color:UIColor, formClosure: @escaping ActionValueFormClosure) {
         self.title = title
         self.formClosure = formClosure
         self.color = color
@@ -67,14 +71,21 @@ public extension ActionValue {
     }
     
     
-    init(title: String, operatingTitle:String, color:UIColor, formClosure: @escaping ActionValueFormClosure) {
+    public init(title: String, operatingTitle:String, color:UIColor, formClosure: @escaping ActionValueFormClosure) {
         self.title = title
         self.formClosure = formClosure
         self.customOperatingTitle = operatingTitle
         self.color = color
-        self.style = .discolosure
+        self.style = .moderate
     }
-
+    
+    /// ReadOnly init
+    public init(_ readOnlyValue:ReadOnlyValue, formClosure: @escaping ActionValueFormClosure) {
+        self.formClosure = formClosure
+        self.readOnlyValue = readOnlyValue
+        self.style = .readOnly
+    }
+    
 }
 
 
@@ -159,7 +170,8 @@ public extension ActionValue {
             formClosure: self.formClosure,
             title: self.title,
             color: (newColor ?? self.color),
-            uuid: self.uuid
+            uuid: self.uuid,
+            readOnlyValue: self.readOnlyValue
         )
     }
     
@@ -174,7 +186,8 @@ public extension ActionValue {
             formClosure: self.formClosure,
             title: newTitle,
             color: (newColor ?? self.color),
-            uuid: self.uuid
+            uuid: self.uuid,
+            readOnlyValue: self.readOnlyValue
         )
     }
     
@@ -190,7 +203,8 @@ public extension ActionValue {
             formClosure: self.formClosure,
             title: self.title,
             color: self.color,
-            uuid: self.uuid
+            uuid: self.uuid,
+            readOnlyValue: self.readOnlyValue
         )
     }
     
@@ -221,7 +235,7 @@ extension ActionValue: Hashable {
 extension ActionValue: FormValue, TableViewSelectable {
     
     public func encodedValue() -> [String : String] {
-        return [ (customKey ?? title) : "->" ]
+        return [ (customKey ?? title) : "@ction!" ]
     }
     
     public var isSelectable: Bool {
@@ -288,15 +302,47 @@ public final class ActionCell: UITableViewCell {
     }()
     
     private lazy var operatingStackView = UIStackView()
-
+    
+    /// `ReadOnly` Styling
+    private lazy var titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.preferredFont(forTextStyle: .body)
+        label.textAlignment = .left
+        label.numberOfLines = 1
+        label.lineBreakMode = .byClipping
+        if #available(iOS 13.0, *) {
+            label.textColor = .secondaryLabel
+        } else {
+            label.textColor = .darkGray
+        }
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private lazy var valueLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+        label.textAlignment = .right
+        label.numberOfLines = 0
+        if #available(iOS 13.0, *) {
+            label.textColor = .tertiaryLabel
+        } else {
+            label.textColor = .lightGray
+        }
+        label.lineBreakMode = .byWordWrapping
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     var formValue : ActionValue? {
         didSet {
-            if let actionValue = formValue {
-                loadForState()
-                if actionValue.isSelectable == false {
-                    self.selectionStyle = .none
-                }
+            guard let actionValue = formValue else { return }
+            if actionValue.isSelectable == false {
+                self.selectionStyle = .none
             }
+            loadForState()
         }
     }
     
@@ -304,15 +350,33 @@ public final class ActionCell: UITableViewCell {
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         activateDefaultHeightAnchorConstraint()
+        
+        // ReadOnly Setup
+        [titleLabel,valueLabel].forEach({
+            contentView.addSubview($0)
+            $0.isHidden = true
+        })
+        
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            titleLabel.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
+            
+            valueLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            valueLabel.leadingAnchor.constraint(equalTo: contentView.centerXAnchor),
+            valueLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8.0),
+            contentView.bottomAnchor.constraint(equalTo: valueLabel.bottomAnchor, constant: 8.0),
+        ])
     }
     
     public override func prepareForReuse() {
-        super.prepareForReuse()
         formValue = nil
+        valueLabel.attributedText = nil
+        titleLabel.text = nil
         operatingTitleLabel.text = nil
         operatingStackView.removeFromSuperview()
         textLabel?.text = nil
         accessoryType = .none
+        super.prepareForReuse()
     }
     
     
@@ -375,21 +439,36 @@ public final class ActionCell: UITableViewCell {
         
     }
     
+    
+    
     func loadFromValue(){
-        guard let formValue = formValue else { return }
-        textLabel?.text = formValue.title
-        switch formValue.style {
+        guard let actionValue = formValue else { return }
+        textLabel?.text = actionValue.title
+        switch actionValue.style {
         case .discolosure:
             textLabel?.textAlignment = .center
-            textLabel?.textColor = formValue.color
+            textLabel?.textColor = actionValue.color
             accessoryType = .disclosureIndicator
+            titleLabel.isHidden = true
+            valueLabel.isHidden = true
         case .none:
-            textLabel?.text = formValue.title
+            textLabel?.text = actionValue.title
             accessoryType = .none
+            titleLabel.isHidden = true
+            valueLabel.isHidden = true
         case .moderate:
             textLabel?.textAlignment = .center
-            textLabel?.textColor = formValue.color
+            textLabel?.textColor = actionValue.color
             accessoryType = .none
+            titleLabel.isHidden = true
+            valueLabel.isHidden = true
+        case .readOnly:
+            textLabel?.text = nil
+            accessoryType = .none
+            titleLabel.text = actionValue.readOnlyValue?.title
+            valueLabel.attributedText = actionValue.readOnlyValue?.valueAttributedText
+            titleLabel.isHidden = false
+            valueLabel.isHidden = false
         }
     }
     
