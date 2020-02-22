@@ -551,7 +551,15 @@ extension FormController {
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         return alert
     }
-
+    
+    
+    public func showAlertSaying(_ title:String,_ message:String = "",with actions:[FormAlertAction]) {
+        let alert = makeAlertController(title, message)
+        actions.forEach({
+            alert.addAction($0.alertAction)
+        })
+        present(alert, animated: true, completion: nil)
+    }
     
     public func showAlertFor(_ formItem:FormItem, actions:[FormAlertAction]) {
         let encodedValues = formItem.encodedValues
