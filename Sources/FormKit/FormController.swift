@@ -516,6 +516,54 @@ extension FormController {
 }
 
 
+// helper alert VC
+
+public struct FormAlertAction {
+    let title:String
+    let action: () -> Void
+}
+
+
+extension FormAlertAction {
+    
+    var alertAction: UIAlertAction {
+        UIAlertAction(title: title, style: .default) { _ in
+            action()
+        }
+    }
+    
+}
+
+
+
+extension FormController {
+    
+    private func makeAlertController(_ title: String,_ message: String) -> UIAlertController {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        return alert
+    }
+
+    public func showAlertFor(_ formItem:FormItem, actions:[FormAlertAction]) {
+        let encodedValues = formItem.encodedValues
+        print(" encodedValues -> \(encodedValues) ")
+        
+        let alertTitle = ""
+        let alertMessage = ""
+        let alert = makeAlertController(alertTitle, alertMessage)
+        
+        actions.forEach({
+            alert.addAction($0.alertAction)
+        })
+        
+        present(alert, animated: true, completion: nil)
+        
+    }
+    
+}
+
+
+
 // MARK: - UpdateFormValueDelegate -
 extension FormController: UpdateFormValueDelegate {
     

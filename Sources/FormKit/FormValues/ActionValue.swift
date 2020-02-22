@@ -63,11 +63,12 @@ extension ActionValue {
         self.style = style
     }
     
+    
     public init(title: String, color:UIColor, formClosure: @escaping ActionValueFormClosure) {
         self.title = title
         self.formClosure = formClosure
         self.color = color
-        self.style = .discolosure
+        self.style = .moderate
     }
     
     
