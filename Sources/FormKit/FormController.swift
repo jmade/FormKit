@@ -528,7 +528,7 @@ extension FormAlertAction {
     
     var alertAction: UIAlertAction {
         UIAlertAction(title: title, style: .default) { _ in
-            action()
+            self.action()
         }
     }
     
@@ -544,6 +544,7 @@ extension FormController {
         return alert
     }
 
+    
     public func showAlertFor(_ formItem:FormItem, actions:[FormAlertAction]) {
         let encodedValues = formItem.encodedValues
         print(" encodedValues -> \(encodedValues) ")
