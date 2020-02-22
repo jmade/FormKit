@@ -595,13 +595,15 @@ extension FormController {
     }
     
     
-    public func showAlertEditingText(_ title:String,_ message:String? = nil,with actions:[FormAlertAction]) {
+    public func showAlertEditingText(_ title:String,_ message:String? = nil, placeholderText:String, with actions:[FormAlertAction]) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         
         alert.addTextField { [weak self] (textField) in
             guard let self = self else { return }
+            textField.text = placeholderText
             textField.addTarget(self, action: #selector(self.handleTextFieldInput(_:)), for: .allEvents)
+            textField.selectAll(nil)
         }
         
         actions.forEach({
