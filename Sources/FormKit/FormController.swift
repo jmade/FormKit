@@ -176,6 +176,10 @@ open class FormController: UITableViewController, CustomTransitionable {
     // MARK: - DoneButton -
     public var showsDoneButton:Bool = false
     
+    
+    private var alertTextFieldInput: String? = nil
+    
+    
     // MARK: - init -
     required public init?(coder aDecoder: NSCoder) {fatalError()}
     
@@ -520,15 +524,25 @@ extension FormController {
 
 public struct FormAlertAction {
     let title:String
-    let action: () -> Void
+    let action:  (() -> Void)
+    var actionText: ((String?) -> Void)? = nil
 }
 
+
 extension FormAlertAction {
+    
     public init(_ title:String, action: @escaping () -> Void) {
         self.title = title
         self.action = action
     }
+    
+    public init(_ title:String, actionText: @escaping (String?) -> Void) {
+        self.title = title
+        self.action = {}
+        self.actionText = actionText
+    }
 }
+
 
 
 
@@ -582,7 +596,8 @@ extension FormController {
     
     
     public func showAlertEditingText(_ title:String,_ message:String? = nil,with actions:[FormAlertAction]) {
-        let alert = makeAlertController(title, message)
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         
         alert.addTextField { [weak self] (textField) in
             guard let self = self else { return }
@@ -590,7 +605,13 @@ extension FormController {
         }
         
         actions.forEach({
-            alert.addAction($0.alertAction)
+            if let actionTextCallback = $0.actionText {
+                alert.addAction(UIAlertAction(title: $0.title, style: .default, handler: { [weak self] (alertAction) in
+                    actionTextCallback(self?.alertTextFieldInput)
+                }))
+            } else {
+                alert.addAction($0.alertAction)
+            }
         })
         
         present(alert, animated: true) { [weak self] in
@@ -602,9 +623,8 @@ extension FormController {
     
     @objc
     private func handleTextFieldInput(_ textField:UITextField) {
-        if let text = textField.text {
-            print("[FormController] (handleTextFieldInput): \(text)")
-        }
+        self.alertTextFieldInput = textField.text
+        print("[FormController] (handleTextFieldInput): \(textField.text ?? "")")
     }
     
 }
