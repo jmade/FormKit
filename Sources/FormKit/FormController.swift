@@ -523,6 +523,14 @@ public struct FormAlertAction {
     let action: () -> Void
 }
 
+extension FormAlertAction {
+    public init(_ title:String, action: @escaping () -> Void) {
+        self.title = title
+        self.action = action
+    }
+}
+
+
 
 extension FormAlertAction {
     
