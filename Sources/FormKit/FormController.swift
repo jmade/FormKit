@@ -546,7 +546,7 @@ extension FormAlertAction {
 
 extension FormController {
     
-    private func makeAlertController(_ title: String,_ message: String) -> UIAlertController {
+    private func makeAlertController(_ title: String,_ message: String?) -> UIAlertController {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         return alert
@@ -578,6 +578,33 @@ extension FormController {
             self?.generateHapticFeedback(.heavyImpact)
         }
         
+    }
+    
+    
+    public func showAlertEditingText(_ title:String,_ message:String? = nil,with actions:[FormAlertAction]) {
+        let alert = makeAlertController(title, message)
+        
+        alert.addTextField { [weak self] (textField) in
+            guard let self = self else { return }
+            textField.addTarget(self, action: #selector(self.handleTextFieldInput(_:)), for: .allEvents)
+        }
+        
+        actions.forEach({
+            alert.addAction($0.alertAction)
+        })
+        
+        present(alert, animated: true) { [weak self] in
+            self?.generateHapticFeedback(.heavyImpact)
+        }
+        
+    }
+    
+    
+    @objc
+    private func handleTextFieldInput(_ textField:UITextField) {
+        if let text = textField.text {
+            print("[FormController] (handleTextFieldInput): \(text)")
+        }
     }
     
 }
