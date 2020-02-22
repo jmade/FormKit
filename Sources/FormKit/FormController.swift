@@ -558,12 +558,13 @@ extension FormController {
         actions.forEach({
             alert.addAction($0.alertAction)
         })
-        present(alert, animated: true, completion: nil)
+        present(alert, animated: true) { [weak self] in
+            self?.generateHapticFeedback(.heavyImpact)
+        }
     }
     
+    
     public func showAlertFor(_ formItem:FormItem, actions:[FormAlertAction]) {
-        let encodedValues = formItem.encodedValues
-        print(" encodedValues -> \(encodedValues) ")
         
         let alertTitle = ""
         let alertMessage = ""
@@ -573,9 +574,64 @@ extension FormController {
             alert.addAction($0.alertAction)
         })
         
-        present(alert, animated: true, completion: nil)
+        present(alert, animated: true) { [weak self] in
+            self?.generateHapticFeedback(.heavyImpact)
+        }
         
     }
+    
+}
+
+
+extension FormController {
+    
+    private enum FeedbackType {
+        case lightImpact, heavyImpact, impact, selection, error, warning, success, failure
+    }
+    
+    
+    private func generateHapticFeedback(_ feedbackType:FeedbackType) {
+        switch feedbackType {
+        case .lightImpact:
+            let gen = UIImpactFeedbackGenerator()
+            gen.prepare()
+            if #available(iOS 13.0, *) {
+                gen.impactOccurred(intensity: 0.25)
+            } else {
+                gen.impactOccurred()
+            }
+        case .heavyImpact:
+            let gen = UIImpactFeedbackGenerator()
+            gen.prepare()
+            if #available(iOS 13.0, *) {
+                gen.impactOccurred(intensity: 1.0)
+            } else {
+                gen.impactOccurred()
+            }
+        case .impact:
+            let gen = UIImpactFeedbackGenerator()
+            gen.prepare()
+            gen.impactOccurred()
+        case .selection:
+            let gen = UISelectionFeedbackGenerator()
+            gen.prepare()
+            gen.selectionChanged()
+        case .warning:
+            let gen = UINotificationFeedbackGenerator()
+            gen.prepare()
+            gen.notificationOccurred(.warning)
+        case .success:
+            let gen = UINotificationFeedbackGenerator()
+            gen.prepare()
+            gen.notificationOccurred(.success)
+        case .failure, .error:
+            let gen = UINotificationFeedbackGenerator()
+            gen.prepare()
+            gen.notificationOccurred(.error)
+        }
+    }
+    
+    
     
 }
 

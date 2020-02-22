@@ -343,7 +343,6 @@ extension PickerSelectionCell: UIPickerViewDelegate {
         
     }
     
-    
     public func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
         
        updateFormValueDelegate?.updatedFormValue(formValue.newWith(row), indexPath)
