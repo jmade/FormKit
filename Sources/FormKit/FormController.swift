@@ -521,10 +521,9 @@ extension FormController {
 
 
 // helper alert VC
-
 public struct FormAlertAction {
     let title:String
-    let action:  (() -> Void)
+    let action: (() -> Void)
     var actionText: ((String?) -> Void)? = nil
 }
 
@@ -545,11 +544,22 @@ extension FormAlertAction {
 
 
 
-
 extension FormAlertAction {
     
+    private var destructiveExamples: [String] {
+        [ "Delete","delete"
+        ]
+    }
+    
+    
+    var soundsDestructive: Bool {
+        destructiveExamples.contains(title)
+    }
+    
     var alertAction: UIAlertAction {
-        UIAlertAction(title: title, style: .default) { _ in
+        UIAlertAction(title: title,
+                      style: soundsDestructive ? .destructive : .default
+        ) { _ in
             self.action()
         }
     }
