@@ -122,7 +122,13 @@ public final class SwitchCell: UITableViewCell {
             }
             
             titleLabel.text = switchValue.title
-            switchControl.setOn(switchValue.value, animated: true)
+            
+            handleSwitch(switchControl)
+            
+            if oldValue == nil {
+                switchControl.setOn(switchValue.value, animated: true)
+            }
+            
         }
     }
     
@@ -151,7 +157,13 @@ public final class SwitchCell: UITableViewCell {
     public override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
         print("Set Selected!")
-        selectionOccured()
+        if switchControl.isOn {
+            switchControl.setOn(false, animated: true)
+            handleSwitch(switchControl)
+        } else {
+            switchControl.setOn(true, animated: true)
+            handleSwitch(switchControl)
+        }
     }
     
     private func selectionOccured() {
