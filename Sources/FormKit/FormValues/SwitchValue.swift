@@ -28,8 +28,8 @@ extension SwitchValue {
 
 extension SwitchValue {
     
-    public func newWith(_ state:Bool) -> SwitchValue {
-        SwitchValue(title: self.title, value: state, customKey: self.customKey)
+    public func newToggled() -> SwitchValue {
+        SwitchValue(title: self.title, value: !self.value, customKey: self.customKey)
     }
     
 }
@@ -122,30 +122,11 @@ public final class SwitchCell: UITableViewCell {
             }
             
             titleLabel.text = switchValue.title
-            currentState = switchValue.value
-            //switchControl.setOn(switchValue.value, animated: true)
+            switchControl.setOn(switchValue.value, animated: true)
         }
     }
     
-    /// State
-    private var currentState: Bool = false {
-        didSet {
-            if currentState != oldValue {
-                
-                if let switchValue = formValue {
-                    print("Updating Form Delegate")
-                    updateFormValueDelegate?.updatedFormValue(
-                                       switchValue.newWith(currentState),
-                                       indexPath
-                                   )
-                }
-               
-            }
-            resolveState()
-        }
-    }
-    
-    
+   
     
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -170,21 +151,30 @@ public final class SwitchCell: UITableViewCell {
     public override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
         print("Set Selected!")
-        currentState.toggle()
+        selectionOccured()
     }
     
-    
-    private func resolveState() {
-        switchControl.setOn(currentState, animated: true)
+    private func selectionOccured() {
+        guard let switchValue = formValue else { return }
+        print("Selection Occured")
+        let newSwitchValue = switchValue.newToggled()
+        print("OLD: \(switchValue)")
+        print("NEW: \(newSwitchValue)")
+        updateFormValueDelegate?.updatedFormValue(
+            newSwitchValue,
+            indexPath
+        )
     }
     
+   
 }
 
 
 extension SwitchCell {
     
     @objc private func handleSwitch(_ switchControl:UISwitch) {
-        
+        print("handleSwitch")
+        selectionOccured()
     }
     
 }
