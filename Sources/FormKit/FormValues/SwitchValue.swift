@@ -164,6 +164,7 @@ public final class SwitchCell: UITableViewCell {
             newSwitchValue,
             indexPath
         )
+        self.formValue = newSwitchValue
     }
     
    
