@@ -123,18 +123,25 @@ public final class SwitchCell: UITableViewCell {
             
             titleLabel.text = switchValue.title
             currentState = switchValue.value
-            switchControl.setOn(switchValue.value, animated: true)
+            //switchControl.setOn(switchValue.value, animated: true)
         }
     }
     
     /// State
     private var currentState: Bool = false {
         didSet {
-            
             if currentState != oldValue {
-                resolveState()
+                
+                if let switchValue = formValue {
+                    print("Updating Form Delegate")
+                    updateFormValueDelegate?.updatedFormValue(
+                                       switchValue.newWith(currentState),
+                                       indexPath
+                                   )
+                }
+               
             }
-            
+            resolveState()
         }
     }
     
@@ -162,20 +169,13 @@ public final class SwitchCell: UITableViewCell {
     
     public override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
+        print("Set Selected!")
         currentState.toggle()
     }
     
     
     private func resolveState() {
         switchControl.setOn(currentState, animated: true)
-        
-        if let switchValue = formValue {
-            updateFormValueDelegate?.updatedFormValue(
-                switchValue.newWith(currentState),
-                indexPath
-            )
-        }
-        
     }
     
 }
