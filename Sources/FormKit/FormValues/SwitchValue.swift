@@ -154,20 +154,22 @@ public final class SwitchCell: UITableViewCell {
     
     public override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-        print("Set Selected!")
+        print("Set Selected: \(selected)")
+        
         if switchControl.isOn {
             switchControl.setOn(false, animated: true)
-            handleSwitch(switchControl)
+            //handleSwitch(switchControl)
         } else {
             switchControl.setOn(true, animated: true)
-            handleSwitch(switchControl)
+            //handleSwitch(switchControl)
         }
     }
+    
     
     private func selectionOccured() {
         guard let switchValue = formValue else { return }
         print("Selection Occured")
-        let newSwitchValue = switchValue.newToggled()
+        let newSwitchValue = SwitchValue(switchValue.title, value: switchControl.isOn)
         print("OLD: \(switchValue)")
         print("NEW: \(newSwitchValue)")
         updateFormValueDelegate?.updatedFormValue(
