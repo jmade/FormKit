@@ -547,10 +547,8 @@ extension FormAlertAction {
 extension FormAlertAction {
     
     private var destructiveExamples: [String] {
-        [ "Delete","delete"
-        ]
+        [ "Delete","delete"]
     }
-    
     
     var soundsDestructive: Bool {
         destructiveExamples.contains(title)
@@ -574,6 +572,15 @@ extension FormController {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         return alert
+    }
+    
+    public func showAlertConfirmation(_ title:String,_ message:String = "",with action:FormAlertAction) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        alert.addAction(action.alertAction)
+        present(alert, animated: true) { [weak self] in
+            self?.generateHapticFeedback(.heavyImpact)
+        }
     }
     
     
