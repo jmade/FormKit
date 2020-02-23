@@ -10,9 +10,6 @@ import UIKit
 /// TODO: make something like a `FormItemDescriptor` that is a Codable object that can be used to initialize a `FormItem` which can be used to be stored and sent as JSON objects.
 
 
-
-
-
 // MARK: - FormItem -
 public enum FormItem {
     case stepper(StepperValue)
@@ -28,6 +25,7 @@ public enum FormItem {
     case action(ActionValue)
     case listSelection(ListSelectionValue)
     case timeInput(TimeInputValue)
+    case switchValue(SwitchValue)
 }
 
 // MARK: - CellDescriptable -
@@ -61,6 +59,8 @@ extension FormItem: FormCellDescriptable {
             return list.cellDescriptor
         case .timeInput(let time):
             return time.cellDescriptor
+        case .switchValue(let switchValue):
+            return switchValue.cellDescriptor
         }
     }
 }
@@ -100,6 +100,8 @@ extension FormItem: Hashable, Equatable {
             return list.hashValue
         case .timeInput(let time):
             return time.hashValue
+        case .switchValue(let switchValue):
+            return switchValue.hashValue
         }
     }
     
@@ -137,6 +139,8 @@ extension FormItem {
             return list.encodedValue()
         case .timeInput(let time):
             return time.encodedValue()
+        case .switchValue(let switchValue):
+            return switchValue.encodedValue()
         }
     }
     
@@ -158,6 +162,7 @@ extension FormItem {
             NumericalValue.Random(),
             ReadOnlyValue.Random(),
             PickerSelectionValue.Random(),
+            SwitchValue.Random(),
         ]
         
         return randomValues

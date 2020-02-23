@@ -13,8 +13,8 @@ public struct SegmentValue: FormValue, TableViewSelectable, Equatable, Hashable 
         }
     }
     public var customKey:String? = "SegmentValue"
-    let selectedValue:Int
-    let values:[String]
+    public let selectedValue:Int
+    public let values:[String]
     
     
 }
@@ -89,7 +89,7 @@ public final class SegmentCell: UITableViewCell {
     
     var segmentedControl: UISegmentedControl = {
         let segmentedControl = UISegmentedControl()
-        segmentedControl.tintColor = FormConstant.tintColor()
+        //segmentedControl.tintColor = FormConstant.tintColor()
         segmentedControl.translatesAutoresizingMaskIntoConstraints = false
         return segmentedControl
     }()

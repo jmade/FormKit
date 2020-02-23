@@ -492,6 +492,11 @@ extension FormController {
         self.update(newSection, path: path, activateInputs: activateInputs, preservingTitle: preservingTitle)
     }
     
+    public func reloadSection(_ newSection:FormSection, at path:IndexPath) {
+        self.update(newSection, path: path, activateInputs: true, preservingTitle: true)
+    }
+    
+    
     // Update
     private func update(_ newSection:FormSection, path:IndexPath, activateInputs:Bool = true, preservingTitle:Bool) {
         // Title
@@ -520,7 +525,8 @@ extension FormController {
 }
 
 
-// helper alert VC
+
+// MARK: - FormAlertAction -
 public struct FormAlertAction {
     let title:String
     let action: (() -> Void)
@@ -574,6 +580,7 @@ extension FormController {
         return alert
     }
     
+    
     public func showAlertConfirmation(_ title:String,_ message:String = "",with action:FormAlertAction) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
@@ -594,24 +601,7 @@ extension FormController {
         }
     }
     
-    
-    public func showAlertFor(_ formItem:FormItem, actions:[FormAlertAction]) {
-        
-        let alertTitle = ""
-        let alertMessage = ""
-        let alert = makeAlertController(alertTitle, alertMessage)
-        
-        actions.forEach({
-            alert.addAction($0.alertAction)
-        })
-        
-        present(alert, animated: true) { [weak self] in
-            self?.generateHapticFeedback(.heavyImpact)
-        }
-        
-    }
-    
-    
+    // MARK: - AlertEditingText -
     public func showAlertEditingText(_ title:String,_ message:String? = nil, placeholderText:String, with actions:[FormAlertAction]) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
@@ -627,6 +617,7 @@ extension FormController {
             if let actionTextCallback = $0.actionText {
                 alert.addAction(UIAlertAction(title: $0.title, style: .default, handler: { [weak self] (alertAction) in
                     actionTextCallback(self?.alertTextFieldInput)
+                    self?.alertTextFieldInput = nil
                 }))
             } else {
                 alert.addAction($0.alertAction)
@@ -643,12 +634,13 @@ extension FormController {
     @objc
     private func handleTextFieldInput(_ textField:UITextField) {
         self.alertTextFieldInput = textField.text
-        print("[FormController] (handleTextFieldInput): \(textField.text ?? "")")
     }
     
 }
 
 
+
+// MARK: - HapticFeedback -
 extension FormController {
     
     private enum FeedbackType {
@@ -790,6 +782,13 @@ extension FormController: UpdateFormValueDelegate {
                             tableView.reloadRows(at: [path], with: .none)
                         }
                     }
+                case .switchValue(let switchValue):
+                    if let switchInputValue = formValue as? SwitchValue {
+                        if switchInputValue != switchValue {
+                            dataSource.updateWith(formValue: switchInputValue, at: path)
+                            tableView.reloadRows(at: [path], with: .none)
+                        }
+                    }
                 }
             }
         }
@@ -822,6 +821,7 @@ extension FormController: UpdateFormValueDelegate {
                 }
             }
         }
+        
         
         FormConstant.makeSelectionFeedback()
     }
