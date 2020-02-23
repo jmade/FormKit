@@ -123,8 +123,6 @@ public final class SwitchCell: UITableViewCell {
             
             titleLabel.text = switchValue.title
             
-            handleSwitch(switchControl)
-            
             if oldValue == nil {
                 switchControl.setOn(switchValue.value, animated: true)
             }
@@ -176,7 +174,6 @@ public final class SwitchCell: UITableViewCell {
             newSwitchValue,
             indexPath
         )
-        self.formValue = newSwitchValue
     }
     
    
