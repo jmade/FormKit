@@ -15,7 +15,7 @@ public typealias FormSectionUpdateClosure = ( (FormSection) -> Void )
 
 public class FormSection: Equatable {
     
-    public var title:String = " "
+    public var title:String = ""
     
     public var rows:[FormItem] = [] {
         didSet {
@@ -39,7 +39,7 @@ extension FormSection {
     
     public convenience init(_ rows:[FormItem]) {
         self.init()
-        self.title = " "
+        self.title = ""
         self.rows = rows
     }
     
