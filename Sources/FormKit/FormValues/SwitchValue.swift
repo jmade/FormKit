@@ -116,17 +116,13 @@ public final class SwitchCell: UITableViewCell {
     var formValue : SwitchValue? {
         didSet {
             guard let switchValue = formValue else { return }
-            
             if switchValue.isSelectable == false {
                 self.selectionStyle = .none
             }
-            
             titleLabel.text = switchValue.title
-            
             if oldValue == nil {
                 switchControl.setOn(switchValue.value, animated: true)
             }
-            
         }
     }
     
@@ -154,8 +150,6 @@ public final class SwitchCell: UITableViewCell {
     
     public override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-        print("Set Selected: \(selected)")
-        
         if selected {
             if switchControl.isOn {
                 switchControl.setOn(false, animated: true)
@@ -170,15 +164,20 @@ public final class SwitchCell: UITableViewCell {
     
     
     private func selectionOccured() {
+        performFeedback()
         guard let switchValue = formValue else { return }
-        print("Selection Occured")
         let newSwitchValue = SwitchValue(switchValue.title, value: switchControl.isOn)
-        print("OLD: \(switchValue)")
-        print("NEW: \(newSwitchValue)")
         updateFormValueDelegate?.updatedFormValue(
             newSwitchValue,
             indexPath
         )
+    }
+    
+    
+    private func performFeedback() {
+        let feedback = UIImpactFeedbackGenerator()
+        feedback.prepare()
+        feedback.impactOccurred()
     }
     
    
@@ -188,7 +187,6 @@ public final class SwitchCell: UITableViewCell {
 extension SwitchCell {
     
     @objc private func handleSwitch(_ switchControl:UISwitch) {
-        print("handleSwitch")
         selectionOccured()
     }
     
