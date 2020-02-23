@@ -156,13 +156,16 @@ public final class SwitchCell: UITableViewCell {
         super.setSelected(selected, animated: animated)
         print("Set Selected: \(selected)")
         
-        if switchControl.isOn {
-            switchControl.setOn(false, animated: true)
-            //handleSwitch(switchControl)
-        } else {
-            switchControl.setOn(true, animated: true)
-            //handleSwitch(switchControl)
+        if selected {
+            if switchControl.isOn {
+                switchControl.setOn(false, animated: true)
+                handleSwitch(switchControl)
+            } else {
+                switchControl.setOn(true, animated: true)
+                handleSwitch(switchControl)
+            }
         }
+        
     }
     
     
