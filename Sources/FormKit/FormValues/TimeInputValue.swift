@@ -103,6 +103,8 @@ extension TimeInputValue: FormValueDisplayable {
 
     public func configureCell(_ formController: Controller, _ cell: Cell, _ path: IndexPath) {
         cell.formValue = self
+        cell.updateFormValueDelegate = formController
+        cell.indexPath = path
     }
 
     public func didSelect(_ formController: Controller, _ path: IndexPath) {

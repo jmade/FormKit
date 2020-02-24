@@ -150,9 +150,27 @@ extension SliderValue {
         }
     }
     
+    
     var interpretedValue: String {
-        String(format: valueFormatString, value)
+        switch self.valueType {
+        case .int:
+            return "\(Int(value))"
+        case .float:
+            return String(format: valueFormatString, value)
+        }
     }
+    
+    
+    
+    public func displayValue(_ newValue:Float) -> String {
+        switch self.valueType {
+        case .int:
+            return "\(Int(newValue))"
+        case .float:
+            return String(format: valueFormatString, newValue)
+        }
+    }
+    
     
     public func matches(_ value:Float) -> Bool {
         switch self.valueType {
@@ -284,9 +302,8 @@ public final class SliderCell: UITableViewCell {
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        //activateDefaultHeightAnchorConstraint()
+        
         NSLayoutConstraint.activate([
-            
             titleLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor, constant: 2.0),
             valueLabel.topAnchor.constraint(equalTo: titleLabel.topAnchor),
             
@@ -315,13 +332,13 @@ extension SliderCell {
     @objc private func handleSlider(_ slider:UISlider) {
         interperateValue(slider.value)
     }
-    
+
     
     private func interperateValue(_ value:Float) {
         guard let sliderValue = formValue else { return }
         if sliderValue.matches(value) == false {
             let newSliderValue = sliderValue.newWith(value)
-            valueLabel.text = String(format: sliderValue.valueFormatString, slider.value )
+            valueLabel.text = newSliderValue.displayValue(value)
             feedbackGenerator.selectionChanged()
             updateFormValueDelegate?.updatedFormValue(
                 newSliderValue,
