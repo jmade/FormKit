@@ -168,16 +168,25 @@ public final class TimeInputCell: UITableViewCell {
         return textField
     }()
     
-    var formValue:TimeInputValue? {
+    
+    
+    var formValue:TimeInputValue? = nil {
         didSet {
+            
             if let timeValue = formValue {
-                evaluateButtonBar()
-                titleLabel.text = timeValue.title
-                textField.text = timeValue.time
+                if oldValue == nil {
+                    print("[TimeInputCell] old value was nil")
+                    evaluateButtonBar()
+                    titleLabel.text = timeValue.title
+                    textField.text = timeValue.time
+                   
+                }
             }
+
         }
     }
     
+
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -195,9 +204,22 @@ public final class TimeInputCell: UITableViewCell {
     public override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
         
+        
         if selected {
+            if let input = textField.inputView as? TimeInputKeyboard {
+                print("I got ahold of the keyboard!: \(input)")
+                if let timeValue = formValue {
+                    input.timeValue = timeValue
+                }
+            } else {
+                if let timeValue = formValue {
+                    print("assing you a new one!")
+                    textField.inputView = TimeInputKeyboard(timeString: timeValue.time)
+                }
+            }
             textField.becomeFirstResponder()
         }
+        
     }
     
     
@@ -265,6 +287,7 @@ public final class TimeInputCell: UITableViewCell {
         print("newTimeString timeString -> \(timeString) ")
         if let timeInputValue = formValue {
             let newTimeInputValue = timeInputValue.newWith(timeString)
+            
             updateFormValueDelegate?.updatedFormValue(newTimeInputValue, indexPath)
         }
     }
@@ -308,6 +331,7 @@ class TimeInputKeyboard: UIInputView {
             }
         }
     }
+    
     
     var startingTime:String? = nil {
         didSet {

@@ -282,6 +282,7 @@ public final class SliderCell: UITableViewCell {
         return slider
     }()
     
+    
     var formValue : SliderValue? {
         didSet {
             guard let sliderValue = formValue else { return }
