@@ -5,6 +5,7 @@ import UIKit
 public struct TimeInputValue: Equatable, Hashable {
     let title:String
     let time:String
+    public var useDirectionButtons:Bool = true
     public var customKey:String? = nil
   
 }
@@ -124,6 +125,9 @@ extension TimeInputValue {
 public final class TimeInputCell: UITableViewCell {
     static let identifier = "FormKit.TimeInputCell"
     
+    weak var updateFormValueDelegate: UpdateFormValueDelegate?
+    public lazy var indexPath: IndexPath? = nil
+    
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: .body)
@@ -152,9 +156,7 @@ public final class TimeInputCell: UITableViewCell {
         inputView.observer = textField
         return textField
     }()
-    
-    
-    var indexPath:IndexPath?
+   
     
     var formValue:TimeInputValue? {
         didSet {
@@ -176,10 +178,6 @@ public final class TimeInputCell: UITableViewCell {
         
         textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
         
-//        let timeSelectionController = TimeSelectionController(TimeValue(formValue?.title ?? "-", formValue?.time ?? "12:34 PM"))
-//        //timeSelectionController.view.frame = CGRect(.zero, CGSize(UIScreen.main.bounds.width, 300))
-//        textField.inputView = timeSelectionController.view
-        
         activateDefaultHeightAnchorConstraint()
         
         let margin = contentView.layoutMarginsGuide
@@ -191,14 +189,7 @@ public final class TimeInputCell: UITableViewCell {
             ])
         
         accessoryType = .disclosureIndicator
-        
-        
     }
-    
-    @objc func textFieldTextChanged() {
-        print("TimeInput textFieldTextChanged")
-    }
-    
     
     public override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
@@ -206,6 +197,68 @@ public final class TimeInputCell: UITableViewCell {
             textField.becomeFirstResponder()
         }
     }
+    
+    
+    func evaluateButtonBar(){
+        guard let timeInputValue = formValue else { return }
+        if timeInputValue.useDirectionButtons {
+
+            let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: 44.0)))
+            let previous = UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction))
+            let next = UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction))
+            let done = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(doneAction))
+            bar.items = [previous,next,.Flexible(),done]
+            
+            bar.sizeToFit()
+            textField.inputAccessoryView = bar
+        }
+    }
+
+    
+    @objc
+    func doneAction(){
+        endTextEditing()
+    }
+    
+    @objc
+    func previousAction(){
+        if let path = indexPath {
+            updateFormValueDelegate?.toggleTo(.previous, path)
+        }
+    }
+    
+    @objc
+    func nextAction(){
+        if let path = indexPath {
+            updateFormValueDelegate?.toggleTo(.next, path)
+        }
+    }
+    
+    public func activate(){
+        FormConstant.makeSelectionFeedback()
+        textField.becomeFirstResponder()
+    }
+    
+    @objc
+    func textFieldTextChanged() {
+        if let text = textField.text {
+            print("Text: \(text)")
+            /*
+            guard let textValue = formValue else { return }
+            updateFormValueDelegate?.updatedFormValue(
+                textValue.newWith(text),
+                indexPath
+            )
+            */
+            
+        }
+    }
+    
+    private func endTextEditing(){
+        textField.resignFirstResponder()
+    }
+    
+    
     
     
 }
@@ -287,6 +340,7 @@ class TimeInputKeyboard: UIInputView {
     }
     
 }
+
 
 extension TimeInputKeyboard {
     
