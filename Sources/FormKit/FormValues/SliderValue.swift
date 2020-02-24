@@ -161,16 +161,14 @@ extension SliderValue {
     }
     
     
-    
     public func displayValue(_ newValue:Float) -> String {
         switch self.valueType {
         case .int:
-            return "\(Int(newValue))"
+            return String(format: valueFormatString, Int(newValue)) //"\(Int(newValue))"
         case .float:
             return String(format: valueFormatString, newValue)
         }
     }
-    
     
     public func matches(_ value:Float) -> Bool {
         switch self.valueType {

@@ -153,6 +153,7 @@ public final class TimeInputCell: UITableViewCell {
         textField.autocorrectionType = .no
         textField.textAlignment = .right
         textField.font = UIFont.preferredFont(forTextStyle: .headline)
+        textField.tintColor = .clear
         textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
         
         textField.newTimeStringClosure = { [weak self] (timeString) in
@@ -267,14 +268,6 @@ public final class TimeInputCell: UITableViewCell {
     func textFieldTextChanged() {
         if let text = textField.text {
             print("Text: \(text)")
-            /*
-            guard let textValue = formValue else { return }
-            updateFormValueDelegate?.updatedFormValue(
-                textValue.newWith(text),
-                indexPath
-            )
-            */
-            
         }
     }
     
@@ -287,8 +280,8 @@ public final class TimeInputCell: UITableViewCell {
         print("newTimeString timeString -> \(timeString) ")
         if let timeInputValue = formValue {
             let newTimeInputValue = timeInputValue.newWith(timeString)
-            
             updateFormValueDelegate?.updatedFormValue(newTimeInputValue, indexPath)
+            self.formValue = newTimeInputValue
         }
     }
     
@@ -309,6 +302,7 @@ class TimeInputTextField: UITextField, TimeInputKeyboardObserver {
     
     public var newTimeStringClosure: ((String) -> Void)? = nil
     
+  
     func add(_ string: String) {
         self.text? = string
         self.newTimeStringClosure?(string)
