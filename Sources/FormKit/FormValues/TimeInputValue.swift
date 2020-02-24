@@ -3,18 +3,15 @@ import UIKit
 
 // MARK: - TimeValue -
 public struct TimeInputValue: Equatable, Hashable {
-    let title:String
-    let time:String
+    public let title:String
+    public let time:String
     public var useDirectionButtons:Bool = true
     public var customKey:String? = nil
-  
 }
 
 
 // MARK: - Initilization -
 extension TimeInputValue {
-    
-    //init(title: String,time:String,_ customKey:String?, useDirectionButtons:Bool)
     
     public init(_ title: String,_ time:String) {
         self.title = title
@@ -160,7 +157,7 @@ public final class TimeInputCell: UITableViewCell {
             self?.newTimeString(timeString)
         }
         
-        let inputView = TimeInputKeyboard()
+        let inputView = TimeInputKeyboard(timeString: "12:34 PM")
         textField.inputView = inputView
         inputView.observer = textField
         
@@ -175,8 +172,6 @@ public final class TimeInputCell: UITableViewCell {
                 evaluateButtonBar()
                 titleLabel.text = timeValue.title
                 textField.text = timeValue.time
-                
-                //inputKeyboard.timeValue = timeValue
             }
         }
     }
@@ -319,7 +314,6 @@ class TimeInputKeyboard: UIInputView {
         }
     }
     
-    
     var minIncrement: Int = 5
     
     private lazy var picker: UIPickerView = {
@@ -347,6 +341,12 @@ class TimeInputKeyboard: UIInputView {
         return f
     }()
     
+    
+    override func systemLayoutSizeFitting(_ targetSize: CGSize) -> CGSize {
+        return CGSize(UIScreen.main.bounds.width, 200)
+    }
+    
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -354,11 +354,13 @@ class TimeInputKeyboard: UIInputView {
     init() {
         super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 275), inputViewStyle: .keyboard)
         setTime()
+        self.allowsSelfSizing = true
     }
     
     
     init(timeString:String) {
         super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 200), inputViewStyle: .keyboard)
+        self.allowsSelfSizing = true
         dataSource = generateDataSource()
         defer {
             self.startingTime = timeString
