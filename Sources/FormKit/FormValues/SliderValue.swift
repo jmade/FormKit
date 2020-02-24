@@ -236,6 +236,7 @@ public final class SliderCell: UITableViewCell {
     private lazy var valueLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: .body)
+        label.text = "-"
         label.textAlignment = .right
         label.translatesAutoresizingMaskIntoConstraints = false
         self.contentView.addSubview(label)
@@ -277,9 +278,11 @@ public final class SliderCell: UITableViewCell {
             titleLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
             valueLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
             
+            
             slider.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12.0),
             slider.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-            slider.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor)
+            slider.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            slider.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20.0),
         ])
     }
     
