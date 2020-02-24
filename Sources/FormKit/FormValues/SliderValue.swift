@@ -128,7 +128,7 @@ extension SliderValue {
         case .int:
             return "%d"
         case .float:
-            return "%2.f"
+            return "%.\(decimalNumbers)f"
         }
     }
     
@@ -224,9 +224,15 @@ public final class SliderCell: UITableViewCell {
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
     public lazy var indexPath: IndexPath? = nil
     
+    private lazy var feedbackGenerator: UISelectionFeedbackGenerator = {
+        let generator = UISelectionFeedbackGenerator()
+        generator.prepare()
+        return generator
+    }()
+    
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.preferredFont(forTextStyle: .body)
+        label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
         label.textAlignment = .left
         label.translatesAutoresizingMaskIntoConstraints = false
         self.contentView.addSubview(label)
@@ -278,7 +284,6 @@ public final class SliderCell: UITableViewCell {
             titleLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
             valueLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
             
-            
             slider.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12.0),
             slider.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
             slider.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
@@ -293,14 +298,6 @@ public final class SliderCell: UITableViewCell {
         self.valueLabel.text = nil
     }
     
-    
-    private func performFeedback() {
-        let feedback = UIImpactFeedbackGenerator()
-        feedback.prepare()
-        feedback.impactOccurred()
-    }
-    
-   
 }
 
 
@@ -308,8 +305,8 @@ extension SliderCell {
     
     @objc private func handleSlider(_ slider:UISlider) {
         guard let sliderValue = formValue else { return }
+        feedbackGenerator.selectionChanged()
         valueLabel.text = String(format: sliderValue.valueFormatString, slider.value )
-        
         let newSliderValue = SliderValue(title: sliderValue.title, value: Double(slider.value))
         updateFormValueDelegate?.updatedFormValue(
             newSliderValue,
