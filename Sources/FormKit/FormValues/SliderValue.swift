@@ -259,7 +259,7 @@ public final class SliderCell: UITableViewCell {
     private lazy var slider: UISlider = {
         let slider = UISlider()
         slider.translatesAutoresizingMaskIntoConstraints = false
-        slider.addTarget(self, action: #selector(handleSlider(_:)), for: .allEvents)
+        slider.addTarget(self, action: #selector(handleSlider(_:)), for: .valueChanged)
         self.contentView.addSubview(slider)
         return slider
     }()
@@ -275,6 +275,7 @@ public final class SliderCell: UITableViewCell {
                 sliderValue.sliderConfig(slider)
                 titleLabel.text = sliderValue.title
                 slider.setValue(sliderValue.sliderValue, animated: true)
+                valueLabel.text = String(format: sliderValue.valueFormatString, slider.value )
             }
         }
     }
