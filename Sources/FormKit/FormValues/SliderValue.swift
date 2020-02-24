@@ -103,7 +103,6 @@ extension SliderValue {
         self.sliderConfig = sliderConfig
     }
     
-    
     public init(title:String, value:Double, valueType:ValueType, decimalNumbers:Int, sliderConfig: @escaping (UISlider) -> Void, customKey:String?) {
         self.title = title
         self.value = value
@@ -154,7 +153,18 @@ extension SliderValue {
         }
     }
     
+    var interpretedValue: String {
+        String(format: valueFormatString, value)
+    }
     
+    public func matches(_ value:Float) -> Bool {
+        switch self.valueType {
+        case .int:
+            return Int(self.value) == Int(value)
+        case .float:
+            return String(format: valueFormatString, value) == interpretedValue
+        }
+    }
     
 }
 
@@ -263,9 +273,10 @@ public final class SliderCell: UITableViewCell {
             if sliderValue.isSelectable == false {
                 self.selectionStyle = .none
             }
-            titleLabel.text = sliderValue.title
-            sliderValue.sliderConfig(slider)
+            
             if oldValue == nil {
+                sliderValue.sliderConfig(slider)
+                titleLabel.text = sliderValue.title
                 slider.setValue(sliderValue.sliderValue, animated: true)
             }
         }
@@ -290,7 +301,7 @@ public final class SliderCell: UITableViewCell {
             slider.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20.0),
         ])
     }
-    
+
     
     public override func prepareForReuse() {
         super.prepareForReuse()
@@ -304,14 +315,22 @@ public final class SliderCell: UITableViewCell {
 extension SliderCell {
     
     @objc private func handleSlider(_ slider:UISlider) {
-        guard let sliderValue = formValue else { return }
-        feedbackGenerator.selectionChanged()
-        valueLabel.text = String(format: sliderValue.valueFormatString, slider.value )
-        let newSliderValue = SliderValue(title: sliderValue.title, value: Double(slider.value))
-        updateFormValueDelegate?.updatedFormValue(
-            newSliderValue,
-            indexPath
-        )
+        interperateValue(slider.value)
     }
+    
+    
+    private func interperateValue(_ value:Float) {
+        guard let sliderValue = formValue else { return }
+        if sliderValue.matches(value) == false {
+            let newSliderValue = sliderValue.newWith(value)
+            valueLabel.text = String(format: sliderValue.valueFormatString, slider.value )
+            feedbackGenerator.selectionChanged()
+            updateFormValueDelegate?.updatedFormValue(
+                newSliderValue,
+                indexPath
+            )
+        }
+    }
+    
     
 }
