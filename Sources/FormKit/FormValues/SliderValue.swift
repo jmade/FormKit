@@ -4,21 +4,17 @@ import UIKit
 
 // MARK: - SliderValue -
 public struct SliderValue {
-    
+
     // MARK: - ValueType -
     public enum ValueType {
         case int,float
     }
     public var valueType:ValueType = .float
-    
     public var decimalNumbers: Int = 2
-    public var sliderConfig: (UISlider) -> Void = { _ in }
-    
-    public var title:String
-    public var value:Double
-    
+    public var sliderConfig: (UISlider) -> Void = { slider in slider.minimumValue = 0.0; slider.maximumValue = 100.0 }
+    public var title:String = "Slider"
+    public var value:Double = 22.0
     public var customKey:String? = nil
-    
 }
 
 
@@ -29,7 +25,7 @@ extension SliderValue: Hashable {
     }
     
     public var hash: Int {
-        return "\(title)+\(value)+\(valueType)".hashValue
+        return "\(title)+\(value)+\(valueType)+\(decimalNumbers)".hashValue
     }
     
 }
@@ -50,7 +46,7 @@ extension SliderValue {
         self.value = value
     }
     
-    /// Float
+    /// `Float`
     public init(floatValue title:String, value:Double,_ decimalNumbers: Int = 2) {
         self.title = title
         self.value = value
@@ -82,7 +78,7 @@ extension SliderValue {
     }
     
     
-    /// Int
+    /// `Int`
     public init(intValue title:String, value:Int) {
         self.title = title
         self.value = Double(value)
@@ -121,6 +117,7 @@ extension SliderValue {
     var sliderValue:Float {
         Float(value)
     }
+    
     
     public var valueFormatString: String {
         switch valueType {
@@ -179,7 +176,7 @@ extension SliderValue {
 
 extension SliderValue: FormValue, TableViewSelectable {
     public func encodedValue() -> [String : String] {
-           return [ (customKey ?? title) : "\(value)" ]
+           return [ (customKey ?? title) : "\(interpretedValue)" ]
        }
        
        public var isSelectable: Bool {
