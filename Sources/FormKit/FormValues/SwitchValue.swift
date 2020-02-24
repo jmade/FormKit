@@ -1,9 +1,4 @@
-//
-//  File.swift
-//  
-//
-//  Created by Justin Madewell on 2/23/20.
-//
+
 
 import UIKit
 

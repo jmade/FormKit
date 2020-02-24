@@ -785,9 +785,13 @@ extension FormController: UpdateFormValueDelegate {
                 case .switchValue(let switchValue):
                     if let switchInputValue = formValue as? SwitchValue {
                         if switchInputValue != switchValue {
-                            print("[Form Controller] updating: \(switchInputValue)")
                             dataSource.updateWith(formValue: switchInputValue, at: path)
-                            //tableView.reloadRows(at: [path], with: .none)
+                        }
+                    }
+                case .slider(let sliderValue):
+                    if let sliderInputValue = formValue as? SliderValue {
+                        if sliderInputValue != sliderValue {
+                            dataSource.updateWith(formValue: sliderInputValue, at: path)
                         }
                     }
                 }

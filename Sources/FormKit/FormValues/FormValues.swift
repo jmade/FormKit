@@ -13,16 +13,6 @@ public protocol CustomKeyProvidable {
     var customKey: String? { get set }
 }
 
-//// MARK: - CustomKeyIdentifiable -
-//public protocol CustomKeyIdentifiable {
-//    func customKey() -> String?
-//}
-//
-//extension CustomKeyIdentifiable {
-//    public func customKey() -> String? {
-//        return nil
-//    }
-//}
 
 
 // MARK: - ValueEncodable -
@@ -36,6 +26,7 @@ extension ValueEncodable {
     }
 }
 
+
 // MARK: - FormEncodable -
 public typealias FormEncodable = CustomKeyProvidable & ValueEncodable
 
@@ -47,7 +38,6 @@ public protocol FormItemizable {
 
 // MARK: - FormValue -
 public typealias FormValue = FormItemizable & FormEncodable
-
 
 
 public protocol TextNumericalInput {}

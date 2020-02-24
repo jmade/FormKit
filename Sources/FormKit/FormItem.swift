@@ -26,6 +26,7 @@ public enum FormItem {
     case listSelection(ListSelectionValue)
     case timeInput(TimeInputValue)
     case switchValue(SwitchValue)
+    case slider(SliderValue)
 }
 
 // MARK: - CellDescriptable -
@@ -61,6 +62,8 @@ extension FormItem: FormCellDescriptable {
             return time.cellDescriptor
         case .switchValue(let switchValue):
             return switchValue.cellDescriptor
+        case .slider(let sliderValue):
+            return sliderValue.cellDescriptor
         }
     }
 }
@@ -102,6 +105,8 @@ extension FormItem: Hashable, Equatable {
             return time.hashValue
         case .switchValue(let switchValue):
             return switchValue.hashValue
+        case .slider(let sliderValue):
+            return sliderValue.hashValue
         }
     }
     
@@ -141,6 +146,8 @@ extension FormItem {
             return time.encodedValue()
         case .switchValue(let switchValue):
             return switchValue.encodedValue()
+        case .slider(let sliderValue):
+            return sliderValue.encodedValue()
         }
     }
     
@@ -163,6 +170,7 @@ extension FormItem {
             ReadOnlyValue.Random(),
             PickerSelectionValue.Random(),
             SwitchValue.Random(),
+            SliderValue.Random(),
         ]
         
         return randomValues
