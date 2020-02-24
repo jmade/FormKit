@@ -132,28 +132,24 @@ public final class TimeInputCell: UITableViewCell {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: .body)
         label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(label)
         return label
     }()
-    
-    /*
-   private lazy var textField: UITextField = {
-        let textField = UITextField()
-        textField.autocorrectionType = .no
-        textField.textAlignment = .right
-        textField.font = UIFont.preferredFont(forTextStyle: .headline)
-        return textField
-    }()
-    */
     
     private lazy var textField: TimeInputTextField = {
         let textField = TimeInputTextField()
         textField.autocorrectionType = .no
         textField.textAlignment = .right
         textField.font = UIFont.preferredFont(forTextStyle: .headline)
+        textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
         
         let inputView = TimeInputKeyboard()
         textField.inputView = inputView
         inputView.observer = textField
+        
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(textField)
         return textField
     }()
    
@@ -171,28 +167,20 @@ public final class TimeInputCell: UITableViewCell {
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        [titleLabel,textField].forEach({
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview($0)
-        })
-        
-        textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
-        
         activateDefaultHeightAnchorConstraint()
-        
-        let margin = contentView.layoutMarginsGuide
         NSLayoutConstraint.activate([
-            titleLabel.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
-            textField.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
-            textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
+            titleLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            titleLabel.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
+            textField.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
+            textField.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
             ])
-        
         accessoryType = .disclosureIndicator
+        evaluateButtonBar()
     }
     
     public override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
+        
         if selected {
             textField.becomeFirstResponder()
         }
