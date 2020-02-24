@@ -249,6 +249,7 @@ class TimeInputKeyboard: UIInputView {
     private lazy var picker: UIPickerView = {
         let pickerView = UIPickerView()
         pickerView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(pickerView)
         pickerView.delegate = self
         pickerView.dataSource = self
         pickerView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor).isActive = true
@@ -276,7 +277,6 @@ class TimeInputKeyboard: UIInputView {
     
     init() {
         super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 300), inputViewStyle: .keyboard)
-        addSubview(picker)
         dataSource = generateDataSource()
         setTime()
     }
