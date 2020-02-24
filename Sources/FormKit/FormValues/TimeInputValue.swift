@@ -176,9 +176,9 @@ public final class TimeInputCell: UITableViewCell {
         
         textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
         
-        let timeSelectionController = TimeSelectionController(TimeValue(formValue?.title ?? "-", formValue?.time ?? "12:34 PM"))
-        //timeSelectionController.view.frame = CGRect(.zero, CGSize(UIScreen.main.bounds.width, 300))
-        textField.inputView = timeSelectionController.view
+//        let timeSelectionController = TimeSelectionController(TimeValue(formValue?.title ?? "-", formValue?.time ?? "12:34 PM"))
+//        //timeSelectionController.view.frame = CGRect(.zero, CGSize(UIScreen.main.bounds.width, 300))
+//        textField.inputView = timeSelectionController.view
         
         activateDefaultHeightAnchorConstraint()
         
@@ -198,6 +198,15 @@ public final class TimeInputCell: UITableViewCell {
     @objc func textFieldTextChanged() {
         print("TimeInput textFieldTextChanged")
     }
+    
+    
+    public override func setSelected(_ selected: Bool, animated: Bool) {
+        super.setSelected(selected, animated: animated)
+        if selected {
+            textField.becomeFirstResponder()
+        }
+    }
+    
     
 }
 
@@ -240,7 +249,6 @@ class TimeInputKeyboard: UIInputView {
     private lazy var picker: UIPickerView = {
         let pickerView = UIPickerView()
         pickerView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(pickerView)
         pickerView.delegate = self
         pickerView.dataSource = self
         pickerView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor).isActive = true
@@ -262,30 +270,21 @@ class TimeInputKeyboard: UIInputView {
         return f
     }()
     
-    
-    
     required init?(coder: NSCoder) {
-           fatalError("init(coder:) has not been implemented")
+        fatalError("init(coder:) has not been implemented")
     }
     
     init() {
         super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 300), inputViewStyle: .keyboard)
+        addSubview(picker)
         dataSource = generateDataSource()
         setTime()
     }
     
-    
-    init(with timeValue:TimeInputValue?) {
-        super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 300), inputViewStyle: .keyboard)
-        defer {
-            if let value = timeValue {
-                self.timeValue = value
-            }
-        }
-        dataSource = generateDataSource()
-        setTime()
+    override func willMove(toSuperview newSuperview: UIView?) {
+        super.willMove(toSuperview: newSuperview)
+        print("[FormKit](TimeInputKeyboard) `willMove(toSuperView)`  \(String(describing: newSuperview)) ")
     }
-
     
 }
 
