@@ -260,6 +260,7 @@ public final class TimeInputCell: UITableViewCell {
 
     
     private func newTimeString(_ timeString:String) {
+        print("newTimeString timeString -> \(timeString) ")
         if let timeInputValue = formValue {
             let newTimeInputValue = timeInputValue.newWith(timeString)
             updateFormValueDelegate?.updatedFormValue(newTimeInputValue, indexPath)
@@ -314,7 +315,7 @@ class TimeInputKeyboard: UIInputView {
         }
     }
     
-    var minIncrement: Int = 5
+    var minIncrement: Int = 1
     
     private lazy var picker: UIPickerView = {
         let pickerView = UIPickerView()
@@ -343,7 +344,8 @@ class TimeInputKeyboard: UIInputView {
     
     
     override func systemLayoutSizeFitting(_ targetSize: CGSize) -> CGSize {
-        return CGSize(UIScreen.main.bounds.width, 200)
+        print("[Input] TargetSize: \(targetSize)")
+        return CGSize(UIScreen.main.bounds.width, 240)
     }
     
     
@@ -359,8 +361,7 @@ class TimeInputKeyboard: UIInputView {
     
     
     init(timeString:String) {
-        super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 200), inputViewStyle: .keyboard)
-        self.allowsSelfSizing = true
+        super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 240), inputViewStyle: .keyboard)
         dataSource = generateDataSource()
         defer {
             self.startingTime = timeString
@@ -396,10 +397,12 @@ extension TimeInputKeyboard {
     private func setTime() {
         if let startingTime = startingTime {
             setPickersToTimeString(startingTime)
+            feedbackGenerator.impactOccurred()
         } else {
             setToCurrentTime()
+            feedbackGenerator.impactOccurred()
         }
-        feedbackGenerator.impactOccurred()
+        
     }
     
 }
@@ -460,6 +463,7 @@ extension TimeInputKeyboard {
 
     // MARK: - TimeString -
     private func setPickersToTimeString(_ timeString:String) {
+        print("[TimeInput] Setting Pickers to Time Sting")
         
         var pickerRowStore: (hour:Int,mins:Int,meridan:Int) = (0,0,0)
         
@@ -477,7 +481,6 @@ extension TimeInputKeyboard {
             let minSplit = nextSplit.split(" ")
             
             if let mins = minSplit.first {
-                print(" mins -> \(mins) ")
                 if let index = dataSource[1].indexOf(mins) {
                     pickerRowStore.mins = index
                 }
@@ -498,7 +501,7 @@ extension TimeInputKeyboard {
     
     // MARK: - Date -
     private func setPickersToDate(_ date:Date = Date()) {
-        
+        print("[TimeInput] Setting Pickers to Date")
         func findIndexOf(_ value:String,in strings:[String]) -> Int {
             for (i, str) in strings.enumerated() {
                 if value == str {
@@ -515,7 +518,6 @@ extension TimeInputKeyboard {
         let dateTimeString = dateString.split(separator: " ").first!
         let hourString = String(dateTimeString.split(separator: ":").first!)
         let minString = String(dateTimeString.split(separator: ":").last!)
-        print(" minString -> \(minString) ")
         let periodString = String(dateString.split(separator: " ").last!)
         
         let hourColumnIndex = findIndexOf(hourString, in: dataSource[0])
