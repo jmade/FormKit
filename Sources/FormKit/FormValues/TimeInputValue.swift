@@ -14,6 +14,8 @@ public struct TimeInputValue: Equatable, Hashable {
 // MARK: - Initilization -
 extension TimeInputValue {
     
+    //init(title: String,time:String,_ customKey:String?, useDirectionButtons:Bool)
+    
     public init(_ title: String,_ time:String) {
         self.title = title
         self.time = time
@@ -25,6 +27,16 @@ extension TimeInputValue {
         self.customKey = customKey
     }
     
+}
+
+extension TimeInputValue {
+    public func newWith(_ timeString:String) -> TimeInputValue {
+        TimeInputValue(title: self.title,
+                       time: timeString,
+                       useDirectionButtons: self.useDirectionButtons,
+                       customKey: self.customKey
+        )
+    }
 }
 
 
@@ -144,6 +156,10 @@ public final class TimeInputCell: UITableViewCell {
         textField.font = UIFont.preferredFont(forTextStyle: .headline)
         textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
         
+        textField.newTimeStringClosure = { [weak self] (timeString) in
+            self?.newTimeString(timeString)
+        }
+        
         let inputView = TimeInputKeyboard()
         textField.inputView = inputView
         inputView.observer = textField
@@ -246,9 +262,14 @@ public final class TimeInputCell: UITableViewCell {
     private func endTextEditing(){
         textField.resignFirstResponder()
     }
+
     
-    
-    
+    private func newTimeString(_ timeString:String) {
+        if let timeInputValue = formValue {
+            let newTimeInputValue = timeInputValue.newWith(timeString)
+            updateFormValueDelegate?.updatedFormValue(newTimeInputValue, indexPath)
+        }
+    }
     
 }
 
@@ -264,8 +285,12 @@ protocol TimeInputKeyboardObserver: class {
 
 // MARK: - TimeInputTextField -
 class TimeInputTextField: UITextField, TimeInputKeyboardObserver {
+    
+    public var newTimeStringClosure: ((String) -> Void)? = nil
+    
     func add(_ string: String) {
-        self.text?.append(string)
+        self.text? = string
+        self.newTimeStringClosure?(string)
     }
 }
 
@@ -286,7 +311,15 @@ class TimeInputKeyboard: UIInputView {
         }
     }
     
-    var startingTime:String? = nil
+    var startingTime:String? = nil {
+        didSet {
+            if let timeString = startingTime {
+                setPickersToTimeString(timeString)
+            }
+        }
+    }
+    
+    
     var minIncrement: Int = 5
     
     private lazy var picker: UIPickerView = {
@@ -320,14 +353,28 @@ class TimeInputKeyboard: UIInputView {
     
     init() {
         super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 275), inputViewStyle: .keyboard)
-        //dataSource = generateDataSource()
         setTime()
     }
     
+    
+    init(timeString:String) {
+        super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 200), inputViewStyle: .keyboard)
+        dataSource = generateDataSource()
+        defer {
+            self.startingTime = timeString
+        }
+    }
+
+    
     override func willMove(toSuperview newSuperview: UIView?) {
         super.willMove(toSuperview: newSuperview)
-        setTime()
         print("[FormKit](TimeInputKeyboard) `willMove(toSuperView)`  \(String(describing: newSuperview)) ")
+    }
+    
+    override func didMoveToSuperview() {
+        print("[FormKit](TimeInputKeyboard) `didMoveToSuperview`")
+        super.didMoveToSuperview()
+        setTime()
     }
     
 }
@@ -358,8 +405,7 @@ extension TimeInputKeyboard {
 
 
 
-
-
+// MARK: - UIPickerViewDataSource -
 extension TimeInputKeyboard: UIPickerViewDataSource {
     
     public func numberOfComponents(in pickerView: UIPickerView) -> Int {
@@ -372,6 +418,7 @@ extension TimeInputKeyboard: UIPickerViewDataSource {
 }
 
 
+// MARK: - UIPickerViewDelegate -
 extension TimeInputKeyboard: UIPickerViewDelegate {
     
     public func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
@@ -389,14 +436,6 @@ extension TimeInputKeyboard: UIPickerViewDelegate {
         let period = dataSource[2][picker.selectedRow(inComponent: 2)]
         let resolvedTime = "\(selectedHour):\(selectedMins) \(period)"
         observer?.add(resolvedTime)
-        
-        /*
-        updateFormValueDelegate?.updatedFormValue(
-            TimeValue(title: title ?? "", time: "\(selectedHour):\(selectedMins) \(period)"),
-            indexPath
-        )
-        */
- 
     }
     
 }
@@ -411,7 +450,7 @@ extension TimeInputKeyboard: UIInputViewAudioFeedback {
 
 
 
-
+/// TODO: round current time to nearest 5 mins...
 
 
 // MARK: - Setting Pickers -
@@ -436,6 +475,7 @@ extension TimeInputKeyboard {
             let minSplit = nextSplit.split(" ")
             
             if let mins = minSplit.first {
+                print(" mins -> \(mins) ")
                 if let index = dataSource[1].indexOf(mins) {
                     pickerRowStore.mins = index
                 }
@@ -473,6 +513,7 @@ extension TimeInputKeyboard {
         let dateTimeString = dateString.split(separator: " ").first!
         let hourString = String(dateTimeString.split(separator: ":").first!)
         let minString = String(dateTimeString.split(separator: ":").last!)
+        print(" minString -> \(minString) ")
         let periodString = String(dateString.split(separator: " ").last!)
         
         let hourColumnIndex = findIndexOf(hourString, in: dataSource[0])

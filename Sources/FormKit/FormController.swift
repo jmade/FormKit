@@ -779,7 +779,7 @@ extension FormController: UpdateFormValueDelegate {
                     if let timeInputValue = formValue as? TimeInputValue {
                         if timeInputValue != time {
                             dataSource.updateWith(formValue: timeInputValue, at: path)
-                            tableView.reloadRows(at: [path], with: .none)
+                            //tableView.reloadRows(at: [path], with: .none)
                         }
                     }
                 case .switchValue(let switchValue):

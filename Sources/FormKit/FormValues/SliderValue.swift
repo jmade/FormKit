@@ -122,7 +122,7 @@ extension SliderValue {
     public var valueFormatString: String {
         switch valueType {
         case .int:
-            return "%d"
+            return "%02d"
         case .float:
             return "%.\(decimalNumbers)f"
         }
@@ -180,7 +180,7 @@ extension SliderValue: FormValue, TableViewSelectable {
        }
        
        public var isSelectable: Bool {
-           return true
+           return false
        }
        
        public var formItem: FormItem {
@@ -284,7 +284,7 @@ public final class SliderCell: UITableViewCell {
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        activateDefaultHeightAnchorConstraint()
+        //activateDefaultHeightAnchorConstraint()
         NSLayoutConstraint.activate([
             
             titleLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor, constant: 2.0),
