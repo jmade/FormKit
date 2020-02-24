@@ -164,7 +164,7 @@ extension SliderValue {
     public func displayValue(_ newValue:Float) -> String {
         switch self.valueType {
         case .int:
-            return String(format: valueFormatString, Int(newValue)) //"\(Int(newValue))"
+            return String(format: valueFormatString, Int(newValue))
         case .float:
             return String(format: valueFormatString, newValue)
         }
@@ -209,6 +209,7 @@ extension SliderValue: FormValueDisplayable {
     
     public typealias Controller = FormController
     public typealias Cell = SliderCell
+    
     
     public func configureCell(_ formController: Controller, _ cell: Cell, _ path: IndexPath) {
         cell.formValue = self
@@ -292,7 +293,7 @@ public final class SliderCell: UITableViewCell {
                 sliderValue.sliderConfig(slider)
                 titleLabel.text = sliderValue.title
                 slider.setValue(sliderValue.sliderValue, animated: true)
-                valueLabel.text = String(format: sliderValue.valueFormatString, slider.value )
+                valueLabel.text = sliderValue.displayValue(slider.value)
             }
         }
     }
@@ -331,7 +332,6 @@ extension SliderCell {
     @objc private func handleSlider(_ slider:UISlider) {
         interperateValue(slider.value)
     }
-
     
     private func interperateValue(_ value:Float) {
         guard let sliderValue = formValue else { return }
