@@ -146,14 +146,11 @@ public final class TimeInputCell: UITableViewCell {
         textField.autocorrectionType = .no
         textField.textAlignment = .right
         textField.font = UIFont.preferredFont(forTextStyle: .headline)
-        textField.inputView = inputKeyboard
-        return textField
-    }()
-    
-    private lazy var inputKeyboard:TimeInputKeyboard = {
+        
         let inputView = TimeInputKeyboard()
+        textField.inputView = inputView
         inputView.observer = textField
-        return inputView
+        return textField
     }()
     
     
@@ -164,7 +161,7 @@ public final class TimeInputCell: UITableViewCell {
             if let timeValue = formValue {
                 titleLabel.text = timeValue.title
                 textField.text = timeValue.time
-                inputKeyboard.timeValue = timeValue
+                //inputKeyboard.timeValue = timeValue
             }
         }
     }
