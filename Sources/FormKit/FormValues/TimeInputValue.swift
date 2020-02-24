@@ -157,8 +157,10 @@ public final class TimeInputCell: UITableViewCell {
     var formValue:TimeInputValue? {
         didSet {
             if let timeValue = formValue {
+                evaluateButtonBar()
                 titleLabel.text = timeValue.title
                 textField.text = timeValue.time
+                
                 //inputKeyboard.timeValue = timeValue
             }
         }
@@ -198,6 +200,7 @@ public final class TimeInputCell: UITableViewCell {
             bar.items = [previous,next,.Flexible(),done]
             
             bar.sizeToFit()
+            print("Assinging bar ")
             textField.inputAccessoryView = bar
         }
     }
