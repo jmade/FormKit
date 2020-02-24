@@ -11,7 +11,7 @@ import Foundation
 // MARK: - FormSection -
 
 // MARK: - FormSectionUpdateClosure -
-public typealias FormSectionUpdateClosure = ( (FormSection) -> Void )
+public typealias FormSectionUpdateClosure = (FormSection) -> Void
 
 public class FormSection: Equatable {
     
@@ -39,7 +39,6 @@ extension FormSection {
     
     public convenience init(_ rows:[FormItem]) {
         self.init()
-        self.title = ""
         self.rows = rows
     }
     
@@ -69,22 +68,26 @@ extension FormSection {
         self.rows = values.map({ $0.formItem })
     }
     
+    public convenience init(_ title:String,_ value:FormValue) {
+        self.init()
+        self.title = title
+        self.rows = [value.formItem]
+    }
+    
     
     public convenience init(_ values:[FormValue]) {
         self.init()
-        self.title = " "
         self.rows = values.map({ $0.formItem })
     }
     
     public convenience init(_ value:FormValue) {
         self.init()
-        self.title = " "
         self.rows = [value.formItem]
     }
     
-    
-    
 }
+
+
 
 
 
@@ -130,11 +133,11 @@ extension FormSection: Hashable {
     }
     
     public var hash: Int {
-        return  "\(rows)".hashValue
+        "\(rows)".hashValue
     }
     
     public static func == (lhs: FormSection, rhs: FormSection) -> Bool {
-        return lhs.hash == rhs.hash
+        lhs.hash == rhs.hash
     }
 
 }
@@ -223,8 +226,8 @@ extension FormSection {
     public class func TestingSection() -> FormSection {
         FormSection("Testing", [
             TimeInputValue.Demo().formItem,
-            ActionValue.DemoAdd().formItem,
-            ActionValue.DemoExp().formItem
+            ActionValue.Demo().formItem,
+            ActionValue.DemoForm().formItem,
         ])
     }
     

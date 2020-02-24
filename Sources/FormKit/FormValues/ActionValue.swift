@@ -28,9 +28,9 @@ public struct ActionValue: Equatable {
     private var customOperatingTitle:String? = nil
     
     public enum ActionStyle {
-       case none, discolosure, moderate, readOnly
+       case none, disclosure, moderate, readOnly
     }
-    var style:ActionStyle = .discolosure
+    var style:ActionStyle = .disclosure
     
     public var customKey:String? = "ActionValue"
     
@@ -44,7 +44,7 @@ public struct ActionValue: Equatable {
     var formClosure: ActionValueFormClosure? = nil
     
     var title:String = "Action"
-    var color:UIColor = .systemBlue
+    var color:UIColor = UIColor.FormKit.text
     var uuid:String = UUID().uuidString
     
     public var readOnlyValue:ReadOnlyValue? = nil
@@ -56,15 +56,30 @@ public struct ActionValue: Equatable {
 extension ActionValue {
     
     
-    init(title: String,color:UIColor,style:ActionStyle = .discolosure,action: @escaping ActionValueClosure) {
+    public init(title: String, formClosure: @escaping ActionValueFormClosure) {
         self.title = title
-        self.color = color
-        self.action = action
-        self.style = style
+        self.formClosure = formClosure
+        self.style = .moderate
     }
     
     
+    public init(_ title: String,_ formClosure: @escaping ActionValueFormClosure) {
+        self.title = title
+        self.formClosure = formClosure
+        self.style = .moderate
+    }
+    
+    
+    
     public init(title: String, color:UIColor, formClosure: @escaping ActionValueFormClosure) {
+        self.title = title
+        self.formClosure = formClosure
+        self.color = color
+        self.style = .moderate
+    }
+    
+    
+    public init(title: String, color:UIColor,_ formClosure: @escaping ActionValueFormClosure) {
         self.title = title
         self.formClosure = formClosure
         self.color = color
@@ -80,11 +95,36 @@ extension ActionValue {
         self.style = .moderate
     }
     
+    
+    public init(title: String,_ operatingTitle:String,_ color:UIColor,_ showDisclosure:Bool = false,_ formClosure: @escaping ActionValueFormClosure) {
+        self.title = title
+        self.formClosure = formClosure
+        self.customOperatingTitle = operatingTitle
+        self.color = color
+        self.style = showDisclosure ? .disclosure : .moderate
+    }
+
+    
     /// ReadOnly init
     public init(_ readOnlyValue:ReadOnlyValue, formClosure: @escaping ActionValueFormClosure) {
         self.formClosure = formClosure
         self.readOnlyValue = readOnlyValue
         self.style = .readOnly
+    }
+    
+    
+    
+}
+
+
+extension ActionValue {
+    
+    public init(saveValue formClosure: @escaping ActionValueFormClosure) {
+        self.title = "Save"
+        self.formClosure = formClosure
+        self.customOperatingTitle = "Saving"
+        self.color = UIColor.FormKit.save
+        self.style = .moderate
     }
     
 }
@@ -94,64 +134,19 @@ extension ActionValue {
 public extension ActionValue {
     
     static func Demo() -> ActionValue {
-        return ActionValue(title: "Demo Action", color: .purple, style: .moderate) {_,_ in
-            print("[ActionValueClosure] Hello!")
+        ActionValue("Demo Action") { (_, _, _) in
+            print("[ActionValueClosure] Hello Demo!")
         }
     }
     
-    
+
     static func DemoForm() -> ActionValue {
-        ActionValue(title: "Demo Form", color: .purple, formClosure: { (actionValue, form, path) in
+        ActionValue("Demo Form") { (_, form, _) in
             form.navigationController?.pushViewController(
                 FormController(formData: .Demo()),
                 animated: true
             )
-        })
-    }
-    
-    
-    static func DemoAdd() -> ActionValue {
-        
-        ActionValue(title: "Add", color: .blue, formClosure: { (actionValue, form, path) in
-            
-            if let lastSection = form.dataSource.sections.last {
-                
-                let newRows = [
-                    ActionValue.DemoAdd().formItem
-                ]
-                
-                let newFormItems = [lastSection.rows,newRows]
-                    .reduce([],+)
-                
-                let newLastSection = FormSection(
-                    lastSection.title,
-                    newFormItems
-                )
-                
-                let newSections = [
-                    form.dataSource.sections[0],
-                    form.dataSource.sections[1],
-                    form.dataSource.sections[2],
-                    newLastSection,
-                ]
-                
-                let newFormData = FormDataSource(title: form.dataSource.title, sections: newSections)
-                
-                form.dataSource = newFormData
-            
-            }
-
-        })
-    }
-
-    
-    static func DemoExp() -> ActionValue {
-        
-        ActionValue(title: "Exp!", color: .systemYellow, formClosure: { (actionValue, form, path) in
-            let sectionIndex = Array(0...(form.dataSource.sections.count-2)).randomElement()!
-            let newDataSource = form.dataSource.newWithSection(.Random(), at: sectionIndex)
-            form.dataSource = newDataSource
-        })
+        }
     }
     
 }
@@ -176,6 +171,7 @@ public extension ActionValue {
         )
     }
     
+    
     func completedVersion(_ newTitle:String = "",_ newColor:UIColor? = .systemGreen) -> ActionValue {
         ActionValue(
             state: .complete,
@@ -197,7 +193,7 @@ public extension ActionValue {
         ActionValue(
             state: .ready,
             customOperatingTitle: self.customOperatingTitle,
-            style: .discolosure,
+            style: .disclosure,
             customKey: self.customKey,
             action: self.action,
             dataAction: self.dataAction,
@@ -446,7 +442,7 @@ public final class ActionCell: UITableViewCell {
         guard let actionValue = formValue else { return }
         textLabel?.text = actionValue.title
         switch actionValue.style {
-        case .discolosure:
+        case .disclosure:
             textLabel?.textAlignment = .center
             textLabel?.textColor = actionValue.color
             accessoryType = .disclosureIndicator

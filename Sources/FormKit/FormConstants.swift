@@ -3,13 +3,71 @@ import UIKit
 
 public extension UIColor {
     
-   static var edit:UIColor {
-       if #available(iOS 13.0, *) {
-           return .systemYellow
-       } else {
-           return .yellow
-       }
-   }
+    struct FormKit {
+        
+        static var text:UIColor {
+            if #available(iOS 13.0, *) {
+                return .label
+            } else {
+                return .black
+            }
+        }
+        
+        static var actionText:UIColor {
+            if #available(iOS 13.0, *) {
+                return .systemYellow
+            } else {
+                return .yellow
+            }
+        }
+        
+        
+        static var edit:UIColor {
+             if #available(iOS 13.0, *) {
+                 return .systemYellow
+             } else {
+                 return .yellow
+             }
+         }
+        
+        
+        static var save:UIColor {
+            if #available(iOS 13.0, *) {
+                return .systemGreen
+            } else {
+                return .green
+            }
+        }
+        
+        
+        static var delete:UIColor {
+            if #available(iOS 13.0, *) {
+                return .systemRed
+            } else {
+                return .red
+            }
+        }
+        
+        static var create:UIColor {
+            if #available(iOS 13.0, *) {
+                return .systemTeal
+            } else {
+                return .blue
+            }
+        }
+        
+        
+    }
+    
+    
+    static var edit:UIColor {
+        if #available(iOS 13.0, *) {
+            return .systemYellow
+        } else {
+            return .yellow
+        }
+    }
+   
    
    static var delete:UIColor {
        if #available(iOS 13.0, *) {
@@ -18,7 +76,6 @@ public extension UIColor {
            return .red
        }
    }
-   
    
    static var create:UIColor {
        if #available(iOS 13.0, *) {
@@ -79,77 +136,6 @@ public struct FormConstant {
     static public func selectedTextBackground() -> UIColor {
         return .clear
     }
-    
-    public struct Color {
-        
-        
-        static var edit:UIColor {
-            if #available(iOS 13.0, *) {
-                return .systemYellow
-            } else {
-                return .yellow
-            }
-        }
-        
-        
-        
-        static var delete:UIColor {
-            if #available(iOS 13.0, *) {
-                return .systemRed
-            } else {
-                return .red
-            }
-        }
-        
-        
-        static var create:UIColor {
-            if #available(iOS 13.0, *) {
-                return .systemTeal
-            } else {
-                return .blue
-            }
-        }
-        
-        
-        static var success:UIColor {
-            if #available(iOS 13.0, *) {
-                return .systemGreen
-            } else {
-                return .green
-            }
-        }
-        
-        static var error:UIColor {
-            if #available(iOS 13.0, *) {
-                return .systemRed
-            } else {
-                return .red
-            }
-        }
-        
-        static var warning:UIColor {
-            if #available(iOS 13.0, *) {
-                return .systemYellow
-            } else {
-                return .yellow
-            }
-        }
-        
-        
-        
-        static var operating:UIColor {
-            if #available(iOS 13.0, *) {
-                return .systemIndigo
-            } else {
-                return .purple
-            }
-        }
-
-        
-        
-    }
-    
-    
     
 }
 
@@ -216,7 +202,22 @@ public protocol FormCellDescriptable {
 // MARK: - FormValueDisplayable -
 public typealias FormValueDisplayable = FormConfigurable & FormCellDescriptable
 
+
+
+
+
+// MARK: - EXTENTIONS -
 /// EXTENTIONS
+
+
+// MARK: - String -
+extension String {
+    public func split(_ s: String) -> [String]{
+        return self.components(separatedBy: s)
+    }
+}
+
+
 
 // MARK: - IndexSet -
 extension IndexSet {
