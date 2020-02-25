@@ -133,7 +133,7 @@ extension TimeInputValue {
 
 
 //: MARK: TimeCell
-public final class TimeInputCell: UITableViewCell {
+public final class TimeInputCell: UITableViewCell, Activatable {
     static let identifier = "FormKit.TimeInputCell"
     
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
@@ -168,8 +168,7 @@ public final class TimeInputCell: UITableViewCell {
         contentView.addSubview(textField)
         return textField
     }()
-    
-    
+
     
     var formValue:TimeInputValue? = nil {
         didSet {
@@ -390,11 +389,9 @@ class TimeInputKeyboard: UIInputView {
     
     override func willMove(toSuperview newSuperview: UIView?) {
         super.willMove(toSuperview: newSuperview)
-        print("[FormKit](TimeInputKeyboard) `willMove(toSuperView)`  \(String(describing: newSuperview)) ")
     }
     
     override func didMoveToSuperview() {
-        print("[FormKit](TimeInputKeyboard) `didMoveToSuperview`")
         super.didMoveToSuperview()
         setTime()
     }
@@ -482,8 +479,6 @@ extension TimeInputKeyboard {
 
     // MARK: - TimeString -
     private func setPickersToTimeString(_ timeString:String) {
-        print("[TimeInput] Setting Pickers to Time Sting")
-        
         var pickerRowStore: (hour:Int,mins:Int,meridan:Int) = (0,0,0)
         
         let hourSplit = timeString.split(":")
@@ -520,7 +515,7 @@ extension TimeInputKeyboard {
     
     // MARK: - Date -
     private func setPickersToDate(_ date:Date = Date()) {
-        print("[TimeInput] Setting Pickers to Date")
+        
         func findIndexOf(_ value:String,in strings:[String]) -> Int {
             for (i, str) in strings.enumerated() {
                 if value == str {

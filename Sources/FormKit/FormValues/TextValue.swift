@@ -299,7 +299,7 @@ public final class TextCell: UITableViewCell, Activatable {
             let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: 44.0)))
             let previous = UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction))
             let next = UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction))
-            let done = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(doneAction))
+            let done = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
             bar.items = [previous,next,.Flexible(),done]
             
             bar.sizeToFit()
