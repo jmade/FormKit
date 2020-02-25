@@ -277,7 +277,6 @@ public final class TimeInputCell: UITableViewCell {
 
     
     private func newTimeString(_ timeString:String) {
-        print("newTimeString timeString -> \(timeString) ")
         if let timeInputValue = formValue {
             let newTimeInputValue = timeInputValue.newWith(timeString)
             updateFormValueDelegate?.updatedFormValue(newTimeInputValue, indexPath)

@@ -275,11 +275,12 @@ public final class SliderCell: UITableViewCell {
     
     private lazy var slider: UISlider = {
         let slider = UISlider()
-        slider.translatesAutoresizingMaskIntoConstraints = false
         slider.addTarget(self, action: #selector(handleSlider(_:)), for: .valueChanged)
+        slider.translatesAutoresizingMaskIntoConstraints = false
         self.contentView.addSubview(slider)
         return slider
     }()
+    
     
     
     var formValue : SliderValue? {
@@ -305,15 +306,15 @@ public final class SliderCell: UITableViewCell {
         
         NSLayoutConstraint.activate([
             titleLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor, constant: 2.0),
-            valueLabel.topAnchor.constraint(equalTo: titleLabel.topAnchor),
-            
             titleLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            
+            valueLabel.topAnchor.constraint(equalTo: titleLabel.topAnchor),
             valueLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
             
             slider.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12.0),
             slider.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
             slider.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-            slider.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20.0),
+            slider.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16.0),
         ])
     }
 

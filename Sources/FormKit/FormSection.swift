@@ -97,7 +97,7 @@ extension FormSection {
         var indicies:[Int] = []
         for (i,v) in rows.enumerated() {
             switch v {
-            case .text(_),.note(_) ,.numerical(_):
+            case .text(_),.note(_) ,.numerical(_),.timeInput(_):
                 indicies.append(i)
             default:
                 break
