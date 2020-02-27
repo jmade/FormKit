@@ -275,8 +275,10 @@ open class FormController: UITableViewController, CustomTransitionable {
             
             print("Keyboard Height: \(keyboardViewEndFrame.height)")
             print("Save Area Insets Bottom: \(view.safeAreaInsets.bottom)")
-            
-            tableView.contentInset = UIEdgeInsets(top: defaultContentInsets.top, left: 0, bottom: keyboardViewEndFrame.height - view.safeAreaInsets.bottom, right: 0)
+            let newInsets = UIEdgeInsets(top: defaultContentInsets.top, left: 0, bottom: keyboardViewEndFrame.height - view.safeAreaInsets.bottom, right: 0)
+            print(" newInsets -> \(newInsets) ")
+             
+            tableView.contentInset = newInsets
         }
         
         tableView.scrollIndicatorInsets = tableView.contentInset
