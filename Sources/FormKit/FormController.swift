@@ -162,6 +162,10 @@ open class FormController: UITableViewController, CustomTransitionable {
         }
     }
     
+    
+    private var defaultContentInsets = UIEdgeInsets(top: 22.0, left: 0, bottom: 0, right: 0)
+    
+    
     /// Loading
     public typealias FormDataLoadingClosure = ( () -> (FormDataSource) )
     public var loadingClosure: FormDataLoadingClosure? = nil
@@ -242,6 +246,11 @@ open class FormController: UITableViewController, CustomTransitionable {
     open override func viewDidLoad() {
         super.viewDidLoad()
         
+        let notificationCenter = NotificationCenter.default
+        notificationCenter.addObserver(self, selector: #selector(adjustForKeyboard), name: UIResponder.keyboardWillHideNotification, object: nil)
+        notificationCenter.addObserver(self, selector: #selector(adjustForKeyboard), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+        
+        
         if let loadingMessage = checkInMessage {
             print("[FormController] we got `checkInMessage`")
             if #available(iOS 13.0, *) {
@@ -251,6 +260,26 @@ open class FormController: UITableViewController, CustomTransitionable {
             }
         }
         
+    }
+    
+    
+    @objc func adjustForKeyboard(notification: Notification) {
+        guard let keyboardValue = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
+
+        let keyboardScreenEndFrame = keyboardValue.cgRectValue
+        let keyboardViewEndFrame = view.convert(keyboardScreenEndFrame, from: view.window)
+
+        if notification.name == UIResponder.keyboardWillHideNotification {
+            tableView.contentInset = defaultContentInsets
+        } else {
+            tableView.contentInset = UIEdgeInsets(top: defaultContentInsets.top, left: 0, bottom: keyboardViewEndFrame.height - view.safeAreaInsets.bottom, right: 0)
+        }
+        
+        tableView.scrollIndicatorInsets = tableView.contentInset
+        //yourTextView.scrollIndicatorInsets = yourTextView.contentInset
+
+//        let selectedRange = yourTextView.selectedRange
+//        yourTextView.scrollRangeToVisible(selectedRange)
     }
     
     
