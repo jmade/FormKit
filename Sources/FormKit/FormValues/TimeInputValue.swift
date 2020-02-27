@@ -155,6 +155,7 @@ public final class TimeInputCell: UITableViewCell, Activatable {
         textField.font = UIFont.preferredFont(forTextStyle: .headline)
         textField.tintColor = .clear
         textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
+        textField.delegate = self
         
         textField.newTimeStringClosure = { [weak self] (timeString) in
             self?.newTimeString(timeString)
@@ -283,6 +284,25 @@ public final class TimeInputCell: UITableViewCell, Activatable {
         }
     }
     
+}
+
+extension TimeInputCell: UITextFieldDelegate {
+    
+    public func textFieldDidEndEditing(_ textField: UITextField) {
+        endTextEditing()
+        textField.textColor = nil
+    }
+    
+    public func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
+    
+    public func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
+        textField.textColor = .systemBlue
+        return true
+        
+    }
 }
 
 
