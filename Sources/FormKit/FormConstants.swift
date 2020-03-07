@@ -3,6 +3,11 @@ import UIKit
 
 public extension UIColor {
     
+    static var inputSelected: UIColor {
+        FormKit.inputSelected
+    }
+    
+    
     struct FormKit {
         
         static var text:UIColor {
@@ -51,6 +56,14 @@ public extension UIColor {
         static var create:UIColor {
             if #available(iOS 13.0, *) {
                 return .systemTeal
+            } else {
+                return .blue
+            }
+        }
+        
+        static var inputSelected:UIColor {
+            if #available(iOS 13.0, *) {
+                return .systemIndigo
             } else {
                 return .blue
             }

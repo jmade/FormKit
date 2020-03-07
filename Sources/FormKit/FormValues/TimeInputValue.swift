@@ -218,14 +218,32 @@ public final class TimeInputCell: UITableViewCell, Activatable {
     
     
     func evaluateButtonBar(){
+        
+        
+        
+        
         guard let timeInputValue = formValue else { return }
         if timeInputValue.useDirectionButtons {
-
-            let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: 44.0)))
+            let inputBarHeight: CGFloat = 32.0
+            
+            let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: inputBarHeight)))
+            
+            
+            let inputLabel = UILabel(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width * 0.60, height: inputBarHeight)))
+            inputLabel.text = "Input the time value here..."
+            inputLabel.font = .preferredFont(forTextStyle: .caption1)
+            if #available(iOS 13.0, *) {
+                inputLabel.textColor = .tertiaryLabel
+            } else {
+                inputLabel.textColor = .gray
+            }
+    
+            let exp = UIBarButtonItem(customView: inputLabel)
+            
             let previous = UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction))
             let next = UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction))
             let done = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
-            bar.items = [previous,next,.Flexible(),done]
+            bar.items = [previous,next,.Flexible(),exp,.Flexible(),done]
             
             bar.sizeToFit()
             textField.inputAccessoryView = bar
@@ -307,13 +325,13 @@ extension TimeInputCell {
     
     func animateTitleForSelection(isSelected:Bool) {
         if isSelected {
-            UIViewPropertyAnimator(duration: 0.5, dampingRatio: 0.35) { [weak self] in
+            UIViewPropertyAnimator(duration: 1.0, dampingRatio: 0.21) { [weak self] in
                 guard let self = self else { return }
                 self.titleLabel.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .headline).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
-                self.titleLabel.textColor = .systemBlue
+                self.titleLabel.textColor = UIColor.FormKit.inputSelected
             }.startAnimation()
         } else {
-            UIViewPropertyAnimator(duration: 0.5, dampingRatio: 0.89) { [weak self] in
+            UIViewPropertyAnimator(duration: 1.0, dampingRatio: 0.89) { [weak self] in
                 guard let self = self else { return }
                 self.titleLabel.font = .preferredFont(forTextStyle: .body)
                 self.titleLabel.textColor = UIColor.FormKit.text
