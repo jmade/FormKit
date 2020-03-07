@@ -286,25 +286,51 @@ public final class TimeInputCell: UITableViewCell, Activatable {
     
 }
 
+
 extension TimeInputCell: UITextFieldDelegate {
     
     public func textFieldDidEndEditing(_ textField: UITextField) {
         endTextEditing()
-        titleLabel.textColor = .systemBlue
+        //titleLabel.textColor = .systemBlue
+        //titleLabel.textColor = UIColor.FormKit.text
         //textField.textColor = UIColor.FormKit.text
+        
     }
     
     public func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
+        animateTitleForSelection(isSelected: false)
         return true
     }
     
     public func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
         //textField.textColor = .systemBlue
-        titleLabel.textColor = UIColor.FormKit.text
+        //titleLabel.textColor = .systemBlue
+        animateTitleForSelection(isSelected: true)
         return true
         
     }
+}
+
+
+extension TimeInputCell {
+    
+    func animateTitleForSelection(isSelected:Bool) {
+        if isSelected {
+            UIViewPropertyAnimator(duration: 0.3, dampingRatio: 0.67) { [weak self] in
+                guard let self = self else { return }
+                self.titleLabel.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+                self.titleLabel.textColor = .systemBlue
+            }.startAnimation()
+        } else {
+            UIViewPropertyAnimator(duration: 0.3, dampingRatio: 0.67) { [weak self] in
+                guard let self = self else { return }
+                self.titleLabel.font = .preferredFont(forTextStyle: .body)
+                self.titleLabel.textColor = UIColor.FormKit.text
+            }.startAnimation()
+        }
+    }
+    
 }
 
 
