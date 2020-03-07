@@ -280,31 +280,29 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     
     
-    
+    // MARK: - Keyboard -
     private func dealWithKeyboard(_ keyboardFrame:CGRect) {
         let keyboardSize = keyboardFrame.size
         print("Keyboard Height: \(keyboardSize.height)")
         
+        var aRect: CGRect = self.view.frame
+        aRect.size.height -= keyboardSize.height
         
         /// find a way to know where the `active` cell is in the onScreenRect
         if let indexPath = selectedIndexPath {
-            if let cell = tableView.cellForRow(at: indexPath) {
-                print(" cell -> \(cell) ")
-            }
             
+            if let cell = tableView.cellForRow(at: indexPath) {
+                print("Cell: --\n\(cell)\n")
+            }
             let rect = tableView.rectForRow(at: indexPath)
-            print(" rect -> \(rect) ")
+            print("Rect For Row: \(rect)")
+            self.tableView.scrollRectToVisible(rect, animated:true)
         }
-        
         
         
         // If active text field is hidden by keyboard, scroll it so it's visible
         // Your app might not need or want this behavior.
-        var aRect: CGRect = self.view.frame
-        aRect.size.height -= keyboardSize.height
-        
-        let activeTextFieldRect: CGRect?
-        let activeTextFieldOrigin: CGPoint?
+
         
         /*
         if self.activeTextField != nil {
