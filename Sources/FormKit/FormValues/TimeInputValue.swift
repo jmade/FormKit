@@ -290,7 +290,8 @@ extension TimeInputCell: UITextFieldDelegate {
     
     public func textFieldDidEndEditing(_ textField: UITextField) {
         endTextEditing()
-        textField.textColor = nil
+        titleLabel.textColor = .systemBlue
+        //textField.textColor = UIColor.FormKit.text
     }
     
     public func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
@@ -299,7 +300,8 @@ extension TimeInputCell: UITextFieldDelegate {
     }
     
     public func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
-        textField.textColor = .systemBlue
+        //textField.textColor = .systemBlue
+        titleLabel.textColor = UIColor.FormKit.text
         return true
         
     }

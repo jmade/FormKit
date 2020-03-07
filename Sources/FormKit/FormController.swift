@@ -272,16 +272,53 @@ open class FormController: UITableViewController, CustomTransitionable {
         if notification.name == UIResponder.keyboardWillHideNotification {
             tableView.contentInset = defaultContentInsets
         } else {
-            
-            print("Keyboard Height: \(keyboardViewEndFrame.height)")
-            print("Save Area Insets Bottom: \(view.safeAreaInsets.bottom)")
-            let newInsets = UIEdgeInsets(top: defaultContentInsets.top, left: 0, bottom: keyboardViewEndFrame.height - view.safeAreaInsets.bottom, right: 0)
-            print(" newInsets -> \(newInsets) ")
-             
-            tableView.contentInset = newInsets
+            dealWithKeyboard(keyboardViewEndFrame)
         }
         
         tableView.scrollIndicatorInsets = tableView.contentInset
+    }
+    
+    
+    
+    
+    private func dealWithKeyboard(_ keyboardFrame:CGRect) {
+        let keyboardSize = keyboardFrame.size
+        print("Keyboard Height: \(keyboardSize.height)")
+        
+        
+        /// find a way to know where the `active` cell is in the onScreenRect
+        if let indexPath = selectedIndexPath {
+            if let cell = tableView.cellForRow(at: indexPath) {
+                print(" cell -> \(cell) ")
+            }
+            
+            let rect = tableView.rectForRow(at: indexPath)
+            print(" rect -> \(rect) ")
+        }
+        
+        
+        
+        // If active text field is hidden by keyboard, scroll it so it's visible
+        // Your app might not need or want this behavior.
+        var aRect: CGRect = self.view.frame
+        aRect.size.height -= keyboardSize.height
+        
+        let activeTextFieldRect: CGRect?
+        let activeTextFieldOrigin: CGPoint?
+        
+        /*
+        if self.activeTextField != nil {
+            println("activeTextField not nil !")
+            activeTextFieldRect = self.activeTextField?.superview?.superview?.frame
+            activeTextFieldOrigin = activeTextFieldRect?.origin
+            self.tableView.scrollRectToVisible(activeTextFieldRect!, animated:true)
+        }
+        */
+        
+//        let newInsets = UIEdgeInsets(top: defaultContentInsets.top, left: 0, bottom: keyboardSize.height - view.safeAreaInsets.bottom, right: 0)
+//        print(" newInsets -> \(newInsets) ")
+//        tableView.contentInset = newInsets
+        
     }
     
     
