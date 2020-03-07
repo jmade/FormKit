@@ -50,7 +50,7 @@ open class FormController: UITableViewController, CustomTransitionable {
     var trailingToolBarButtonTitle:String?
 
     var selectedIndexPath: IndexPath?
-    var reuseIdentifiers: Set<String> = []
+    private var reuseIdentifiers: Set<String> = []
     
     
     public var dataSource = FormDataSource(sections: []) {
@@ -175,11 +175,12 @@ open class FormController: UITableViewController, CustomTransitionable {
     private var checkInMessage: String? = nil
     
     
-    // MARK: - shouldRefresh -
+    // MARK: - ShouldRefresh -
     public var shouldRefresh:Bool = false
     // MARK: - DoneButton -
     public var showsDoneButton:Bool = false
-    
+    // MARK: - Activates Input On Appear -
+    public var activatesInputOnAppear: Bool = false
     
     private var alertTextFieldInput: String? = nil
     
@@ -297,26 +298,24 @@ open class FormController: UITableViewController, CustomTransitionable {
             let rect = tableView.rectForRow(at: indexPath)
             print("Rect For Row: \(rect)")
             self.tableView.scrollRectToVisible(rect, animated:true)
+            
+            /// TODO: calculate the rect that would position the cell in question to the ideal posiiton above the keybaord then pass this into this function?
+            /// --- adding content insets as needed...
+            // let rect = findIdealRect()
+            // self.tableView.scrollRectToVisible(rect, animated: true)
         }
         
-        
-        // If active text field is hidden by keyboard, scroll it so it's visible
-        // Your app might not need or want this behavior.
-
+        /// Insets? ?
         
         /*
-        if self.activeTextField != nil {
-            println("activeTextField not nil !")
-            activeTextFieldRect = self.activeTextField?.superview?.superview?.frame
-            activeTextFieldOrigin = activeTextFieldRect?.origin
-            self.tableView.scrollRectToVisible(activeTextFieldRect!, animated:true)
-        }
+        let newInsets = UIEdgeInsets(top: defaultContentInsets.top,
+                                     left: 0,
+                                     bottom: keyboardSize.height - view.safeAreaInsets.bottom,
+                                     right: 0
+        )
+        print(" newInsets -> \(newInsets) ")
+        tableView.contentInset = newInsets
         */
-        
-//        let newInsets = UIEdgeInsets(top: defaultContentInsets.top, left: 0, bottom: keyboardSize.height - view.safeAreaInsets.bottom, right: 0)
-//        print(" newInsets -> \(newInsets) ")
-//        tableView.contentInset = newInsets
-        
     }
     
     
@@ -340,10 +339,12 @@ open class FormController: UITableViewController, CustomTransitionable {
     open override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        if let firstInputPath = dataSource.firstInputIndexPath {
-            if let nextCell = tableView.cellForRow(at: firstInputPath) {
-                if let activatabelCell = nextCell as? Activatable {
-                    activatabelCell.activate()
+        if activatesInputOnAppear {
+            if let firstInputPath = dataSource.firstInputIndexPath {
+                if let nextCell = tableView.cellForRow(at: firstInputPath) {
+                    if let activatabelCell = nextCell as? Activatable {
+                        activatabelCell.activate()
+                    }
                 }
             }
         }
@@ -372,10 +373,7 @@ open class FormController: UITableViewController, CustomTransitionable {
             }
         }
         
-        
     }
-    
-    
     
 }
 
