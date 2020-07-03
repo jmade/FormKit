@@ -219,9 +219,6 @@ public final class TimeInputCell: UITableViewCell, Activatable {
     
     func evaluateButtonBar(){
         
-        
-        
-        
         guard let timeInputValue = formValue else { return }
         if timeInputValue.useDirectionButtons {
             let inputBarHeight: CGFloat = 32.0
@@ -237,7 +234,6 @@ public final class TimeInputCell: UITableViewCell, Activatable {
             } else {
                 inputLabel.textColor = .gray
             }
-    
             let exp = UIBarButtonItem(customView: inputLabel)
             
             let previous = UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction))

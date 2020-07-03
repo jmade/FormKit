@@ -53,29 +53,36 @@ public extension ReadOnlyValue {
     var valueAttributedText:NSAttributedString {
         let mutableAttribString = NSMutableAttributedString(string: value)
         
+        
+        var digitFont = UIFont.preferredFont(forTextStyle: .body)
+        if #available(iOS 13.0, *) {
+            digitFont = UIFont.monospacedSystemFont(ofSize: UIFont.systemFontSize, weight: .regular)
+        }
+        
+        
+        var boldDigit = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+        if #available(iOS 13.0, *) {
+            boldDigit = UIFont.monospacedDigitSystemFont(ofSize: UIFont.systemFontSize, weight: .bold)
+        }
+        
+        
         switch valueDisplayStyle {
-        case .code:
+        case .code, .default:
              mutableAttribString
                 .addAttribute(.font,
-                              value: UIFont.monospacedSystemFont(ofSize: UIFont.systemFontSize, weight: .regular),
+                              value: digitFont,
                               range: NSRange(location: 0, length: value.count)
             )
         case .digit:
             mutableAttribString
                 .addAttribute(.font,
-                              value: UIFont.monospacedDigitSystemFont(ofSize: UIFont.systemFontSize, weight: .bold),
+                              value: boldDigit,
                               range: NSRange(location: 0, length: value.count)
             )
         case .bold:
             mutableAttribString
                 .addAttribute(.font,
                               value: UIFont(descriptor: UIFont.preferredFont(forTextStyle:  .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0),
-                              range: NSRange(location: 0, length: value.count)
-            )
-        case .default:
-            mutableAttribString
-                .addAttribute(.font,
-                              value: UIFont.monospacedSystemFont(ofSize: UIFont.systemFontSize, weight: .bold),
                               range: NSRange(location: 0, length: value.count)
             )
         }

@@ -8,6 +8,8 @@ public struct SwitchValue: Equatable, Hashable {
     public var title:String
     public var value:Bool = false
     public var customKey:String? = nil
+    
+    
 }
 
 
