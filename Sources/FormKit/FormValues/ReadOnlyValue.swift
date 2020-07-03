@@ -190,8 +190,7 @@ public final class ReadOnlyCell: UITableViewCell {
     
     private lazy var valueOnlyLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
-        label.textAlignment = .right
+        label.textAlignment = .left
         label.numberOfLines = 0
         if #available(iOS 13.0, *) {
             label.textColor = .tertiaryLabel
@@ -199,7 +198,6 @@ public final class ReadOnlyCell: UITableViewCell {
             label.textColor = .lightGray
         }
         label.lineBreakMode = .byWordWrapping
-        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
