@@ -4,7 +4,7 @@ import UIKit
 public struct ReadOnlyValue: Equatable, Hashable {
     
     public enum ValueDisplayStyle {
-        case code, digit, bold, `default`
+        case code, digit, bold, `default`, valueOnly
     }
     
     public var valueDisplayStyle:ValueDisplayStyle = .default
@@ -45,6 +45,13 @@ public extension ReadOnlyValue {
         self.isDisabled = disabled
     }
     
+    init(valueOnly: String) {
+        self.title = String()
+        self.value = valueOnly
+        self.valueDisplayStyle = .valueOnly
+        self.isDisabled = true
+    }
+    
 }
 
 // MARK: - ValueDisplayStyle -
@@ -67,7 +74,7 @@ public extension ReadOnlyValue {
         
         
         switch valueDisplayStyle {
-        case .code, .default:
+        case .code, .default, .valueOnly:
              mutableAttribString
                 .addAttribute(.font,
                               value: digitFont,
@@ -180,23 +187,58 @@ public final class ReadOnlyCell: UITableViewCell {
         return label
     }()
     
+    
+    private lazy var valueOnlyLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+        label.textAlignment = .right
+        label.numberOfLines = 0
+        if #available(iOS 13.0, *) {
+            label.textColor = .tertiaryLabel
+        } else {
+            label.textColor = .lightGray
+        }
+        label.lineBreakMode = .byWordWrapping
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    
     var formValue : ReadOnlyValue? {
         didSet {
-            if let readOnlyValue = formValue {
-                if readOnlyValue.isDisabled {
-                    self.selectionStyle = .none
-                }
+            
+            guard let readOnlyValue = formValue else {
+                return
+            }
+            
+            if readOnlyValue.isDisabled {
+                self.selectionStyle = .none
+            }
+            
+            switch readOnlyValue.valueDisplayStyle {
+            case .valueOnly:
+                titleLabel.isHidden = true
+                valueLabel.isHidden = true
+                valueOnlyLabel.isHidden = false
+                valueOnlyLabel.attributedText = readOnlyValue.valueAttributedText
+            default:
+                titleLabel.isHidden = false
+                valueLabel.isHidden = false
+                valueOnlyLabel.isHidden = true
                 titleLabel.text = readOnlyValue.title
                 valueLabel.attributedText = readOnlyValue.valueAttributedText
             }
+            
         }
+        
     }
     
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        [titleLabel,valueLabel].forEach({
+        [titleLabel,valueLabel,valueOnlyLabel].forEach({
             contentView.addSubview($0)
         })
         
@@ -210,6 +252,12 @@ public final class ReadOnlyCell: UITableViewCell {
             valueLabel.leadingAnchor.constraint(equalTo: contentView.centerXAnchor),
             valueLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8.0),
             contentView.bottomAnchor.constraint(equalTo: valueLabel.bottomAnchor, constant: 8.0),
+            
+            valueOnlyLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            valueOnlyLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            valueOnlyLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            contentView.bottomAnchor.constraint(equalTo: valueOnlyLabel.bottomAnchor, constant: 8.0),
+            
         ])
         
     }
@@ -217,6 +265,7 @@ public final class ReadOnlyCell: UITableViewCell {
     override public func prepareForReuse() {
         valueLabel.attributedText = nil
         titleLabel.text = nil
+        valueOnlyLabel.attributedText = nil
         formValue = nil
         super.prepareForReuse()
     }
