@@ -206,11 +206,11 @@ open class FormController: UITableViewController, CustomTransitionable {
     }
     
     public init(checkInMessage:String) {
-         if #available(iOS 13.0, *) {
-                   super.init(style: .insetGrouped)
-               } else {
-                   super.init(style: .grouped)
-               }
+        if #available(iOS 13.0, *) {
+            super.init(style: .insetGrouped)
+        } else {
+            super.init(style: .grouped)
+        }
         self.checkInMessage = checkInMessage
         controllerInitialize()
     }

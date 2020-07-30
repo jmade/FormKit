@@ -176,8 +176,7 @@ final class ListSelectViewController: UITableViewController, UISearchResultsUpda
         self.title = descriptor.title
         self.allowsMultipleSelection = descriptor.allowsMultipleSelection
         self.sectionTile = descriptor.selectionMessage
-        
-        // navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(donePressed))
+
     }
     
     
@@ -195,7 +194,7 @@ final class ListSelectViewController: UITableViewController, UISearchResultsUpda
         self.title = title
         self.listSelectionChangeClosure = updateClosure
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(donePressed))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(donePressed))
         loadingClosure(self)
     }
     

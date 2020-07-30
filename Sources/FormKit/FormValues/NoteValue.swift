@@ -131,12 +131,12 @@ public final class NoteCell: UITableViewCell, Activatable {
                 UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction)),
                 UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction)),
                 .Flexible(),
-                UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(doneAction))
+                UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
             ]
         } else {
             bar.items = [
                 .Flexible(), .Flexible(), .Flexible(),
-                UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(doneAction))
+                UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
             ]
         }
         bar.sizeToFit()

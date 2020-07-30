@@ -22,7 +22,7 @@ public struct NumericalValue: Equatable, Hashable {
 }
 
 
-extension NumericalValue {
+public extension NumericalValue {
     
     /// General
     init(title:String, numberType:NumberType, customKey:String?) {
@@ -285,7 +285,7 @@ public final class NumericalCell: UITableViewCell, Activatable {
             let previous = UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction))
             let next = UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction))
             let spacer = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-            let done = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(doneAction))
+            let done = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
             bar.items = [previous,next,spacer,done]
             
             bar.sizeToFit()

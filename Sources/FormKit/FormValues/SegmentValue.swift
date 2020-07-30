@@ -85,11 +85,10 @@ extension SegmentValue {
 
 //: MARK: SegmentCell
 public final class SegmentCell: UITableViewCell {
-    static let identifier = "segmentCell"
+    static let identifier = "jmade.FormKit.segmentCell.identifier"
     
     var segmentedControl: UISegmentedControl = {
         let segmentedControl = UISegmentedControl()
-        //segmentedControl.tintColor = FormConstant.tintColor()
         segmentedControl.translatesAutoresizingMaskIntoConstraints = false
         return segmentedControl
     }()

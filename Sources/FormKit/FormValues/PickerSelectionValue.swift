@@ -183,7 +183,7 @@ public final class PickerSelectionCell: UITableViewCell {
         label.numberOfLines = 0
         label.lineBreakMode = .byWordWrapping
         label.textAlignment = .left
-        if #available(iOS 10.0, *) { label.adjustsFontForContentSizeCategory = true }
+        label.adjustsFontForContentSizeCategory = true
         return label
     }()
     
@@ -194,7 +194,7 @@ public final class PickerSelectionCell: UITableViewCell {
         label.lineBreakMode = .byWordWrapping
         label.textAlignment = .right
         label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .subheadline).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
-        if #available(iOS 10.0, *) { label.adjustsFontForContentSizeCategory = true }
+        label.adjustsFontForContentSizeCategory = true
         return label
     }()
     
@@ -206,7 +206,7 @@ public final class PickerSelectionCell: UITableViewCell {
         label.lineBreakMode = .byWordWrapping
         label.textAlignment = .center
         label.text = "Make a Selection"
-        if #available(iOS 10.0, *) { label.adjustsFontForContentSizeCategory = true }
+        label.adjustsFontForContentSizeCategory = true
         return label
     }()
     
