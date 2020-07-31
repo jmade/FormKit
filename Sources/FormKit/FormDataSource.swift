@@ -200,6 +200,7 @@ extension FormDataSource {
         return makeEncodedFormDataSource()
     }
     
+    
     public func log() {
         let encoded = makeEncodedFormDataSource()
         var report = "\n"
@@ -323,7 +324,19 @@ extension FormDataSource {
             .OtherDemo(),
             .NumericsDemo(),
             .TextDemo(),
-            .TestingSection()
+            .TestingSection(),
+            .init([
+                .switchValue(.init(title: "Switch Mode")),
+                .slider(.Random()),
+                .timeInput(.Random()),
+                .text(.init(title: "Input:")),
+                .action(ActionValue(title: "Random Form", formClosure: { (_, ctl, _) in
+                    ctl.navigationController?.pushViewController(
+                        FormDataSource.Random().controller(),
+                        animated: true
+                    )
+                }))
+            ])
         ])
     }
 }
