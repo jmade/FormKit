@@ -328,7 +328,7 @@ open class FormController: UITableViewController, CustomTransitionable {
             }
             
             
-            activeTextField.convert(activeTextField.bounds, to: self.view).maxY;
+            
             
             let bottomOfActiveCell = cellRect.maxY
             
