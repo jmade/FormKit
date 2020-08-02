@@ -1,6 +1,30 @@
 import UIKit
 
 
+
+extension UITableView {
+    
+    public func indexPathOfFirstResponder() -> IndexPath? {
+        
+        for section in Array(0...numberOfSections) {
+            for row in Array(0...numberOfRows(inSection: section)) {
+                if let cell = cellForRow(at: IndexPath(row: row, section: section)) {
+                    for view in cell.contentView.subviews {
+                        if view.isFirstResponder {
+                            return IndexPath(row: row, section: section)
+                        }
+                    }
+                }
+            }
+        }
+        return nil
+        
+    }
+    
+}
+
+
+
 // MARK: - CustomTransitionable -
 protocol CustomTransitionable: class {
     var customTransitioningDelegate: PresentationTransitioningDelegate { get }
@@ -49,7 +73,7 @@ open class FormController: UITableViewController, CustomTransitionable {
     var leadingToolBarButtonTitle:String?
     var trailingToolBarButtonTitle:String?
 
-    var selectedIndexPath: IndexPath?
+    var selectedIndexPath: IndexPath? = nil
     private var reuseIdentifiers: Set<String> = []
     
     
@@ -267,21 +291,24 @@ open class FormController: UITableViewController, CustomTransitionable {
     @objc func adjustForKeyboard(notification: Notification) {
         guard let keyboardValue = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
 
-        print(" adjustForKeyboard -> ")
+        
         let keyboardScreenEndFrame = keyboardValue.cgRectValue
         let keyboardViewEndFrame = view.convert(keyboardScreenEndFrame, from: view.window)
+        
+        print(" keyboardViewEndFrame -> \(keyboardViewEndFrame) ")
         
        
         if notification.name == UIResponder.keyboardWillHideNotification {
             tableView.contentInset = defaultContentInsets
+            tableView.scrollIndicatorInsets = tableView.contentInset
         } else {
             dealWithKeyboard(keyboardViewEndFrame)
         }
         
-        tableView.scrollIndicatorInsets = tableView.contentInset
+       
     }
     
-    
+  
     
     // MARK: - Keyboard -
     private func dealWithKeyboard(_ keyboardFrame:CGRect) {
@@ -292,6 +319,14 @@ open class FormController: UITableViewController, CustomTransitionable {
         aRect.size.height -= keyboardSize.height
         
         /// find a way to know where the `active` cell is in the onScreenRect
+        
+        if let firstRepondingPath = tableView.indexPathOfFirstResponder() {
+            print(" firstRepondingPath -> \(firstRepondingPath) ")
+        } else {
+            print("No First Reponding Path found")
+        }
+        
+        /*
         if let indexPath = selectedIndexPath {
             print("Selected IndexPath: \(indexPath)")
             
@@ -306,7 +341,7 @@ open class FormController: UITableViewController, CustomTransitionable {
             print("Rect For Row: \(rect)")
             
             
-            let insets = UIEdgeInsetsMake( 0, 0, keyboardSize.height, 0 )
+            let insets = UIEdgeInsets( top: 0, left: 0, bottom: keyboardSize.height, right: 0 )
             print(" insets -> \(insets) ")
             tableView.contentInset = insets
             tableView.scrollIndicatorInsets = insets
@@ -318,6 +353,7 @@ open class FormController: UITableViewController, CustomTransitionable {
             // let rect = findIdealRect()
             // self.tableView.scrollRectToVisible(rect, animated: true)
         }
+        */
         
         /// Insets? ?
         
