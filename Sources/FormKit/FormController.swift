@@ -314,9 +314,23 @@ open class FormController: UITableViewController, CustomTransitionable {
         print("bottom Safe Area Insets: \(view.safeAreaInsets.bottom)")
         print("Bottom Inset: \(keyboardSize.height - view.safeAreaInsets.bottom)")
         
+
         
-        if let firstRepondingPath = tableView.indexPathOfFirstResponder() {
-            let bottomOfActiveCell = tableView.rectForRow(at: firstRepondingPath).maxY
+        
+        if let firstRespondingPath = tableView.indexPathOfFirstResponder() {
+            let cellRect = tableView.rectForRow(at: firstRespondingPath)
+            print(" cellRect -> \(cellRect) ")
+            
+            if let cell = tableView.cellForRow(at: firstRespondingPath) {
+                print(cell.frame)
+                let convertedCellRect = cell.convert(cell.bounds, to: self.view)
+                print(" convertedCellRect -> \(convertedCellRect) ")
+            }
+            
+            
+            activeTextField.convert(activeTextField.bounds, to: self.view).maxY;
+            
+            let bottomOfActiveCell = cellRect.maxY
             
             print("KeyboardTop: \(Int(topOfKeyboard) ) | ActiveCellBottom: \(Int(bottomOfActiveCell))")
             
