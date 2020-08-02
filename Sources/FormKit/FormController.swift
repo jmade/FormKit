@@ -311,9 +311,7 @@ open class FormController: UITableViewController, CustomTransitionable {
         let keyboardSize = keyboardFrame.size
         let topOfKeyboard = self.view.frame.height - keyboardSize.height
         
-        print("bottom Safe Area Insets: \(view.safeAreaInsets.bottom)")
-        print("Bottom Inset: \(keyboardSize.height - view.safeAreaInsets.bottom)")
-        
+      
         
          
         
@@ -321,17 +319,23 @@ open class FormController: UITableViewController, CustomTransitionable {
             let cellRect = tableView.rectForRow(at: firstRespondingPath)
             print(" cellRectfor row -> \(cellRect) ")
             
-            if let cell = tableView.cellForRow(at: firstRespondingPath) {
-                //print("Cell Frame: \(cell.frame)")
-                print("Self Frame: \(self.view.frame)")
-                let windowCellFrame = view.convert(cell.frame, from: tableView)
-                print(" windowCellFrame -> \(windowCellFrame) ")
-                let convertedCellBottom = cell.convert(CGPoint(x: 0, y: cell.frame.y), to: self.view)
-                //print(" convertedCellBottom -> \(convertedCellBottom) ")
-                let convertedCellRect = cell.convert(cell.frame, to: self.view)
-                //print(" convertedCellRect -> \(convertedCellRect) ")
-                //print("bottom of Converted Cell : \(convertedCellRect.maxY)")
+            if let superView = tableView.superview {
+                let convertedRect = tableView.convert(cellRect, to: superView)
+                print(" convertedRect -> \(convertedRect) ")
             }
+            
+            
+//            if let cell = tableView.cellForRow(at: firstRespondingPath) {
+//                //print("Cell Frame: \(cell.frame)")
+//                print("Self Frame: \(self.view.frame)")
+//                let windowCellFrame = view.convert(cell.frame, from: tableView)
+//                print(" windowCellFrame -> \(windowCellFrame) ")
+//                let convertedCellBottom = cell.convert(CGPoint(x: 0, y: cell.frame.y), to: self.view)
+//                //print(" convertedCellBottom -> \(convertedCellBottom) ")
+//                let convertedCellRect = cell.convert(cell.frame, to: self.view)
+//                //print(" convertedCellRect -> \(convertedCellRect) ")
+//                //print("bottom of Converted Cell : \(convertedCellRect.maxY)")
+//            }
             
             
             
