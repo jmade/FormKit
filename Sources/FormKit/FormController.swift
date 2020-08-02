@@ -309,8 +309,20 @@ open class FormController: UITableViewController, CustomTransitionable {
         let keyboardSize = keyboardFrame.size
         let topOfKeyboard = self.view.frame.height - keyboardSize.height
         
+        print("bottom Safe Area Insets: \(view.safeAreaInsets.bottom)")
+        print("Bottom Inset: \(keyboardSize.height - view.safeAreaInsets.bottom)")
+        
+        
         if let firstRepondingPath = tableView.indexPathOfFirstResponder() {
             let bottomOfActiveCell = tableView.rectForRow(at: firstRepondingPath).maxY
+            
+            print("KeyboardTop: \(Int(topOfKeyboard) ) | ActiveCellBottom: \(Int(bottomOfActiveCell))")
+            if #available(iOS 12.0, *) {
+                print("TV Visible Size: \(tableView.visibleSize)")
+            } else {
+                // Fallback on earlier versions
+            }
+            
             shouldMoveViewUp = bottomOfActiveCell > topOfKeyboard
         }
         
