@@ -323,7 +323,8 @@ open class FormController: UITableViewController, CustomTransitionable {
             
             if let cell = tableView.cellForRow(at: firstRespondingPath) {
                 //print("Cell Frame: \(cell.frame)")
-                let windowCellFrame = view.convert(cell.frame, from: view.window)
+                print("Self Frame: \(self.frame)")
+                let windowCellFrame = view.convert(cell.frame, from: tableView)
                 print(" windowCellFrame -> \(windowCellFrame) ")
                 let convertedCellBottom = cell.convert(CGPoint(x: 0, y: cell.frame.y), to: self.view)
                 //print(" convertedCellBottom -> \(convertedCellBottom) ")
