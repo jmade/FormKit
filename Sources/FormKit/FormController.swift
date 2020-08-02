@@ -294,10 +294,6 @@ open class FormController: UITableViewController, CustomTransitionable {
         
         let keyboardScreenEndFrame = keyboardValue.cgRectValue
         let keyboardViewEndFrame = view.convert(keyboardScreenEndFrame, from: view.window)
-        
-        print(" keyboardViewEndFrame -> \(keyboardViewEndFrame) ")
-        
-       
         if notification.name == UIResponder.keyboardWillHideNotification {
             tableView.contentInset = defaultContentInsets
             tableView.scrollIndicatorInsets = tableView.contentInset
@@ -314,17 +310,39 @@ open class FormController: UITableViewController, CustomTransitionable {
     private func dealWithKeyboard(_ keyboardFrame:CGRect) {
         let keyboardSize = keyboardFrame.size
         print("Keyboard Height: \(keyboardSize.height)")
+        let topOfKeyboard = self.view.frame.height - keyboardSize.height
+        print(" topOfKeyboard -> \(topOfKeyboard) ")
         
         var aRect: CGRect = self.view.frame
         aRect.size.height -= keyboardSize.height
         
-        /// find a way to know where the `active` cell is in the onScreenRect
+        var shouldMoveViewUp = false
         
         if let firstRepondingPath = tableView.indexPathOfFirstResponder() {
             print(" firstRepondingPath -> \(firstRepondingPath) ")
-        } else {
-            print("No First Reponding Path found")
+            
+            let rect = tableView.rectForRow(at: firstRepondingPath)
+            let bottomOfActiveCell = rect.maxY
+            print(" bottomOfActiveCell -> \(bottomOfActiveCell) ")
+   
+            
+            if let cell = tableView.cellForRow(at: firstRepondingPath) {
+               
+                let bottomOfActiveCell = cell.convert(cell.bounds, to: self.view).maxY
+                print(" bottomOfActiveCell -> \(bottomOfActiveCell) ")
+                
+            }
+            
+            if bottomOfActiveCell > topOfKeyboard {
+              shouldMoveViewUp = true
+            }
+            
         }
+        
+        if(shouldMoveViewUp) {
+          self.view.frame.origin.y = 0 - keyboardSize.height
+        }
+        
         
         /*
         if let indexPath = selectedIndexPath {
