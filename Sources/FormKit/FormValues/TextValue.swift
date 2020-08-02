@@ -328,7 +328,7 @@ public final class TextCell: UITableViewCell, Activatable {
     }
     
     public func activate(){
-        FormConstant.makeSelectionFeedback()
+        //FormConstant.makeSelectionFeedback()
         textField.becomeFirstResponder()
     }
     

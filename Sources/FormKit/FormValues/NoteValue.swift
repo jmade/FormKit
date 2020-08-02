@@ -43,9 +43,9 @@ extension NoteValue: FormValueDisplayable {
     }
     
     public func didSelect(_ formController: Controller, _ path: IndexPath) {
-        if let noteCell = formController.tableView.cellForRow(at: path) as? NoteCell {
-            noteCell.activate()
-        }
+//        if let noteCell = formController.tableView.cellForRow(at: path) as? NoteCell {
+//            noteCell.activate()
+//        }
     }
     
     public var cellDescriptor: FormCellDescriptor {

@@ -272,7 +272,6 @@ public final class NumericalCell: UITableViewCell, Activatable {
     
     override public func setSelected(_ selected: Bool, animated: Bool) {
         if selected {
-            FormConstant.makeSelectionFeedback()
             textField.becomeFirstResponder()
         }
     }
@@ -345,9 +344,6 @@ extension NumericalCell: UITextFieldDelegate {
         switch formValue.numberType {
         case .int:
             if CharacterSet.decimalDigits.isSuperset(of: CharacterSet(charactersIn: string)) {
-//                if let newText = textField.text {
-//                    self.formValue = formValue.newWith(newText)
-//                }
                 return true
             } else {
                  return false
@@ -355,9 +351,6 @@ extension NumericalCell: UITextFieldDelegate {
         case .float:
             let floatCharacterSet = CharacterSet.decimalDigits.union(CharacterSet(charactersIn: ".-+"))
             if floatCharacterSet.isSuperset(of: CharacterSet(charactersIn: string)) {
-//                if let newText = textField.text {
-//                    self.formValue = formValue.newWith(newText)
-//                }
                 return true
             } else {
                 return false

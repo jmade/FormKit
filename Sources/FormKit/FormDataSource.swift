@@ -104,7 +104,7 @@ extension FormDataSource {
 
 extension FormDataSource {
     
-    /// Trickle down the update closure, when aytime a section changes
+    /// Trickle down the update closure, when a section changes
     private func sectionWasUpdated(section: FormSection) {
         updateClosure(self)
     }

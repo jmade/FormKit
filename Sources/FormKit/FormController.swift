@@ -163,7 +163,7 @@ open class FormController: UITableViewController, CustomTransitionable {
     }
     
     
-    private var defaultContentInsets = UIEdgeInsets(top: 22.0, left: 0, bottom: 0, right: 0)
+    private var defaultContentInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
     
     
     /// Loading
@@ -224,7 +224,7 @@ open class FormController: UITableViewController, CustomTransitionable {
         tableView.estimatedRowHeight = 44.0
         tableView.rowHeight = UITableView.automaticDimension
         tableView.tableFooterView = ItemsLoadingView()
-        tableView.contentInset = UIEdgeInsets(top: 22.0, left: 0, bottom: 0, right: 0)
+        tableView.contentInset = defaultContentInsets
         
         /*
         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Reload", style: .plain, target: self, action: #selector(cancelPressed))
@@ -267,9 +267,11 @@ open class FormController: UITableViewController, CustomTransitionable {
     @objc func adjustForKeyboard(notification: Notification) {
         guard let keyboardValue = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
 
+        print(" adjustForKeyboard -> ")
         let keyboardScreenEndFrame = keyboardValue.cgRectValue
         let keyboardViewEndFrame = view.convert(keyboardScreenEndFrame, from: view.window)
-
+        
+       
         if notification.name == UIResponder.keyboardWillHideNotification {
             tableView.contentInset = defaultContentInsets
         } else {
@@ -291,13 +293,25 @@ open class FormController: UITableViewController, CustomTransitionable {
         
         /// find a way to know where the `active` cell is in the onScreenRect
         if let indexPath = selectedIndexPath {
+            print("Selected IndexPath: \(indexPath)")
+            
+            let rectForPath = tableView.rectForRow(at: indexPath)
+            print(" rectForPath -> \(rectForPath) ")
+
             
             if let cell = tableView.cellForRow(at: indexPath) {
                 print("Cell: --\n\(cell)\n")
             }
             let rect = tableView.rectForRow(at: indexPath)
             print("Rect For Row: \(rect)")
-            self.tableView.scrollRectToVisible(rect, animated:true)
+            
+            
+            let insets = UIEdgeInsetsMake( 0, 0, keyboardSize.height, 0 )
+            print(" insets -> \(insets) ")
+            tableView.contentInset = insets
+            tableView.scrollIndicatorInsets = insets
+            
+            //self.tableView.scrollRectToVisible(rect, animated:true)
             
             /// TODO: calculate the rect that would position the cell in question to the ideal posiiton above the keybaord then pass this into this function?
             /// --- adding content insets as needed...
