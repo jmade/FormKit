@@ -265,6 +265,7 @@ open class FormController: UITableViewController, CustomTransitionable {
         }
                
         setupToolBar()
+
     }
     
 
@@ -295,8 +296,8 @@ open class FormController: UITableViewController, CustomTransitionable {
         let keyboardViewEndFrame = view.convert(keyboardScreenEndFrame, from: view.window)
         if notification.name == UIResponder.keyboardWillHideNotification {
             print("KEYBOARD HIDE")
-//            tableView.contentInset = defaultContentInsets
-//            tableView.scrollIndicatorInsets = tableView.contentInset
+            tableView.contentInset = defaultContentInsets
+            tableView.scrollIndicatorInsets = tableView.contentInset
         } else {
             print("KEYBOARD SHOW")
             dealWithKeyboard(keyboardViewEndFrame)
@@ -357,11 +358,11 @@ open class FormController: UITableViewController, CustomTransitionable {
             
         }
         
-        if (shouldMoveViewUp) {
-            //self.view.frame.origin.y = 0 - keyboardSize.height
-            tableView.contentInset = UIEdgeInsets(top: defaultContentInsets.top, left: defaultContentInsets.left, bottom: keyboardSize.height - view.safeAreaInsets.bottom, right: defaultContentInsets.right)
-            tableView.scrollIndicatorInsets = tableView.contentInset
-        }
+//        if (shouldMoveViewUp) {
+//            //self.view.frame.origin.y = 0 - keyboardSize.height
+//            tableView.contentInset = UIEdgeInsets(top: defaultContentInsets.top, left: defaultContentInsets.left, bottom: keyboardSize.height - view.safeAreaInsets.bottom, right: defaultContentInsets.right)
+//            tableView.scrollIndicatorInsets = tableView.contentInset
+//        }
     }
     
     
@@ -919,7 +920,7 @@ extension FormController: UpdateFormValueDelegate {
         switch direction {
         case .previous:
             if let previousIndexPath = dataSource.previousIndexPath(from) {
-                tableView.scrollToRow(at: previousIndexPath, at: .none, animated: false)
+                tableView.scrollToRow(at: previousIndexPath, at: .none, animated: true)
                 if let previousCell = tableView.cellForRow(at: previousIndexPath) {
                     if let activatabelCell = previousCell as? Activatable {
                         activatabelCell.activate()
@@ -928,7 +929,7 @@ extension FormController: UpdateFormValueDelegate {
             }
         case .next:
             if let nextIndexPath = dataSource.nextIndexPath(from) {
-                tableView.scrollToRow(at: nextIndexPath, at: .none, animated: false)
+                tableView.scrollToRow(at: nextIndexPath, at: .none, animated: true)
                 if let nextCell = tableView.cellForRow(at: nextIndexPath) {
                     if let activatabelCell = nextCell as? Activatable {
                         activatabelCell.activate()
@@ -938,7 +939,7 @@ extension FormController: UpdateFormValueDelegate {
         }
         
         
-        FormConstant.makeSelectionFeedback()
+        //FormConstant.makeSelectionFeedback()
     }
 }
 
