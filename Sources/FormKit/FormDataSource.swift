@@ -298,11 +298,25 @@ extension FormDataSource {
     
     func previousIndexPath(_ from: IndexPath) -> IndexPath? {
         if let currentIndex = inputIndexPaths.indexOf(from) {
-            var nextIndex = currentIndex - 1
-            if nextIndex < 0 {
-                nextIndex = inputIndexPaths.count - 1
+            print(" currentIndex -> \(currentIndex) ")
+            var previousIndex = currentIndex - 1
+            print(" previousIndex -> \(previousIndex) ")
+            if previousIndex < 0 {
+                print("resetting counter, backwards")
+                previousIndex = inputIndexPaths.count - 1
             }
-            return inputIndexPaths[nextIndex]
+            
+            
+            
+            if previousIndex > (inputIndexPaths.count - 1) {
+                print("uh oh")
+                previousIndex = 0
+                return inputIndexPaths[0]
+            } else {
+                return inputIndexPaths[previousIndex]
+            }
+            
+            
         } else {
             return nil
         }
@@ -321,6 +335,8 @@ extension FormDataSource {
     
     public static func Demo() -> FormDataSource {
         return FormDataSource(sections: [
+            .TextDemo(),
+            .TextDemo(),
             .OtherDemo(),
             .NumericsDemo(),
             .TextDemo(),
