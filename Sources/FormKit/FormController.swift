@@ -308,82 +308,25 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     // MARK: - Keyboard -
     private func dealWithKeyboard(_ keyboardFrame:CGRect) {
-        let keyboardSize = keyboardFrame.size
-        print("Keyboard Height: \(keyboardSize.height)")
-        let topOfKeyboard = self.view.frame.height - keyboardSize.height
-        print(" topOfKeyboard -> \(topOfKeyboard) ")
-        
-        var aRect: CGRect = self.view.frame
-        aRect.size.height -= keyboardSize.height
-        
         var shouldMoveViewUp = false
+        let keyboardSize = keyboardFrame.size
+        let topOfKeyboard = self.view.frame.height - keyboardSize.height
+        
         
         if let firstRepondingPath = tableView.indexPathOfFirstResponder() {
-            print(" firstRepondingPath -> \(firstRepondingPath) ")
-            
             let rect = tableView.rectForRow(at: firstRepondingPath)
             let bottomOfActiveCell = rect.maxY
             print(" bottomOfActiveCell -> \(bottomOfActiveCell) ")
-   
-            
             if let cell = tableView.cellForRow(at: firstRepondingPath) {
-               
                 let bottomOfActiveCell = cell.convert(cell.bounds, to: self.view).maxY
                 print(" bottomOfActiveCell -> \(bottomOfActiveCell) ")
-                
             }
-            
-            if bottomOfActiveCell > topOfKeyboard {
-              shouldMoveViewUp = true
-            }
-            
+            shouldMoveViewUp = bottomOfActiveCell > topOfKeyboard
         }
         
-        if(shouldMoveViewUp) {
-          self.view.frame.origin.y = 0 - keyboardSize.height
+        if (shouldMoveViewUp) {
+            self.view.frame.origin.y = 0 - keyboardSize.height
         }
-        
-        
-        /*
-        if let indexPath = selectedIndexPath {
-            print("Selected IndexPath: \(indexPath)")
-            
-            let rectForPath = tableView.rectForRow(at: indexPath)
-            print(" rectForPath -> \(rectForPath) ")
-
-            
-            if let cell = tableView.cellForRow(at: indexPath) {
-                print("Cell: --\n\(cell)\n")
-            }
-            let rect = tableView.rectForRow(at: indexPath)
-            print("Rect For Row: \(rect)")
-            
-            
-            let insets = UIEdgeInsets( top: 0, left: 0, bottom: keyboardSize.height, right: 0 )
-            print(" insets -> \(insets) ")
-            tableView.contentInset = insets
-            tableView.scrollIndicatorInsets = insets
-            
-            //self.tableView.scrollRectToVisible(rect, animated:true)
-            
-            /// TODO: calculate the rect that would position the cell in question to the ideal posiiton above the keybaord then pass this into this function?
-            /// --- adding content insets as needed...
-            // let rect = findIdealRect()
-            // self.tableView.scrollRectToVisible(rect, animated: true)
-        }
-        */
-        
-        /// Insets? ?
-        
-        /*
-        let newInsets = UIEdgeInsets(top: defaultContentInsets.top,
-                                     left: 0,
-                                     bottom: keyboardSize.height - view.safeAreaInsets.bottom,
-                                     right: 0
-        )
-        print(" newInsets -> \(newInsets) ")
-        tableView.contentInset = newInsets
-        */
     }
     
     
