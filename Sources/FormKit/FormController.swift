@@ -323,8 +323,9 @@ open class FormController: UITableViewController, CustomTransitionable {
             
             if let cell = tableView.cellForRow(at: firstRespondingPath) {
                 print(cell.frame)
-                let convertedCellRect = cell.convert(cell.bounds, to: self.view)
+                let convertedCellRect = cell.convert(cell.frame, to: self.view)
                 print(" convertedCellRect -> \(convertedCellRect) ")
+                print("bottom of Converted Cell : \(convertedCellRect.maxY)")
             }
             
             
