@@ -291,7 +291,6 @@ open class FormController: UITableViewController, CustomTransitionable {
     @objc func adjustForKeyboard(notification: Notification) {
         guard let keyboardValue = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
 
-        
         let keyboardScreenEndFrame = keyboardValue.cgRectValue
         let keyboardViewEndFrame = view.convert(keyboardScreenEndFrame, from: view.window)
         if notification.name == UIResponder.keyboardWillHideNotification {
@@ -300,8 +299,6 @@ open class FormController: UITableViewController, CustomTransitionable {
         } else {
             dealWithKeyboard(keyboardViewEndFrame)
         }
-        
-       
     }
     
   
@@ -312,20 +309,15 @@ open class FormController: UITableViewController, CustomTransitionable {
         let keyboardSize = keyboardFrame.size
         let topOfKeyboard = self.view.frame.height - keyboardSize.height
         
-        
         if let firstRepondingPath = tableView.indexPathOfFirstResponder() {
-            let rect = tableView.rectForRow(at: firstRepondingPath)
-            let bottomOfActiveCell = rect.maxY
-            print(" bottomOfActiveCell -> \(bottomOfActiveCell) ")
-            if let cell = tableView.cellForRow(at: firstRepondingPath) {
-                let bottomOfActiveCell = cell.convert(cell.bounds, to: self.view).maxY
-                print(" bottomOfActiveCell -> \(bottomOfActiveCell) ")
-            }
+            let bottomOfActiveCell = tableView.rectForRow(at: firstRepondingPath).maxY
             shouldMoveViewUp = bottomOfActiveCell > topOfKeyboard
         }
         
         if (shouldMoveViewUp) {
-            self.view.frame.origin.y = 0 - keyboardSize.height
+            //self.view.frame.origin.y = 0 - keyboardSize.height
+            tableView.contentInset = UIEdgeInsets(top: defaultContentInsets.top, left: defaultContentInsets.left, bottom: keyboardSize.height - view.safeAreaInsets.bottom, right: defaultContentInsets.right)
+            tableView.scrollIndicatorInsets = tableView.contentInset
         }
     }
     
