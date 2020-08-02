@@ -286,6 +286,9 @@ open class FormController: UITableViewController, CustomTransitionable {
             }
         }
         
+        
+        print("Input Paths: \(dataSource.inputIndexPaths)")
+        
     }
     
     
