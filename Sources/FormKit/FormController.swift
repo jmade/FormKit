@@ -322,6 +322,13 @@ open class FormController: UITableViewController, CustomTransitionable {
             if let superView = tableView.superview {
                 let convertedRect = tableView.convert(cellRect, to: superView)
                 print(" convertedRect -> \(convertedRect) ")
+                let bottomOfActiveCell = convertedRect.y + convertedRect.height
+                
+                print("KeyboardTop: \(Int(topOfKeyboard) ) | ActiveCellBottom: \(Int(bottomOfActiveCell))")
+                
+                shouldMoveViewUp = bottomOfActiveCell > topOfKeyboard
+                
+                print("Should Move Up? \(shouldMoveViewUp)")
             }
             
             
@@ -340,21 +347,21 @@ open class FormController: UITableViewController, CustomTransitionable {
             
             
             
-            let bottomOfActiveCell = cellRect.maxY
-            
-            print("KeyboardTop: \(Int(topOfKeyboard) ) | ActiveCellBottom: \(Int(bottomOfActiveCell))")
-            
-            shouldMoveViewUp = bottomOfActiveCell > topOfKeyboard
-            
-            print("Should Move Up? \(shouldMoveViewUp)")
+//            let bottomOfActiveCell = cellRect.maxY
+//
+//            print("KeyboardTop: \(Int(topOfKeyboard) ) | ActiveCellBottom: \(Int(bottomOfActiveCell))")
+//
+//            shouldMoveViewUp = bottomOfActiveCell > topOfKeyboard
+//
+//            print("Should Move Up? \(shouldMoveViewUp)")
             
         }
         
-//        if (shouldMoveViewUp) {
-//            //self.view.frame.origin.y = 0 - keyboardSize.height
-//            tableView.contentInset = UIEdgeInsets(top: defaultContentInsets.top, left: defaultContentInsets.left, bottom: keyboardSize.height - view.safeAreaInsets.bottom, right: defaultContentInsets.right)
-//            tableView.scrollIndicatorInsets = tableView.contentInset
-//        }
+        if (shouldMoveViewUp) {
+            //self.view.frame.origin.y = 0 - keyboardSize.height
+            tableView.contentInset = UIEdgeInsets(top: defaultContentInsets.top, left: defaultContentInsets.left, bottom: keyboardSize.height - view.safeAreaInsets.bottom, right: defaultContentInsets.right)
+            tableView.scrollIndicatorInsets = tableView.contentInset
+        }
     }
     
     
