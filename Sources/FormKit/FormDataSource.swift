@@ -251,7 +251,19 @@ extension FormDataSource {
     
     
     public func updateWith(formValue:FormValue,at path:IndexPath) {
-        sections[path.section].rows[path.row] = formValue.formItem
+        let qualifiedSections = path.section >= 0 && path.section <= sections.count - 1
+        if qualifiedSections {
+            let rowCount = sections[path.section].rows
+            if path.row >= 0 && path.row <= rowCount -1 {
+                sections[path.section].rows[path.row] = formValue.formItem
+            } else {
+                print("[FormKit Error]: (Row Error) Unable to update FormValue at IndexPath: \(path)")
+            }
+        } else {
+             print("[FormKit Error]: (Section Error) Unable to update FormValue at IndexPath: \(path)")
+        }
+       
+        
     }
     
     

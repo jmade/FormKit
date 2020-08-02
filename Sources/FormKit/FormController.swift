@@ -287,7 +287,7 @@ open class FormController: UITableViewController, CustomTransitionable {
         }
         
         
-        print("Input Paths: \(dataSource.inputIndexPaths)")
+       
         
     }
     
@@ -298,11 +298,11 @@ open class FormController: UITableViewController, CustomTransitionable {
         let keyboardScreenEndFrame = keyboardValue.cgRectValue
         let keyboardViewEndFrame = view.convert(keyboardScreenEndFrame, from: view.window)
         if notification.name == UIResponder.keyboardWillHideNotification {
-            print("KEYBOARD HIDE")
+            //print("KEYBOARD HIDE")
             tableView.contentInset = defaultContentInsets
             tableView.scrollIndicatorInsets = tableView.contentInset
         } else {
-            print("KEYBOARD SHOW")
+            //print("KEYBOARD SHOW")
             dealWithKeyboard(keyboardViewEndFrame)
         }
     }
@@ -321,18 +321,18 @@ open class FormController: UITableViewController, CustomTransitionable {
         
         if let firstRespondingPath = tableView.indexPathOfFirstResponder() {
             let cellRect = tableView.rectForRow(at: firstRespondingPath)
-            print(" cellRectfor row -> \(cellRect) ")
+            //print(" cellRectfor row -> \(cellRect) ")
             
             if let superView = tableView.superview {
                 let convertedRect = tableView.convert(cellRect, to: superView)
-                print(" convertedRect -> \(convertedRect) ")
+               // print(" convertedRect -> \(convertedRect) ")
                 let bottomOfActiveCell = convertedRect.y + convertedRect.height
                 
-                print("KeyboardTop: \(Int(topOfKeyboard) ) | ActiveCellBottom: \(Int(bottomOfActiveCell))")
+               // print("KeyboardTop: \(Int(topOfKeyboard) ) | ActiveCellBottom: \(Int(bottomOfActiveCell))")
                 
                 shouldMoveViewUp = bottomOfActiveCell > topOfKeyboard
                 
-                print("Should Move Up? \(shouldMoveViewUp)")
+                //print("Should Move Up? \(shouldMoveViewUp)")
             }
             
             
@@ -377,6 +377,8 @@ open class FormController: UITableViewController, CustomTransitionable {
             self.navigationController?.setToolbarHidden(true, animated: false)
         }
         
+        
+        
     }
     
     
@@ -398,7 +400,6 @@ open class FormController: UITableViewController, CustomTransitionable {
                 }
             }
         }
-        
     }
     
     
@@ -920,7 +921,6 @@ extension FormController: UpdateFormValueDelegate {
             currentCell.resignFirstResponder()
         }
         
-        print(" dataSource.inputIndexPaths -> \(dataSource.inputIndexPaths) ")
         
         switch direction {
         case .previous:
