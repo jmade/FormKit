@@ -295,8 +295,8 @@ open class FormController: UITableViewController, CustomTransitionable {
         let keyboardViewEndFrame = view.convert(keyboardScreenEndFrame, from: view.window)
         if notification.name == UIResponder.keyboardWillHideNotification {
             print("KEYBOARD HIDE")
-            tableView.contentInset = defaultContentInsets
-            tableView.scrollIndicatorInsets = tableView.contentInset
+//            tableView.contentInset = defaultContentInsets
+//            tableView.scrollIndicatorInsets = tableView.contentInset
         } else {
             print("KEYBOARD SHOW")
             dealWithKeyboard(keyboardViewEndFrame)
@@ -322,12 +322,14 @@ open class FormController: UITableViewController, CustomTransitionable {
             print(" cellRectfor row -> \(cellRect) ")
             
             if let cell = tableView.cellForRow(at: firstRespondingPath) {
-                print("Cell Frame: \(cell.frame)")
+                //print("Cell Frame: \(cell.frame)")
+                let windowCellFrame = view.convert(cell.frame, from: view.window)
+                print(" windowCellFrame -> \(windowCellFrame) ")
                 let convertedCellBottom = cell.convert(CGPoint(x: 0, y: cell.frame.y), to: self.view)
-                print(" convertedCellBottom -> \(convertedCellBottom) ")
+                //print(" convertedCellBottom -> \(convertedCellBottom) ")
                 let convertedCellRect = cell.convert(cell.frame, to: self.view)
-                print(" convertedCellRect -> \(convertedCellRect) ")
-                print("bottom of Converted Cell : \(convertedCellRect.maxY)")
+                //print(" convertedCellRect -> \(convertedCellRect) ")
+                //print("bottom of Converted Cell : \(convertedCellRect.maxY)")
             }
             
             
@@ -343,11 +345,11 @@ open class FormController: UITableViewController, CustomTransitionable {
             
         }
         
-        if (shouldMoveViewUp) {
-            //self.view.frame.origin.y = 0 - keyboardSize.height
-            tableView.contentInset = UIEdgeInsets(top: defaultContentInsets.top, left: defaultContentInsets.left, bottom: keyboardSize.height - view.safeAreaInsets.bottom, right: defaultContentInsets.right)
-            tableView.scrollIndicatorInsets = tableView.contentInset
-        }
+//        if (shouldMoveViewUp) {
+//            //self.view.frame.origin.y = 0 - keyboardSize.height
+//            tableView.contentInset = UIEdgeInsets(top: defaultContentInsets.top, left: defaultContentInsets.left, bottom: keyboardSize.height - view.safeAreaInsets.bottom, right: defaultContentInsets.right)
+//            tableView.scrollIndicatorInsets = tableView.contentInset
+//        }
     }
     
     
