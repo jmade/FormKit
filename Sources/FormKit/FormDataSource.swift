@@ -329,7 +329,7 @@ extension FormDataSource {
     
     public class func Random() -> FormDataSource {
           return FormDataSource(
-              sections: Array(0...Int.random(in: 0...5)).map({ _ in FormSection.Random()})
+              sections: Array(0...Int.random(in: 1...5)).map({ _ in FormSection.Random()})
           )
       }
     

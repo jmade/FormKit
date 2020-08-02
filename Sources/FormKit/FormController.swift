@@ -917,6 +917,8 @@ extension FormController: UpdateFormValueDelegate {
             currentCell.resignFirstResponder()
         }
         
+        print(" dataSource.inputIndexPaths -> \(dataSource.inputIndexPaths) ")
+        
         switch direction {
         case .previous:
             if let previousIndexPath = dataSource.previousIndexPath(from) {
