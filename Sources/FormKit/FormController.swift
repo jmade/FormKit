@@ -294,9 +294,11 @@ open class FormController: UITableViewController, CustomTransitionable {
         let keyboardScreenEndFrame = keyboardValue.cgRectValue
         let keyboardViewEndFrame = view.convert(keyboardScreenEndFrame, from: view.window)
         if notification.name == UIResponder.keyboardWillHideNotification {
+            print("KEYBOARD HIDE")
             tableView.contentInset = defaultContentInsets
             tableView.scrollIndicatorInsets = tableView.contentInset
         } else {
+            print("KEYBOARD SHOW")
             dealWithKeyboard(keyboardViewEndFrame)
         }
     }
@@ -317,13 +319,11 @@ open class FormController: UITableViewController, CustomTransitionable {
             let bottomOfActiveCell = tableView.rectForRow(at: firstRepondingPath).maxY
             
             print("KeyboardTop: \(Int(topOfKeyboard) ) | ActiveCellBottom: \(Int(bottomOfActiveCell))")
-            if #available(iOS 12.0, *) {
-                print("TV Visible Size: \(tableView.visibleSize)")
-            } else {
-                // Fallback on earlier versions
-            }
             
             shouldMoveViewUp = bottomOfActiveCell > topOfKeyboard
+            
+            print("Should Move Up? \(shouldMoveViewUp)")
+            
         }
         
         if (shouldMoveViewUp) {
