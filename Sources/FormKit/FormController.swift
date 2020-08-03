@@ -852,9 +852,11 @@ extension FormController: UpdateFormValueDelegate {
                 case .segment(let segment):
                     print("Its SegmentValue")
                     if let segmentValue = formValue as? SegmentValue {
-                        if segmentValue != segment {
+                        print("still SegmentValue")
+                        if segmentValue.selectedValue != segment.selectedValue {
                             dataSource.updateWith(formValue: segmentValue, at: path)
                             print("can Call ValueChange Closure")
+                            //segment.valueChangeClosure?(segmentValue,self,path)
                             segmentValue.valueChangeClosure?(segmentValue,self,path)
                         }
                     }
