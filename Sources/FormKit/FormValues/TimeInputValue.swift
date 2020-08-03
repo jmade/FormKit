@@ -198,6 +198,7 @@ public final class TimeInputCell: UITableViewCell, Activatable {
         evaluateButtonBar()
     }
     
+    
     public override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
         
@@ -215,6 +216,12 @@ public final class TimeInputCell: UITableViewCell, Activatable {
         }
         
     }
+    
+    override public func prepareForReuse() {
+           super.prepareForReuse()
+        textField.text = nil
+        titleLabel.text = nil
+       }
     
     
     func evaluateButtonBar(){
