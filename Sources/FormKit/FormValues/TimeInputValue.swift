@@ -236,6 +236,7 @@ public final class TimeInputCell: UITableViewCell, Activatable {
             let inputLabel = UILabel(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width * 0.60, height: inputBarHeight)))
             inputLabel.text = "Input the time value here..."
             inputLabel.font = .preferredFont(forTextStyle: .caption1)
+            inputLabel.textAlignment = .center
             if #available(iOS 13.0, *) {
                 inputLabel.textColor = .tertiaryLabel
             } else {
@@ -438,8 +439,9 @@ class TimeInputKeyboard: UIInputView {
     
     
     init(timeString:String) {
-        super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 240), inputViewStyle: .keyboard)
+        super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 280), inputViewStyle: .keyboard)
         dataSource = generateDataSource()
+        self.allowsSelfSizing = true
         defer {
             self.startingTime = timeString
         }
@@ -472,10 +474,10 @@ extension TimeInputKeyboard {
     private func setTime() {
         if let startingTime = startingTime {
             setPickersToTimeString(startingTime)
-            feedbackGenerator.impactOccurred()
+            //feedbackGenerator.impactOccurred()
         } else {
             setToCurrentTime()
-            feedbackGenerator.impactOccurred()
+            //feedbackGenerator.impactOccurred()
         }
         
     }
