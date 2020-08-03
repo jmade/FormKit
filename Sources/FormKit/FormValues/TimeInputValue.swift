@@ -34,6 +34,17 @@ extension TimeInputValue {
                        customKey: self.customKey
         )
     }
+    
+    
+    public func newByAdding(mins:Int) -> TimeInputValue {
+           TimeInputValue(title: self.title,
+                          time: self.timeIncrementBy(mins: mins),
+                          useDirectionButtons: self.useDirectionButtons,
+                          customKey: self.customKey
+           )
+       }
+    
+    
 }
 
 

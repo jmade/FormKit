@@ -376,9 +376,6 @@ open class FormController: UITableViewController, CustomTransitionable {
         } else {
             self.navigationController?.setToolbarHidden(true, animated: false)
         }
-        
-        
-        
     }
     
     
