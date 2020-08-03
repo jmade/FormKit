@@ -16,13 +16,15 @@ public struct SegmentValue: FormValue, TableViewSelectable {
     public var customKey:String? = "SegmentValue"
     public let selectedValue:Int
     public var values:[String]
-    private var uuid:String = UUID().uuidString
+    public let uuid:String
     
     public typealias SegmentValueChangeClosure = ( (SegmentValue,FormController,IndexPath) -> Void )
     public var valueChangeClosure: SegmentValueChangeClosure? = nil
     
     
 }
+
+
 
 extension SegmentValue: Hashable {
     public func hash(into hasher: inout Hasher) {
@@ -45,15 +47,26 @@ extension SegmentValue: Equatable {
 extension SegmentValue {
     
     public init(values: [String],_ selectedValue:Int = 0) {
+        self.uuid = UUID().uuidString
         self.values = values
         self.selectedValue = selectedValue
     }
     
     
     public init(_ values: [String],_ selectedValue:Int = 0, valueChangeClosure: @escaping SegmentValueChangeClosure) {
+        self.uuid = UUID().uuidString
         self.values = values
         self.selectedValue = selectedValue
         self.valueChangeClosure = valueChangeClosure
+    }
+    
+    
+    public init(from:SegmentValue,_ selectedIndex:Int) {
+        self.uuid = from.uuid
+        self.selectedValue = selectedIndex
+        self.values = from.values
+        self.customKey = from.customKey
+        self.valueChangeClosure = from.valueChangeClosure
     }
     
 }
@@ -170,7 +183,7 @@ public final class SegmentCell: UITableViewCell {
         FormConstant.makeSelectionFeedback()
         if let segmentValue = formValue {
             updateFormValueDelegate?.updatedFormValue(
-                SegmentValue(values: segmentValue.values, sender.selectedSegmentIndex),
+                SegmentValue(from: segmentValue,sender.selectedSegmentIndex),
                 indexPath
             )
         }
