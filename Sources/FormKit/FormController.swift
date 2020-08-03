@@ -850,6 +850,7 @@ extension FormController: UpdateFormValueDelegate {
                         }
                     }
                 case .segment(let segment):
+                    print("Its SegmentValue")
                     if let segmentValue = formValue as? SegmentValue {
                         if segmentValue != segment {
                             dataSource.updateWith(formValue: segmentValue, at: path)
