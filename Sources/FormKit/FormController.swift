@@ -854,7 +854,7 @@ extension FormController: UpdateFormValueDelegate {
                         if segmentValue != segment {
                             dataSource.updateWith(formValue: segmentValue, at: path)
                             print("can Call ValueChange Closure")
-                            segmentValue.valueChangeClosure(segmentValue,self,path)
+                            segmentValue.valueChangeClosure?(segmentValue,self,path)
                         }
                     }
                 case .numerical(let numerical):

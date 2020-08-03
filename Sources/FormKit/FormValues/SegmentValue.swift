@@ -1,7 +1,7 @@
 import UIKit
 
 //: MARK: - SegmentValue -
-public struct SegmentValue: FormValue, TableViewSelectable, Equatable, Hashable {
+public struct SegmentValue: FormValue, TableViewSelectable {
     
     public var isSelectable: Bool {
         return false
@@ -16,11 +16,29 @@ public struct SegmentValue: FormValue, TableViewSelectable, Equatable, Hashable 
     public var customKey:String? = "SegmentValue"
     public let selectedValue:Int
     public var values:[String]
+    private var uuid:String = UUID().uuidString
     
     public typealias SegmentValueChangeClosure = ( (SegmentValue,FormController,IndexPath) -> Void )
     public var valueChangeClosure: SegmentValueChangeClosure? = nil
     
     
+}
+
+extension SegmentValue: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(uuid)
+    }
+    
+    public var hashValue: Int {
+        return uuid.hashValue
+    }
+}
+
+
+extension SegmentValue: Equatable {
+    public static func == (lhs: SegmentValue, rhs: SegmentValue) -> Bool {
+           return lhs.uuid == rhs.uuid
+       }
 }
 
 
