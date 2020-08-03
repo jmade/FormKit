@@ -12,9 +12,13 @@ public struct SegmentValue: FormValue, TableViewSelectable, Equatable, Hashable 
             return FormItem.segment(self)
         }
     }
+    
     public var customKey:String? = "SegmentValue"
     public let selectedValue:Int
-    public let values:[String]
+    public var values:[String]
+    
+    public typealias SegmentValueChangeClosure = ( (SegmentValue,FormController,IndexPath) -> Void )
+    public var valueChangeClosure: SegmentValueChangeClosure? = nil
     
     
 }
@@ -25,6 +29,13 @@ extension SegmentValue {
     public init(values: [String],_ selectedValue:Int = 0) {
         self.values = values
         self.selectedValue = selectedValue
+    }
+    
+    
+    public init(_ values: [String],_ selectedValue:Int = 0, valueChangeClosure: @escaping SegmentValueChangeClosure) {
+        self.values = values
+        self.selectedValue = selectedValue
+        self.valueChangeClosure = valueChangeClosure
     }
     
 }

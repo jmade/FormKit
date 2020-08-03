@@ -596,6 +596,10 @@ extension FormController {
 }
 
 
+
+
+
+
 extension FormController {
     // MARK: - Update FormSection -
     
@@ -849,6 +853,8 @@ extension FormController: UpdateFormValueDelegate {
                     if let segmentValue = formValue as? SegmentValue {
                         if segmentValue != segment {
                             dataSource.updateWith(formValue: segmentValue, at: path)
+                            print("can Call ValueChange Closure")
+                            segmentValue.valueChangeClosure(segmentValue,self,path)
                         }
                     }
                 case .numerical(let numerical):
