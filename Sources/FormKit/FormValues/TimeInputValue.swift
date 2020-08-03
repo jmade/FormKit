@@ -176,9 +176,9 @@ public final class TimeInputCell: UITableViewCell, Activatable {
             if let timeValue = formValue {
                 if oldValue == nil {
                     evaluateButtonBar()
-                    titleLabel.text = timeValue.title
-                    textField.text = timeValue.time
                 }
+                titleLabel.text = timeValue.title
+                textField.text = timeValue.time
             }
         }
     }
