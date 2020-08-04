@@ -182,16 +182,11 @@ public final class SegmentCell: UITableViewCell {
     func valueChanged(_ sender:UISegmentedControl) {
         FormConstant.makeSelectionFeedback()
         if let segmentValue = formValue {
-            
-            let newValue = SegmentValue(from: segmentValue,sender.selectedSegmentIndex)
-            print(" newValue -> \(newValue) ")
-            
             updateFormValueDelegate?.updatedFormValue(
-                newValue,
+                SegmentValue(from: segmentValue,sender.selectedSegmentIndex),
                 indexPath
             )
         }
-    
     }
     
 }
