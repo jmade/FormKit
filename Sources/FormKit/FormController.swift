@@ -272,11 +272,6 @@ open class FormController: UITableViewController, CustomTransitionable {
     open override func viewDidLoad() {
         super.viewDidLoad()
         
-        let notificationCenter = NotificationCenter.default
-        notificationCenter.addObserver(self, selector: #selector(adjustForKeyboard), name: UIResponder.keyboardWillHideNotification, object: nil)
-        notificationCenter.addObserver(self, selector: #selector(adjustForKeyboard), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
-        
-        
         if let loadingMessage = checkInMessage {
             print("[FormController] we got `checkInMessage`")
             if #available(iOS 13.0, *) {
@@ -285,88 +280,9 @@ open class FormController: UITableViewController, CustomTransitionable {
                 tableView.tableFooterView = ItemsLoadingView(message: loadingMessage, textStyle: .body, color: .black)
             }
         }
-        
-        
-       
-        
     }
     
-    
-    @objc func adjustForKeyboard(notification: Notification) {
-        guard let keyboardValue = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
 
-        let keyboardScreenEndFrame = keyboardValue.cgRectValue
-        let keyboardViewEndFrame = view.convert(keyboardScreenEndFrame, from: view.window)
-        if notification.name == UIResponder.keyboardWillHideNotification {
-            //print("KEYBOARD HIDE")
-            tableView.contentInset = defaultContentInsets
-            tableView.scrollIndicatorInsets = tableView.contentInset
-        } else {
-            //print("KEYBOARD SHOW")
-            dealWithKeyboard(keyboardViewEndFrame)
-        }
-    }
-    
-  
-    
-    // MARK: - Keyboard -
-    private func dealWithKeyboard(_ keyboardFrame:CGRect) {
-        var shouldMoveViewUp = false
-        let keyboardSize = keyboardFrame.size
-        let topOfKeyboard = self.view.frame.height - keyboardSize.height
-        
-      
-        
-         
-        
-        if let firstRespondingPath = tableView.indexPathOfFirstResponder() {
-            let cellRect = tableView.rectForRow(at: firstRespondingPath)
-            //print(" cellRectfor row -> \(cellRect) ")
-            
-            if let superView = tableView.superview {
-                let convertedRect = tableView.convert(cellRect, to: superView)
-               // print(" convertedRect -> \(convertedRect) ")
-                let bottomOfActiveCell = convertedRect.y + convertedRect.height
-                
-               // print("KeyboardTop: \(Int(topOfKeyboard) ) | ActiveCellBottom: \(Int(bottomOfActiveCell))")
-                
-                shouldMoveViewUp = bottomOfActiveCell > topOfKeyboard
-                
-                //print("Should Move Up? \(shouldMoveViewUp)")
-            }
-            
-            
-//            if let cell = tableView.cellForRow(at: firstRespondingPath) {
-//                //print("Cell Frame: \(cell.frame)")
-//                print("Self Frame: \(self.view.frame)")
-//                let windowCellFrame = view.convert(cell.frame, from: tableView)
-//                print(" windowCellFrame -> \(windowCellFrame) ")
-//                let convertedCellBottom = cell.convert(CGPoint(x: 0, y: cell.frame.y), to: self.view)
-//                //print(" convertedCellBottom -> \(convertedCellBottom) ")
-//                let convertedCellRect = cell.convert(cell.frame, to: self.view)
-//                //print(" convertedCellRect -> \(convertedCellRect) ")
-//                //print("bottom of Converted Cell : \(convertedCellRect.maxY)")
-//            }
-            
-            
-            
-            
-//            let bottomOfActiveCell = cellRect.maxY
-//
-//            print("KeyboardTop: \(Int(topOfKeyboard) ) | ActiveCellBottom: \(Int(bottomOfActiveCell))")
-//
-//            shouldMoveViewUp = bottomOfActiveCell > topOfKeyboard
-//
-//            print("Should Move Up? \(shouldMoveViewUp)")
-            
-        }
-        
-//        if (shouldMoveViewUp) {
-//            //self.view.frame.origin.y = 0 - keyboardSize.height
-//            tableView.contentInset = UIEdgeInsets(top: defaultContentInsets.top, left: defaultContentInsets.left, bottom: keyboardSize.height - view.safeAreaInsets.bottom, right: defaultContentInsets.right)
-//            tableView.scrollIndicatorInsets = tableView.contentInset
-//        }
-    }
     
     
     override open func viewWillAppear(_ animated: Bool) {
