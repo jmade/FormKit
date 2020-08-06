@@ -84,8 +84,9 @@ extension MapActionValue: FormValueDisplayable {
     public func didSelect(_ formController: Controller, _ path: IndexPath) {
         
         let updateClosure: MapActionUpdateClosure = { [weak formController] (mapActionValue) in
-            
+            print("Got a new MapAction: \(mapActionValue)")
             let mapValuePath = IndexPath(row: (path.row-1), section: path.row)
+            
             if let mapValue = mapActionValue.mapValue {
                 formController?.dataSource.updateWith(formValue: mapValue, at: mapValuePath)
             }

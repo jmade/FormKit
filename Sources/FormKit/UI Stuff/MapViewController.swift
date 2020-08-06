@@ -146,9 +146,16 @@ extension MapViewController: HandleMapSearch {
         
         selectedPin = placemark
         
+        
+        
+       
+        
+        
         guard let mapView = mapView else {
             mapValueChangeClosure?(self.mapValue)
-            mapActionUpdateClosure?(.init())
+            mapActionUpdateClosure?(
+                 MapActionValue(placemark.searchItem.primary, placemark.searchItem.secondary, self.mapValue)
+            )
             return
         }
         
@@ -180,7 +187,11 @@ extension MapViewController: HandleMapSearch {
         mapView.setRegion(region, animated: true)
         
         mapValueChangeClosure?(self.mapValue)
-        mapActionUpdateClosure?(.init())
+        
+        mapActionUpdateClosure?(
+             MapActionValue(placemark.searchItem.primary, placemark.searchItem.secondary, self.mapValue)
+        )
+        
     }
     
 }
