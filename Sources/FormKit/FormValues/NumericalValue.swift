@@ -13,11 +13,11 @@ public struct NumericalValue: Equatable, Hashable {
     
     public var customKey:String? = nil
     
-    let title:String
-    let value:String
-    var style:Style = .hoizontalDiscrete
-    var numberType: NumberType = .float
-    var useDirectionButtons:Bool = true
+    public let title:String
+    public let value:String
+    public var style:Style = .hoizontalDiscrete
+    public var numberType: NumberType = .float
+    public var useDirectionButtons:Bool = true
     
 }
 
@@ -69,6 +69,12 @@ extension NumericalValue: FormValue {
                return FormItem.numerical(self)
            }
        }
+    
+}
+
+
+extension NumericalValue {
+    
     
 }
 
