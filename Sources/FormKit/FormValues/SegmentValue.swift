@@ -9,7 +9,7 @@ public struct SegmentValue: FormValue, TableViewSelectable {
     
     public var formItem: FormItem {
         get {
-            return FormItem.segment(self)
+            return .segment(self)
         }
     }
     

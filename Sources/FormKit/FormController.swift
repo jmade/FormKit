@@ -827,6 +827,12 @@ extension FormController: UpdateFormValueDelegate {
                             dataSource.updateWith(formValue: sliderInputValue, at: path)
                         }
                     }
+                case .map(let mapValue):
+                    if let mapInputValue = formValue as? MapValue {
+                        if mapInputValue != mapValue {
+                            dataSource.updateWith(formValue: mapInputValue, at: path)
+                        }
+                    }
                 }
             }
         }
