@@ -166,7 +166,8 @@ public final class MapValueCell: UITableViewCell {
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        contentView.heightAnchor.constraint(equalToConstant: 220.0).isActive = true
+        activateDefaultHeightAnchorConstraint(220)
+        //contentView.heightAnchor.constraint(equalToConstant: 220.0).isActive = true
     }
     
     override public func prepareForReuse() {
@@ -234,28 +235,3 @@ extension MapValueCell: MKMapViewDelegate  {
     
 }
 
-
-////: MARK: - CircleGeoZoneRenderer -
-//public class CircleGeoZoneRenderer : MKCircleRenderer {
-//    
-//    override public func applyStrokeProperties(to context: CGContext, atZoomScale zoomScale: MKZoomScale) {
-//        super.applyStrokeProperties(to: context, atZoomScale: zoomScale)
-//        context.setLineWidth(4.0)
-//        if #available(iOS 13.0, *) {
-//            context.setStrokeColor(UIColor.systemRed.cgColor)
-//        } else {
-//            context.setStrokeColor(UIColor.red.cgColor)
-//        }
-//
-//    }
-//    
-//    public override func applyFillProperties(to context: CGContext, atZoomScale zoomScale: MKZoomScale) {
-//        super.applyFillProperties(to: context, atZoomScale: zoomScale)
-//        if #available(iOS 13.0, *) {
-//            context.setStrokeColor(UIColor.systemRed.withAlphaComponent(0.1).cgColor)
-//        } else {
-//            context.setStrokeColor(UIColor.green.withAlphaComponent(0.1).cgColor)
-//        }
-//        
-//    }
-//}
