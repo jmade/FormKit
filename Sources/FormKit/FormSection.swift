@@ -85,6 +85,28 @@ extension FormSection {
         self.rows = [value.formItem]
     }
     
+  
+    
+    
+    
+}
+
+
+
+extension FormSection {
+    
+    
+    public convenience init(_ mapValue:MapValue = MapValue(),_ actionValues:[ActionValue]) {
+        self.init()
+        
+        self.rows = [ [mapValue],[actionValues]  ].reduce(+,[])
+    }
+    
+    public convenience init(mapValue:MapValue? = nil) {
+        self.init()
+        self.rows = [ [MapValue()],[actionValues]  ].reduce(+,[])
+    }
+    
 }
 
 

@@ -54,7 +54,7 @@ extension MapValue: FormValueDisplayable {
 
 
 
-extension MapValue {
+public extension MapValue {
     
     var coordinate: CLLocationCoordinate2D? {
         guard let lat = lat, let lng = lng else {
@@ -90,6 +90,13 @@ extension MapValue: Hashable, Equatable {
 // init
 
 public extension MapValue {
+    
+    
+    init() {
+        self.lng = nil
+        self.lat = nil
+        self.radius = nil
+    }
     
     
     init(lat:Double,lng:Double,_ radius:Measurement<UnitLength>? = nil) {
