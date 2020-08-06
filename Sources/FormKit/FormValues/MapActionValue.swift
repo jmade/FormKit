@@ -41,6 +41,10 @@ public extension MapActionValue {
 // MARK: - FormValue -
 extension MapActionValue: FormValue {
     
+    var idKey: String {
+        return "\(identifier.uuidString.split(separator: "-")[1])"
+       }
+    
     public var formItem: FormItem {
         .mapAction(self)
     }
@@ -72,7 +76,7 @@ extension MapActionValue: FormValueDisplayable {
     public typealias Cell = MapActionValueCell
     
     public var cellDescriptor: FormCellDescriptor {
-        return FormCellDescriptor("\(Cell.identifier)", configureCell, didSelect)
+        return FormCellDescriptor("\(Cell.identifier)-\(idKey)", configureCell, didSelect)
     }
     
     public func configureCell(_ formController: Controller, _ cell: Cell, _ path: IndexPath) {
@@ -85,7 +89,7 @@ extension MapActionValue: FormValueDisplayable {
         
         let updateClosure: MapActionUpdateClosure = { [weak formController] (mapActionValue) in
             print("Got a new MapAction: \(mapActionValue)")
-            let mapValuePath = IndexPath(row: (path.row-1), section: path.row)
+            let mapValuePath = IndexPath(row: (path.row-1), section: path.section)
             
             if let mapValue = mapActionValue.mapValue {
                 formController?.dataSource.updateWith(formValue: mapValue, at: mapValuePath)
