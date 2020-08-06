@@ -3,27 +3,31 @@ import MapKit
 
 // needs section inits too
 
+
+
+
 // MARK: - MapValue -
 public struct MapValue: Codable {
     let identifier: UUID = UUID()
-    public var customKey:String? = "ActionValue"
+    public var customKey:String? = "MapValue"
     var lat: Double? = nil
     var lng: Double? = nil
     var radius: Double? = nil
-    
-    //var coordinate:CLLocationCoordinate2D? = nil
-    //var radius:Measurement<UnitLength>? = nil
 }
 
+public typealias MapValueChangeClosure = (MapValue) -> ()
+
+
+
+// MARK: - FormValue -
 extension MapValue: FormValue {
     
     public var formItem: FormItem {
         .map(self)
     }
-   
-    
     
 }
+
 
 //: MARK: - FormValueDisplayable -
 extension MapValue: FormValueDisplayable {
