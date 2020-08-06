@@ -89,8 +89,6 @@ extension MapActionValue: FormValueDisplayable {
         
         let updateClosure: MapActionUpdateClosure = { [weak formController] (mapActionValue) in
             
-            print("New Value")
-            
             let mapValuePath = IndexPath(row: (path.row-1), section: path.section)
             
             if let mapValue = mapActionValue.mapValue {
@@ -102,9 +100,7 @@ extension MapActionValue: FormValueDisplayable {
 
         }
         
-        print("Loading map with: \(String(describing: mapValue))")
-        
-        let mapVC = MapViewController(mapValue: self.mapValue)
+        let mapVC = MapViewController(mapActionValue: self)
         mapVC.mapActionUpdateClosure = updateClosure
         formController.navigationController?.pushViewController(mapVC, animated: true)
         
