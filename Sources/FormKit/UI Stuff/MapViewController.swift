@@ -10,7 +10,7 @@ import UIKit
 import MapKit
 
 protocol HandleMapSearch {
-    func dropPinZoomIn(placemark:MKPlacemark)
+    func dropPinZoomIn(placemark:MKPlacemark,searchItem:SearchResultItem?)
 }
 
 
@@ -20,18 +20,26 @@ final class MapViewController: UIViewController {
     public var mapValueChangeClosure:MapValueChangeClosure? = nil
     public var mapActionUpdateClosure: MapActionUpdateClosure? = nil
     
+    private var searchItem: SearchResultItem? = nil
+    
     var mapView: MKMapView?
     
     private var radius:Measurement<UnitLength>? = nil
     
     private var selectedPin:MKPlacemark? = nil
     
+    
     private var mapValue:MapValue {
         guard let placemark = selectedPin else {
-            return .init(lat: Double(), lng: Double(), radius)
+            return .init(lat: Double(), lng: Double(), self.radius)
         }
-        return .init(mapItem: MKMapItem(placemark: placemark), radius)
+        return .init(mapItem: MKMapItem(placemark: placemark), self.radius)
     }
+    
+    private var mapActionValue: MapActionValue {
+        return .init(searchItem?.primary, searchItem?.secondary, mapValue)
+    }
+    
     
     // Search
     private var locationSearchTable:LocationSearchTable? = nil
@@ -55,6 +63,18 @@ final class MapViewController: UIViewController {
             self.radius = mapValue.measurement
         }
     }
+    
+    
+    init(mapActionValue:MapActionValue) {
+        super.init(nibName: nil, bundle: nil)
+        if let mapValue = mapActionValue.mapValue {
+            self.selectedPin = mapValue.placemark
+            self.radius = mapValue.measurement
+        }
+        
+        self.searchItem = SearchResultItem(primary: mapActionValue.primary, secondary: mapActionValue.secondary)
+    }
+    
     
     override func loadView() {
         let view = UIView()
@@ -94,8 +114,10 @@ final class MapViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
+
         if let loadedPin = selectedPin {
-            dropPinZoomIn(placemark:loadedPin)
+            displayAnnotationAt(coordinate: loadedPin.coordinate, title: searchItem?.primary, subtitle: searchItem?.secondary)
+            
         }
         
     }
@@ -151,39 +173,49 @@ extension MapViewController: MKMapViewDelegate  {
 // MARK: - HandleMapSearch -
 extension MapViewController: HandleMapSearch {
     
+    func dropPinZoomIn(placemark: MKPlacemark, searchItem: SearchResultItem?) {
+        
+        self.searchItem = searchItem
+        self.selectedPin = placemark
+        
+        displayAnnotationAt(coordinate: placemark.coordinate, title: searchItem?.primary, subtitle: searchItem?.secondary)
+        
+         //mapValueChangeClosure?(self.mapValue)
+         mapActionUpdateClosure?(self.mapActionValue)
+    }
     
-    func dropPinZoomIn(placemark:MKPlacemark) {
+    
+    private func load(_ mapActionValue:MapActionValue) {
         
-        selectedPin = placemark
-        
-        
-        
-       
-        
-        
-        guard let mapView = mapView else {
-            mapValueChangeClosure?(self.mapValue)
-            mapActionUpdateClosure?(
-                 MapActionValue(placemark.searchItem.primary, placemark.searchItem.secondary, self.mapValue)
-            )
-            return
+        if let coord = mapActionValue.mapValue?.coordinate {
+            self.selectedPin = MKPlacemark(coordinate: coord)
+            self.searchItem = SearchResultItem(primary: mapActionValue.primary, secondary: mapActionValue.secondary)
+            
+            displayAnnotationAt(coordinate: coord, title: mapActionValue.primary, subtitle: mapActionValue.secondary)
         }
         
+    }
+    
+    
+    
+    
+    private func displayAnnotationAt(coordinate: CLLocationCoordinate2D,title: String?,subtitle: String? ) {
+        
+        guard let mapView = mapView else {
+            return
+        }
         
         mapView.removeAnnotations(mapView.annotations)
         
         let annotation = MKPointAnnotation()
-        annotation.coordinate = placemark.coordinate
-        annotation.title = placemark.name
+        annotation.coordinate = coordinate
+        annotation.title = title
+        annotation.subtitle = subtitle
         
-        if let city = placemark.locality,
-        let state = placemark.administrativeArea {
-            annotation.subtitle = "\(city) \(state)"
-        }
         
         if let radius = radius {
             mapView.addOverlay(
-                MKCircle(center: placemark.coordinate,
+                MKCircle(center: coordinate,
                          radius: radius.converted(to: .meters).value
                 ),
                 level: .aboveRoads
@@ -193,16 +225,33 @@ extension MapViewController: HandleMapSearch {
         mapView.addAnnotation(annotation)
         
         let span = MKCoordinateSpan(latitudeDelta: 0.039, longitudeDelta: 0.039)
-        let region = MKCoordinateRegion(center: placemark.coordinate, span: span)
+        let region = MKCoordinateRegion(center: coordinate, span: span)
         mapView.setRegion(region, animated: true)
         
-        mapValueChangeClosure?(self.mapValue)
-        
-        mapActionUpdateClosure?(
-             MapActionValue(placemark.searchItem.primary, placemark.searchItem.secondary, self.mapValue)
-        )
-        
     }
+    
+    
+    
+//    private func handlePlacemark(_ placemark:MKPlacemark) {
+//
+//        var subtitle:String? = nil
+//        if let city = placemark.locality,
+//            let state = placemark.administrativeArea {
+//            annotation.subtitle = "\(city) \(state)"
+//        }
+//
+//
+//
+//    }
+    
+    
+//
+//    func dropPinZoomIn(placemark:MKPlacemark) {
+//
+//
+//
+//
+//    }
     
 }
 

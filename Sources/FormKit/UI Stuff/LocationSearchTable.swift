@@ -161,7 +161,7 @@ extension LocationSearchTable : UISearchResultsUpdating {
 extension LocationSearchTable {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let item = matchingItems[indexPath.row]
-        handleMapSearchDelegate?.dropPinZoomIn(placemark: item.placemark)
+        handleMapSearchDelegate?.dropPinZoomIn(placemark: item.placemark, searchItem: item.placemark.searchItem)
         dismiss(animated: true, completion: nil)
     }
     
