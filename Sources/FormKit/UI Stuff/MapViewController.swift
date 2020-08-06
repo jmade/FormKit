@@ -89,6 +89,16 @@ final class MapViewController: UIViewController {
         resultSearchController?.hidesNavigationBarDuringPresentation = false
         definesPresentationContext = true
     }
+    
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        if let loadedPin = selectedPin {
+            dropPinZoomIn(placemark:loadedPin)
+        }
+        
+    }
 
     
     
