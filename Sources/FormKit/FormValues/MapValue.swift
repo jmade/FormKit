@@ -63,6 +63,15 @@ public extension MapValue {
         return .init(latitude: lat, longitude: lng)
     }
     
+    
+    var placemark: MKPlacemark? {
+        guard let coordinate = coordinate else {
+            return nil
+        }
+        return .init(coordinate: coordinate)
+    }
+    
+    
     var measurement:Measurement<UnitLength>? {
         guard let radius = radius else {
             return nil
@@ -91,11 +100,10 @@ extension MapValue: Hashable, Equatable {
 
 public extension MapValue {
     
-    
-    init() {
-        self.lng = nil
-        self.lat = nil
-        self.radius = nil
+    init(_ lat:Double? = nil,_ lng:Double? = nil,_ radius:Measurement<UnitLength>? = nil) {
+        self.lng = lng
+        self.lat = lat
+        self.radius = radius?.converted(to: .meters).value
     }
     
     

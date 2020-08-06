@@ -3,7 +3,7 @@ import MapKit
 
 
 // MARK: - MapActionValue -
-public struct MapActionValue: Codable {
+public struct MapActionValue: Codable, CustomKeyProvidable {
     let identifier: UUID = UUID()
     
     public var customKey:String? = "MapActionValue"
@@ -14,11 +14,13 @@ public struct MapActionValue: Codable {
 }
 
 
-public extension MapActionValue {
-    
-    init()
-    
-}
+//public extension MapActionValue {
+//
+//    init(){
+//
+//    }
+//
+//}
 
 
 
@@ -32,7 +34,7 @@ extension MapActionValue: FormValueDisplayable {
     public typealias Cell = MapActionValueCell
     
     public var cellDescriptor: FormCellDescriptor {
-        return FormCellDescriptor("\(Cell.identifier)_\(idKey)", configureCell, didSelect)
+        return FormCellDescriptor("\(Cell.identifier)", configureCell, didSelect)
         /*
         switch selectionType {
         case .single:
@@ -55,7 +57,7 @@ extension MapActionValue: FormValueDisplayable {
         
         
         
-        
+        /*
         let changeClosure: ListSelectionChangeClosure = { [weak formController] (selectedValues) in
             if let formItem = formController?.dataSource.itemAt(path) {
                 switch formItem {
@@ -72,6 +74,7 @@ extension MapActionValue: FormValueDisplayable {
         let descriptor = self.makeDescriptor(changeClosure)
         let listSelectionController = ListSelectViewController(descriptor: descriptor)
         formController.navigationController?.pushViewController(listSelectionController, animated: true)
+        */
         
     }
     
@@ -116,13 +119,13 @@ final public class MapActionValueCell: UITableViewCell {
         return label
     }()
     
-    var formValue : MapSearchValueCell? {
+    var formValue : MapActionValue? {
         didSet {
             if let listSelectValue = formValue {
 //                titleLabel.text = listSelectValue.title
 //                selectionLabel.text = listSelectValue.selectionTitle
                 if let path = indexPath {
-                    updateFormValueDelegate?.updatedFormValue(listSelectValue, path)
+                    //updateFormValueDelegate?.updatedFormValue(listSelectValue, path)
                 }
             }
             
