@@ -89,15 +89,15 @@ extension MapActionValue: FormValueDisplayable {
         
         let updateClosure: MapActionUpdateClosure = { [weak formController] (mapActionValue) in
             
+            let mapValuePath = IndexPath(row: (path.row-1), section: path.section)
+            
             if let mapValue = mapActionValue.mapValue {
-                let mapValuePath = IndexPath(row: (path.row-1), section: path.section)
                 formController?.dataSource.updateWith(formValue: mapValue, at: mapValuePath)
-                formController?.tableView.reloadRows(at: [mapValuePath,path], with: .none)
-            } else {
-                formController?.dataSource.updateWith(formValue: mapActionValue, at: path)
-                formController?.tableView.reloadRows(at: [path], with: .none)
             }
             
+            formController?.dataSource.updateWith(formValue: mapActionValue, at: path)
+            formController?.tableView.reloadRows(at: [mapValuePath,path], with: .none)
+
         }
         
         let mapVC = MapViewController(mapActionValue: self)
