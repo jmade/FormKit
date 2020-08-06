@@ -26,6 +26,14 @@ extension MapActionValue: Hashable, Equatable {
 }
 
 
+public extension MapActionValue {
+    init(_ primary:String? = nil,_ secondary: String? = nil,_ mapValue:MapValue? = nil) {
+        self.primary = primary
+        self.secondary = secondary
+        self.mapValue = mapValue
+    }
+}
+
 
 
 
