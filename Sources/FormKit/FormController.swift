@@ -833,6 +833,13 @@ extension FormController: UpdateFormValueDelegate {
                             dataSource.updateWith(formValue: mapInputValue, at: path)
                         }
                     }
+                case .mapAction(let mapAction):
+                    if let mapActionInputValue = formValue as? MapActionValue {
+                        if mapActionInputValue != mapAction {
+                            dataSource.updateWith(formValue: mapActionInputValue, at: path)
+                            tableView.reloadRows(at: [path], with: .automatic)
+                        }
+                    }
                 }
             }
         }

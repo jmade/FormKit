@@ -28,6 +28,7 @@ public enum FormItem {
     case switchValue(SwitchValue)
     case slider(SliderValue)
     case map(MapValue)
+    case mapAction(MapActionValue)
 }
 
 // MARK: - CellDescriptable -
@@ -67,6 +68,8 @@ extension FormItem: FormCellDescriptable {
             return sliderValue.cellDescriptor
         case .map(let mapValue):
             return mapValue.cellDescriptor
+        case .mapAction(let mapActionValue):
+            return mapActionValue.cellDescriptor
         }
     }
 }
@@ -112,6 +115,8 @@ extension FormItem: Hashable, Equatable {
             return sliderValue.hashValue
         case .map(let mapValue):
             return mapValue.hashValue
+        case .mapAction(let mapActionValue):
+            return mapActionValue.hashValue
         }
     }
     
@@ -155,6 +160,8 @@ extension FormItem {
             return sliderValue.encodedValue()
         case .map(let mapValue):
             return mapValue.encodedValue()
+        case .mapAction(let mapActionValue):
+            return mapActionValue.encodedValue()
         }
     }
     

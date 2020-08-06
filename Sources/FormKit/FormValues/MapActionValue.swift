@@ -3,7 +3,7 @@ import MapKit
 
 
 // MARK: - MapActionValue -
-public struct MapActionValue: Codable, CustomKeyProvidable {
+public struct MapActionValue: Codable {
     let identifier: UUID = UUID()
     
     public var customKey:String? = "MapActionValue"
@@ -14,17 +14,47 @@ public struct MapActionValue: Codable, CustomKeyProvidable {
 }
 
 
-//public extension MapActionValue {
-//
-//    init(){
-//
-//    }
-//
-//}
+extension MapActionValue: Hashable, Equatable {
+    
+    public func hash(into hasher: inout Hasher) {
+        return hasher.combine(identifier)
+    }
+    
+    public static func == (lhs: MapActionValue, rhs: MapActionValue) -> Bool {
+        return lhs.identifier == rhs.identifier
+    }
+}
 
 
 
-public typealias MapActionUpdateClosure = (MapActionValue?) -> Void
+
+
+
+// MARK: - FormValue -
+extension MapActionValue: FormValue {
+    
+    public var formItem: FormItem {
+        .mapAction(self)
+    }
+    
+}
+
+
+extension MapActionValue {
+    
+    func newWith(_ primary: String?, secondary: String?, mapValue: MapValue?) -> MapActionValue {
+        return .init(customKey: self.customKey,
+                     primary: (primary == nil) ? self.primary : primary,
+                     secondary: (secondary == nil) ? self.secondary : secondary,
+                     mapValue: (mapValue == nil) ? self.mapValue : mapValue
+        )
+    }
+    
+}
+
+
+
+public typealias MapActionUpdateClosure = (MapActionValue) -> Void
 
 
 // MARK: - FormValueDisplayable -
@@ -35,14 +65,6 @@ extension MapActionValue: FormValueDisplayable {
     
     public var cellDescriptor: FormCellDescriptor {
         return FormCellDescriptor("\(Cell.identifier)", configureCell, didSelect)
-        /*
-        switch selectionType {
-        case .single:
-            return FormCellDescriptor("\(Cell.identifier)_\(idKey)", configureCell, didSelect)
-        case .multiple:
-            return FormCellDescriptor("\(Cell.identifier)_\(idKey)", configureCell, didSelect)
-        }
-        */
     }
     
     public func configureCell(_ formController: Controller, _ cell: Cell, _ path: IndexPath) {
@@ -53,28 +75,38 @@ extension MapActionValue: FormValueDisplayable {
 
     public func didSelect(_ formController: Controller, _ path: IndexPath) {
         
-        
-        
-        
-        
-        /*
-        let changeClosure: ListSelectionChangeClosure = { [weak formController] (selectedValues) in
+        let updateClosure: MapActionUpdateClosure = { [weak formController] (mapActionValue) in
+            
+            mapActionValue.mapValue
+            
+            // or update the section?
+            
             if let formItem = formController?.dataSource.itemAt(path) {
                 switch formItem {
-                case .listSelection(let list):
-                    let new = list.newWith(selectedValues)
-                    formController?.dataSource.updateWith(formValue: new, at: path)
+                case .mapAction(let mapAction):
+                    let newAction = mapActionValue
+                    formController?.dataSource.updateWith(formValue: newAction, at: path)
                     formController?.tableView.reloadRows(at: [path], with: .none)
                 default:
                     break
                 }
             }
+            
+            /*
+             find the mapaction
+             try reloading section...
+            then just the top 2 cells
+            then just finding that cell and just updating it with new mapValue
+            */
+            
+            
         }
         
-        let descriptor = self.makeDescriptor(changeClosure)
-        let listSelectionController = ListSelectViewController(descriptor: descriptor)
-        formController.navigationController?.pushViewController(listSelectionController, animated: true)
-        */
+        
+        
+        let mapVC = MapViewController(mapValue: self.mapValue)
+        mapVC.mapActionUpdateClosure = updateClosure
+        formController.navigationController?.pushViewController(mapVC, animated: true)
         
     }
     
