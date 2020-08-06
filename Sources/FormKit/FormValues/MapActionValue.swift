@@ -77,32 +77,15 @@ extension MapActionValue: FormValueDisplayable {
         
         let updateClosure: MapActionUpdateClosure = { [weak formController] (mapActionValue) in
             
-            mapActionValue.mapValue
-            
-            // or update the section?
-            
-            if let formItem = formController?.dataSource.itemAt(path) {
-                switch formItem {
-                case .mapAction(let mapAction):
-                    let newAction = mapActionValue
-                    formController?.dataSource.updateWith(formValue: newAction, at: path)
-                    formController?.tableView.reloadRows(at: [path], with: .none)
-                default:
-                    break
-                }
+            let mapValuePath = IndexPath(row: (path.row-1), section: path.row)
+            if let mapValue = mapActionValue.mapValue {
+                formController?.dataSource.updateWith(formValue: mapValue, at: mapValuePath)
             }
             
-            /*
-             find the mapaction
-             try reloading section...
-            then just the top 2 cells
-            then just finding that cell and just updating it with new mapValue
-            */
-            
-            
+            formController?.dataSource.updateWith(formValue: mapActionValue, at: path)
+            formController?.tableView.reloadRows(at: [mapValuePath,path], with: .none)
+
         }
-        
-        
         
         let mapVC = MapViewController(mapValue: self.mapValue)
         mapVC.mapActionUpdateClosure = updateClosure
@@ -130,70 +113,79 @@ final public class MapActionValueCell: UITableViewCell {
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
     var indexPath: IndexPath?
     
-    lazy var titleLabel: UILabel = {
-        let label = UILabel()
-        if #available(iOS 13.0, *) {
-            label.textColor = .label
-        }
-        label.font = UIFont.preferredFont(forTextStyle: .body)
-        label.textAlignment = .left
-        return label
-    }()
     
-    lazy var selectionLabel: UILabel = {
-        let label = UILabel()
-        if #available(iOS 13.0, *) {
-            label.textColor = .secondaryLabel
-        } else {
-             label.textColor = .gray
-        }
-        label.textAlignment = .right
-        return label
-    }()
-    
-    var formValue : MapActionValue? {
+    var formValue: MapActionValue? {
         didSet {
-            if let listSelectValue = formValue {
-//                titleLabel.text = listSelectValue.title
-//                selectionLabel.text = listSelectValue.selectionTitle
-                if let path = indexPath {
-                    //updateFormValueDelegate?.updatedFormValue(listSelectValue, path)
-                }
-            }
+            primaryTextLabel.text = formValue?.primary
+            secondaryTextLabel.text = formValue?.secondary
             
         }
     }
     
+    
+    lazy var primaryTextLabel: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .left
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        label.font = .preferredFont(forTextStyle: .body)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(label)
+        return label
+    }()
+    
+    
+    lazy var secondaryTextLabel: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .left
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle:  .caption2).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(label)
+        return label
+    }()
+    
+    
     required init?(coder aDecoder: NSCoder) {fatalError()}
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-        [titleLabel,selectionLabel].forEach({
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview($0)
-        })
+       
+       override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+           super.init(style: style, reuseIdentifier: reuseIdentifier)
+           
+           let defaultTableViewCellHeightConstraint = contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 44.0)
+           defaultTableViewCellHeightConstraint.priority = UILayoutPriority(501)
+           
+           NSLayoutConstraint.activate([
+               defaultTableViewCellHeightConstraint,
+               
+               primaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+               primaryTextLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+               primaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+               
+               secondaryTextLabel.topAnchor.constraint(equalTo: primaryTextLabel.bottomAnchor),
+               secondaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+               secondaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+               
+               contentView.bottomAnchor.constraint(equalTo: secondaryTextLabel.bottomAnchor, constant: 8.0),
+              
+               
+           ])
         
-        activateDefaultHeightAnchorConstraint()
-        
-        NSLayoutConstraint.activate([
-            titleLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
-            selectionLabel.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
-            selectionLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-            selectionLabel.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 8.0),
-            ])
         
         accessoryType = .disclosureIndicator
-        
-        titleLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
-        selectionLabel.setContentCompressionResistancePriority(UILayoutPriority(rawValue: 499), for: .horizontal)
+           
+       }
+    
+    
+    public override func prepareForReuse() {
+        super.prepareForReuse()
+        primaryTextLabel.text = nil
+        secondaryTextLabel.text = nil
     }
     
-    
-    override public func prepareForReuse() {
-        titleLabel.text = nil
-        selectionLabel.text = nil
-        formValue = nil
-        super.prepareForReuse()
+       
+    public func configureCell(_ mapActionValue:MapActionValue) {
+        formValue = mapActionValue
     }
     
 }
