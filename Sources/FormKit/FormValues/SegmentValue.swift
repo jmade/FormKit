@@ -61,6 +61,14 @@ extension SegmentValue {
     }
     
     
+    public init(_ values: [String],_ selectedValue:Int,_ valueChangeClosure: @escaping SegmentValueChangeClosure) {
+        self.uuid = UUID().uuidString
+        self.values = values
+        self.selectedValue = selectedValue
+        self.valueChangeClosure = valueChangeClosure
+    }
+    
+    
     public init(from:SegmentValue,_ selectedIndex:Int) {
         self.uuid = from.uuid
         self.selectedValue = selectedIndex
