@@ -354,6 +354,13 @@ final class ListSelectViewController: UITableViewController, UISearchResultsUpda
         }
     }
     
+    
+    override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        cell.accessoryType = dataSource[indexPath.row].selected ? .checkmark : .none
+    }
+    
+    
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: ListSelectViewController.ReuseID, for: indexPath)
         let row = dataSource[indexPath.row]

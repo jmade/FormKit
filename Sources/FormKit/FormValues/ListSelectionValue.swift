@@ -213,7 +213,7 @@ extension ListSelectionValue: FormValueDisplayable {
 
 extension ListSelectionValue {
     
-    static func DemoSingle() -> ListSelectionValue {
+   public static func DemoSingle() -> ListSelectionValue {
         return
             ListSelectionValue(
                 title: "Single-Demo",
@@ -223,7 +223,7 @@ extension ListSelectionValue {
     }
     
     
-    static func DemoMulti() -> ListSelectionValue {
+   public static func DemoMulti() -> ListSelectionValue {
         return
             ListSelectionValue(
                 title: "Multi-Demo",
