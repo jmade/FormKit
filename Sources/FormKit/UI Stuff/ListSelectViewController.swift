@@ -94,24 +94,27 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     private var dataSource: [SelectionRow] = [] {
         willSet {
             
-            print("Setting dataSource")
-            print("Number of Sections: \(tableView.numberOfSections)")
             
-            tableView.tableFooterView = nil
-            guard tableView.numberOfSections == 0 else {
-                tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
-                return
-            }
-            tableView.reloadData()
+            
             
         }
         
         
         didSet {
             
+            print("Setting dataSource")
+            print("Number of Sections: \(tableView.numberOfSections)")
+            
+            tableView.tableFooterView = nil
+            guard tableView.numberOfSections == 0 else {
+                tableView.reloadData()
+                return
+            }
+            tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
+            
 //            print("Setting dataSource")
 //            print("Number of Sections: \(tableView.numberOfSections)")
-//            
+//
 //            tableView.tableFooterView = nil
 //            guard tableView.numberOfSections == 0 else {
 //                tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
