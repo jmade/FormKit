@@ -347,7 +347,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
 
     // MARK: - TableView functions -
     public override func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
+        return dataSource.isEmpty ? 0 : 1
     }
     
     public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
