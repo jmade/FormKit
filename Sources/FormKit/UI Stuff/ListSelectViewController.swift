@@ -92,7 +92,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     private var completeDataSource:[SelectionRow] = []
     
     private var dataSource: [SelectionRow] = [] {
-        didSet {
+        willSet {
             
             print("Setting dataSource")
             print("Number of Sections: \(tableView.numberOfSections)")
@@ -103,6 +103,21 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
                 return
             }
             tableView.reloadData()
+            
+        }
+        
+        
+        didSet {
+            
+//            print("Setting dataSource")
+//            print("Number of Sections: \(tableView.numberOfSections)")
+//            
+//            tableView.tableFooterView = nil
+//            guard tableView.numberOfSections == 0 else {
+//                tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
+//                return
+//            }
+//            tableView.reloadData()
             
             if oldValue.isEmpty && dataSource.isEmpty == false {
                 
