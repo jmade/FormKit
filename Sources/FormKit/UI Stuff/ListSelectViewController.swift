@@ -108,6 +108,9 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
         }
     }
     
+    
+    // sectionTitles = []
+    
     private var sectionTile: String = ""
     
     /// setting the data from outside
@@ -161,6 +164,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
         }
         
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
+        unformatedData = (data,selected)
         formatData(data,selected)
         self.title = title
         
@@ -174,6 +178,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     public init(descriptor:ListSelectionControllerDescriptor) {
         super.init(style: descriptor.tableViewStyle)
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
+        unformatedData = (descriptor.listVales,descriptor.selectedIndicies)
         formatData(descriptor.listVales,descriptor.selectedIndicies)
         self.listSelectionChangeClosure = descriptor.selectionChangeClosure
         self.title = descriptor.title
@@ -186,6 +191,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     public init(descriptor:ListSelectionControllerDescriptor,loadingClosure: @escaping  ListSelectLoadingClosure) {
         super.init(style: descriptor.tableViewStyle)
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
+        unformatedData = (descriptor.listVales,descriptor.selectedIndicies)
         formatData(descriptor.listVales,descriptor.selectedIndicies)
         self.listSelectionChangeClosure = descriptor.selectionChangeClosure
         self.title = descriptor.title
@@ -249,6 +255,36 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     }
     
     
+   
+    
+    
+    public func setLoading() {
+        prepareTableForLoading()
+    }
+    
+    private func prepareTableForLoading() {
+           dataSource = []
+           sectionTile = ""
+           tableView.deleteSections(IndexSet(integersIn: 0..<tableView.numberOfSections), with: .top)
+           tableView.tableFooterView = ItemsLoadingView()
+       }
+    
+    
+    public func reloadExistingData() {
+        let existingData = self.unformatedData
+        setUnformatedData(existingData)
+    }
+    
+
+    public func setUnformatedData(_ unformated: ([String],[Int])) {
+        DispatchQueue.main.async(execute: { [weak self] in
+            self?.unformatedData = unformated
+        })
+    }
+      
+
+    
+    
     private func showDoNotDismiss() {
         let alert = UIAlertController(title: self.title ?? "",
                                       message: "Make a selection to continue.",
@@ -259,12 +295,9 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     }
     
     
+  
     
-    public func setUnformatedData(_ unformated: ([String],[Int])) {
-        DispatchQueue.main.async(execute: { [weak self] in
-            self?.unformatedData = unformated
-        })
-    }
+    
     
     private func formatData(_ data:[String],_ selected:[Int]) {
         var newDataSource: [SelectionRow] = []
