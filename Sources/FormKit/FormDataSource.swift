@@ -9,6 +9,20 @@ public typealias FormDataSourceUpdateClosure = ( (FormDataSource) -> Void )
 
 /// TODO: Consider turning this into a struct? and make the function a mutating one? would it change automattically?
 
+
+extension Array {
+    public subscript(safeIndex index: Int) -> Element? {
+        guard index >= 0, index < endIndex else {
+            return nil
+        }
+
+        return self[index]
+    }
+}
+
+
+
+
 public class FormDataSource {
     
     public var title:String = ""
