@@ -8,8 +8,10 @@
 
 import UIKit
 
+public typealias ListSelectLoadingClosure = (ListSelectViewController) -> Void
+
 // MARK: - ListSelectionValue -
-public struct ListSelectionValue: Equatable, Hashable {
+public struct ListSelectionValue {
     
     enum SelectionType { case single, multiple }
     var selectionType: SelectionType
@@ -20,10 +22,26 @@ public struct ListSelectionValue: Equatable, Hashable {
     var selectionMessage:String = "Select a Value"
     var color:UIColor? = nil
     
+    var loadingClosure: ListSelectLoadingClosure? = nil
+    
     public var customKey: String? = nil
     var uuid:String = UUID().uuidString
     
 }
+
+
+extension ListSelectionValue: Equatable, Hashable {
+    
+    public func hash(into hasher: inout Hasher) {
+        return hasher.combine(uuid)
+    }
+    
+    public static func == (lhs: ListSelectionValue, rhs: ListSelectionValue) -> Bool {
+        return lhs.uuid == rhs.uuid
+    }
+}
+
+
 
 extension ListSelectionValue {
     
@@ -55,7 +73,7 @@ extension ListSelectionValue {
         self.color = nil
     }
     
-    /// Mutt Selection
+    /// Multi Selection
     public init(title:String, values:[String], selected:[Int]) {
         self.values = values
         self.selectedIndicies = selected
@@ -64,6 +82,18 @@ extension ListSelectionValue {
         self.selectionType = .multiple
         self.color = nil
     }
+    
+    
+    public init(_ title:String,_ values:[String],_ loadingClosure: ListSelectLoadingClosure? = nil) {
+        self.values = values
+        self.selectedIndicies = []
+        self.title = title
+        self.selectionMessage = "Select a Value"
+        self.selectionType = .single
+        self.loadingClosure = loadingClosure
+        self.color = nil
+    }
+    
     
 }
 
@@ -155,6 +185,7 @@ extension ListSelectionValue {
                 title: self.title,
                 selectionMessage: self.selectionMessage,
                 color: self.color,
+                loadingClosure: self.loadingClosure,
                 customKey: self.customKey,
                 uuid: self.uuid
         )
@@ -189,6 +220,8 @@ extension ListSelectionValue: FormValueDisplayable {
 
     public func didSelect(_ formController: Controller, _ path: IndexPath) {
         
+        
+        
         let changeClosure: ListSelectionChangeClosure = { [weak formController] (selectedValues) in
             if let formItem = formController?.dataSource.itemAt(path) {
                 switch formItem {
@@ -203,8 +236,16 @@ extension ListSelectionValue: FormValueDisplayable {
         }
         
         let descriptor = self.makeDescriptor(changeClosure)
-        let listSelectionController = ListSelectViewController(descriptor: descriptor)
-        formController.navigationController?.pushViewController(listSelectionController, animated: true)
+        
+        if let loadingClosure = self.loadingClosure {
+            formController.navigationController?.pushViewController(
+                ListSelectViewController(descriptor: descriptor, loadingClosure: loadingClosure)
+                , animated: true)
+        } else {
+            formController.navigationController?.pushViewController(
+                ListSelectViewController(descriptor: descriptor)
+            , animated: true)
+        }
         
     }
     

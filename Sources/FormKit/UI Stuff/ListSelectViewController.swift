@@ -3,12 +3,12 @@ import UIKit
 
 
 // MARK: - ListSelectionDelegate -
-protocol ListSelectionDelegate: class {
+public protocol ListSelectionDelegate: class {
     func selectionUpdated(values: [String])
 }
 
 // MARK: - ListSelectionChangeClosure -
-typealias ListSelectionChangeClosure = ( ([String]) -> Void )
+public typealias ListSelectionChangeClosure = ( ([String]) -> Void )
 
 let DefaultChangeClosure: ListSelectionChangeClosure = { (changes) in
     print("[ListSelectionChangeClosure] Selection Changed: \(changes)")
@@ -16,8 +16,10 @@ let DefaultChangeClosure: ListSelectionChangeClosure = { (changes) in
 
 
 
+
+
 // MARK: - ListSelectionControllerDescriptor -
-struct ListSelectionControllerDescriptor {
+public struct ListSelectionControllerDescriptor {
     let title: String
     let listVales: [String]
     let selectedIndicies: [Int]
@@ -72,12 +74,12 @@ extension ListSelectionControllerDescriptor {
 
 
 //: MARK: - ListSelectViewController -
-final class ListSelectViewController: UITableViewController, UISearchResultsUpdating, UISearchBarDelegate {
+public final class ListSelectViewController: UITableViewController, UISearchResultsUpdating, UISearchBarDelegate {
     
     static let ReuseID = "FormKit.ListSelectionCell"
     
     /// Closure
-    public var listSelectionChangeClosure: ListSelectionChangeClosure = { _ in }
+    var listSelectionChangeClosure: ListSelectionChangeClosure = { _ in }
     /// Delegation
     weak var delegate:ListSelectionDelegate?
     
@@ -151,7 +153,7 @@ final class ListSelectViewController: UITableViewController, UISearchResultsUpda
     // MARK: - Init -
     required init?(coder aDecoder: NSCoder) {fatalError()}
 
-    init(data: [String],selected: [Int], title:String) {
+   public  init(data: [String],selected: [Int], title:String) {
         if #available(iOS 13.0, *) {
             super.init(style: .insetGrouped)
         } else {
@@ -169,7 +171,7 @@ final class ListSelectViewController: UITableViewController, UISearchResultsUpda
     }
     
     
-    init(descriptor:ListSelectionControllerDescriptor) {
+    public init(descriptor:ListSelectionControllerDescriptor) {
         super.init(style: descriptor.tableViewStyle)
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
         formatData(descriptor.listVales,descriptor.selectedIndicies)
@@ -177,16 +179,28 @@ final class ListSelectViewController: UITableViewController, UISearchResultsUpda
         self.title = descriptor.title
         self.allowsMultipleSelection = descriptor.allowsMultipleSelection
         self.sectionTile = descriptor.selectionMessage
-
+    }
+    
+    
+    
+    public init(descriptor:ListSelectionControllerDescriptor,loadingClosure: @escaping  ListSelectLoadingClosure) {
+        super.init(style: descriptor.tableViewStyle)
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
+        formatData(descriptor.listVales,descriptor.selectedIndicies)
+        self.listSelectionChangeClosure = descriptor.selectionChangeClosure
+        self.title = descriptor.title
+        self.allowsMultipleSelection = descriptor.allowsMultipleSelection
+        self.sectionTile = descriptor.selectionMessage
+        loadingClosure(self)
     }
     
     
     // MARK: - Loading -
     
     
-    typealias ListSelectLoadingClosure = (ListSelectViewController) -> Void
+    public typealias ListSelectLoadingClosure = (ListSelectViewController) -> Void
     
-    init(title:String,loadingClosure: @escaping ListSelectLoadingClosure, updateClosure: @escaping ListSelectionChangeClosure) {
+   public init(title:String,loadingClosure: @escaping ListSelectLoadingClosure, updateClosure: @escaping ListSelectionChangeClosure) {
         if #available(iOS 13.0, *) {
             super.init(style: .insetGrouped)
         } else {
@@ -202,7 +216,7 @@ final class ListSelectViewController: UITableViewController, UISearchResultsUpda
     
     
     
-    override func viewDidLoad() {
+    public override func viewDidLoad() {
         super.viewDidLoad()
         
         if searchEnabled {
@@ -273,12 +287,12 @@ final class ListSelectViewController: UITableViewController, UISearchResultsUpda
         searchBar.resignFirstResponder()
     }
     
-    func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
+    public func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
         return true
     }
     
     //: MARK: - UISearchResultsUpdating -
-    func updateSearchResults(for searchController: UISearchController) {
+    public func updateSearchResults(for searchController: UISearchController) {
         if let searchText = searchController.searchBar.text {
             /// use a fresh copy of all entires
             let currentDataSource = completeDataSource
@@ -299,19 +313,19 @@ final class ListSelectViewController: UITableViewController, UISearchResultsUpda
     }
 
     // MARK: - TableView functions -
-    override func numberOfSections(in tableView: UITableView) -> Int {
+    public override func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
     
-    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+    public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         return sectionTile
     }
     
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return dataSource.count
     }
     
-    override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+    public override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
         updateMasterStorage(title: dataSource[indexPath.row].title, selected: false)
         let oldRow = dataSource[indexPath.row]
         dataSource[indexPath.row] = SelectionRow(title: oldRow.title, selected: false)
@@ -319,7 +333,7 @@ final class ListSelectViewController: UITableViewController, UISearchResultsUpda
         updateSeletion()
     }
     
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         updateMasterStorage(title: dataSource[indexPath.row].title, selected: true)
         if allowsMultipleSelection == false {
             // find the current selected item,
@@ -355,13 +369,13 @@ final class ListSelectViewController: UITableViewController, UISearchResultsUpda
     }
     
     
-    override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+    public override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         cell.accessoryType = dataSource[indexPath.row].selected ? .checkmark : .none
     }
     
     
     
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: ListSelectViewController.ReuseID, for: indexPath)
         let row = dataSource[indexPath.row]
         cell.textLabel?.font = .preferredFont(forTextStyle: .headline)
