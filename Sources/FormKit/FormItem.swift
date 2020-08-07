@@ -195,3 +195,48 @@ extension FormItem {
 }
 
 
+
+extension FormItem {
+    
+    public func matches<T>(type:T) -> Bool {
+        switch self {
+        case .stepper(_):
+            return type is StepperValue
+        case .text(_):
+            return type is TextValue
+        case .time(_):
+            return type is TimeValue
+        case .button(_):
+            return type is ButtonValue
+        case .note(_):
+            return type is NoteValue
+        case .segment(_):
+            return type is SegmentValue
+        case .numerical(_):
+            return type is NumericalValue
+        case .readOnly(_):
+            return type is ReadOnlyValue
+        case .picker(_):
+            return type is PickerValue
+        case .pickerSelection(_):
+            return type is PickerSelectionValue
+        case .action(_):
+            return type is ActionValue
+        case .listSelection(_):
+            return type is ListSelectionValue
+        case .timeInput(_):
+            return type is TimeInputValue
+        case .switchValue(_):
+            return type is SwitchValue
+        case .slider(_):
+            return type is SliderValue
+        case .map(_):
+            return type is MapValue
+        case .mapAction(_):
+            return type is MapActionValue
+        }
+    }
+    
+}
+
+

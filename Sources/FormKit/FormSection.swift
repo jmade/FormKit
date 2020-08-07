@@ -270,3 +270,18 @@ extension FormSection {
     }
     
 }
+
+
+
+extension FormSection {
+    
+    public func row(for index: Int) -> FormItem? {
+        guard index >= 0, index < rows.endIndex else {
+            return nil
+        }
+        
+        return rows[index]
+    }
+    
+
+}

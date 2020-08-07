@@ -10,15 +10,6 @@ public typealias FormDataSourceUpdateClosure = ( (FormDataSource) -> Void )
 /// TODO: Consider turning this into a struct? and make the function a mutating one? would it change automattically?
 
 
-extension Array {
-    public subscript(safeIndex index: Int) -> Element? {
-        guard index >= 0, index < endIndex else {
-            return nil
-        }
-
-        return self[index]
-    }
-}
 
 
 
@@ -386,6 +377,42 @@ extension FormDataSource {
             ])
         ])
     }
+}
+
+
+
+extension FormDataSource {
+    
+    public func section(for index: Int) -> FormSection? {
+        guard index >= 0, index < sections.endIndex else {
+            return nil
+        }
+        
+        return sections[index]
+    }
+    
+    
+    public func item(for row:Int,in sectionIndex:Int) -> FormItem? {
+        return self.section(for: sectionIndex)?.row(for: row)
+    }
+    
+    
+    public func first<T>() -> T? {
+        for section in sections {
+            for item in section.rows {
+                if item.matches(type: T.self) {
+                    return item as? T
+                }
+            }
+        }
+        
+        return nil
+    }
+    
+    
+    
+    
+    
 }
 
 
