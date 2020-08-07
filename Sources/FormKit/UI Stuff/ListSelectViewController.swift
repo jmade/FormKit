@@ -112,6 +112,8 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
             }
             tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
             
+            
+            
 //            print("Setting dataSource")
 //            print("Number of Sections: \(tableView.numberOfSections)")
 //
