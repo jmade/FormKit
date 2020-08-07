@@ -201,8 +201,13 @@ extension FormItem {
     public func matches<T>(type:T) -> Bool {
         switch self {
         case .stepper(_):
+            print(type)
+            print("running throught stepper")
             return type is StepperValue
         case .text(_):
+            
+            print(type)
+            print("running throught text")
             return type is TextValue
         case .time(_):
             return type is TimeValue
