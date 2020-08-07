@@ -94,33 +94,23 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     private var dataSource: [SelectionRow] = [] {
         didSet {
             
-            
-            
-            
-            
             print("Setting dataSource")
             print("Number of Sections: \(tableView.numberOfSections)")
             
-            if oldValue.isEmpty && dataSource.isEmpty == false {
-                tableView.tableFooterView = nil
+            tableView.tableFooterView = nil
+            guard tableView.numberOfSections == 0 else {
                 tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
-            } else {
-
-                tableView.tableFooterView = nil
-                tableView.reloadData()
+                return
             }
+            tableView.reloadData()
             
-            
-            
-//
-//
-//            if dataSource.isEmpty {
-//                if let loadingFooterView = tableView.tableFooterView as? ItemsLoadingView {
-//                    loadingFooterView.displayMessage("No Data.")
-//                }
-//                return
-//            }
-            
+            if oldValue.isEmpty && dataSource.isEmpty == false {
+                
+                print("old was empty new is not")
+            } else {
+               
+                
+            }
 
         }
     }
