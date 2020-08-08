@@ -21,6 +21,7 @@ public struct ListSelectionValue {
     var title:String
     var selectionMessage:String = "Select a Value"
     var color:UIColor? = nil
+    var valueIdentifiers:[String]? = nil
     
     var loadingClosure: ListSelectLoadingClosure? = nil
     
@@ -185,11 +186,38 @@ extension ListSelectionValue {
                 title: self.title,
                 selectionMessage: self.selectionMessage,
                 color: self.color,
+                valueIdentifiers: self.valueIdentifiers,
                 loadingClosure: self.loadingClosure,
                 customKey: self.customKey,
                 uuid: self.uuid
         )
     }
+    
+    
+    public func newWith(selectedValues:[String],_ selectedValueIdentifiers:[String]? = nil) -> ListSelectionValue {
+        var newSelectedIndicies: [Int] = []
+        for selected in selectedValues {
+            if let index = values.firstIndex(of: selected) {
+                newSelectedIndicies.append(index)
+            }
+        }
+        
+        return
+            ListSelectionValue(
+                selectionType: self.selectionType,
+                values: self.values,
+                selectedIndicies: newSelectedIndicies,
+                title: self.title,
+                selectionMessage: self.selectionMessage,
+                color: self.color,
+                valueIdentifiers: selectedValueIdentifiers,
+                loadingClosure: self.loadingClosure,
+                customKey: self.customKey,
+                uuid: self.uuid
+        )
+    }
+    
+    
     
 }
 
@@ -239,12 +267,14 @@ extension ListSelectionValue: FormValueDisplayable {
         
         if let loadingClosure = self.loadingClosure {
             formController.navigationController?.pushViewController(
-                ListSelectViewController(descriptor: descriptor, loadingClosure: loadingClosure)
-                , animated: true)
+                ListSelectViewController(descriptor: descriptor, loadingClosure: loadingClosure),
+                animated: true
+            )
         } else {
             formController.navigationController?.pushViewController(
-                ListSelectViewController(descriptor: descriptor)
-            , animated: true)
+                ListSelectViewController(descriptor: descriptor),
+                animated: true
+            )
         }
         
     }

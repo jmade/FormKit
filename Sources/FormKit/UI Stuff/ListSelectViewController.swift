@@ -83,6 +83,15 @@ public typealias ListSelectable = Displayable & Selectable
 
 
 
+
+
+
+
+
+
+
+
+
 //: MARK: - ListSelectViewController -
 public final class ListSelectViewController: UITableViewController, UISearchResultsUpdating, UISearchBarDelegate {
     
@@ -99,6 +108,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
         var title: String
         
         var selected: Bool
+        var valueIdentifier:String? = nil
         
         let identifier: UUID = UUID()
         
@@ -139,6 +149,9 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     }
     
     
+    public var jsonPayload: [String:Any]? = nil
+    
+    
     // sectionTitles = []
     
     private var sectionTile: String = ""
@@ -165,24 +178,6 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     // MARK: - Searching -
     private var searchEnabled = true
     
-    
-//    public lazy var searchController: UISearchController = {
-//        let controller = UISearchController(searchResultsController: nil)
-//        controller.hidesNavigationBarDuringPresentation = true
-//        controller.searchBar.tintColor = UIColor.white
-//
-//        if #available(iOS 13.0, *) {
-//            controller.searchBar.searchTextField.backgroundColor = .systemBackground
-//        } else {
-//            if let searchBarTextField = controller.searchBar.textField {
-//                searchBarTextField.textColor = .white
-//            }
-//        }
-//
-//        controller.searchBar.searchBarStyle = .minimal
-//        controller.searchBar.delegate = self
-//        return controller
-//    }()
     
     private var listSearchTable:ListSearchTable? = nil
     private var resultSearchController:UISearchController? = nil
@@ -260,6 +255,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     
     public override func viewDidLoad() {
         super.viewDidLoad()
+        addBackbutton(title: " ")
         
         listSearchTable = ListSearchTable()
         
