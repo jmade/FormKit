@@ -262,6 +262,10 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
         super.viewDidLoad()
         
         listSearchTable = ListSearchTable()
+        listSearchTable?.itemSelectedClosure = { [weak self] (item,ctrl,path) in
+            ctrl.dismiss(animated: true, completion: nil)
+            self?.handleSearchedSelection(item: item)
+        }
         listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: nil) })
         resultSearchController = UISearchController(searchResultsController: listSearchTable)
         resultSearchController?.searchResultsUpdater = listSearchTable
@@ -483,6 +487,9 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
           }
       }
     
+    private func handleSearchedSelection(item:SearchResultItem) {
+        print("Item: \(item)")
+    }
  
     private func updateSeletion() {
         let selectedValues = dataSource.filter({ $0.selected }).map({ $0.title })
