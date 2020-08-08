@@ -494,11 +494,33 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
           }
       }
     
+    
+    
+    
     private func handleSearchedSelection(item:SearchResultItem, at path:IndexPath) {
         print("Item Selected: \(item)")
-        handleDidSelectRowAt(path)
+        
+        if let title = item.primary {
+            for (index,value) in dataSource.enumerated() {
+                if value.title == title {
+                    let foundPath = IndexPath(row: index, section: 0)
+                    
+                    print("Found the matching value at: \(foundPath)")
+                    
+                    DispatchQueue.main.async(execute: { [weak self] in
+                        guard let self = self else { return }
+                        self.handleDidSelectRowAt(foundPath)
+                    })
+
+                    
+                }
+            }
+            
+        }
+        
     }
  
+    
     private func updateSeletion() {
         let selectedValues = dataSource.filter({ $0.selected }).map({ $0.title })
         delegate?.selectionUpdated(values: selectedValues)

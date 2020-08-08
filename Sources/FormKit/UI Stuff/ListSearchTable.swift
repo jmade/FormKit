@@ -10,6 +10,8 @@ public class ListSearchTable : UITableViewController {
     
     public var itemSelectedClosure: SearchedItemSelectionClosure? = nil
     
+    var searchString:String = ""
+    
     var searchItems:[SearchResultItem] = []
     
     var dataSource:[SearchResultItem] = [] {
@@ -47,7 +49,15 @@ public class ListSearchTable : UITableViewController {
         super.viewDidLoad()
         tableView.register(ListSearchResultCell.self, forCellReuseIdentifier: ListSearchResultCell.ReuseID)
         tableView.rowHeight = UITableView.automaticDimension
+        
     }
+    
+    
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        searchString = ""
+    }
+    
 }
 
 
@@ -57,9 +67,9 @@ public class ListSearchTable : UITableViewController {
 extension ListSearchTable : UISearchResultsUpdating {
     
     public func updateSearchResults(for searchController: UISearchController) {
-        guard let searchBarText = searchController.searchBar.text,searchBarText.isEmpty == false else { return }
+        guard let searchBarText = searchController.searchBar.text else { return }
         print("Search Text: \(searchBarText)")
-        
+        searchString = searchBarText
         
         
         let matchedItems = searchItems.filter({ $0.primary!.contains(searchBarText) })
