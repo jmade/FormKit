@@ -262,10 +262,12 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
         super.viewDidLoad()
         
         listSearchTable = ListSearchTable()
+        
         listSearchTable?.itemSelectedClosure = { [weak self] (item,ctrl,path) in
             ctrl.dismiss(animated: true, completion: nil)
-            self?.handleSearchedSelection(item: item)
+            self?.handleSearchedSelection(item: item,at: path)
         }
+        
         listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: nil) })
         resultSearchController = UISearchController(searchResultsController: listSearchTable)
         resultSearchController?.searchResultsUpdater = listSearchTable
@@ -426,7 +428,14 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     
     
     public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        handleDidSelectRowAt(indexPath)
+    }
+    
+    
+    private func handleDidSelectRowAt(_ path:IndexPath) {
+        let indexPath = path
         updateMasterStorage(title: dataSource[indexPath.row].title, selected: true)
+        
         if allowsMultipleSelection == false {
             // find the current selected item,
             if let selectedRow = dataSource.filter({ $0.selected == true }).first {
@@ -446,8 +455,6 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
                 /// Reload the table Rows
                 tableView.reloadRows(at: [indexPath], with: .none)
             }
-            /// dissmiss the search Controller here...
-            //self.searchController.dismiss(animated: true, completion: nil)
             updateSeletion()
             dismiss(animated: true, completion: nil)
         } else {
@@ -487,8 +494,9 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
           }
       }
     
-    private func handleSearchedSelection(item:SearchResultItem) {
-        print("Item: \(item)")
+    private func handleSearchedSelection(item:SearchResultItem, at path:IndexPath) {
+        print("Item Selected: \(item)")
+        handleDidSelectRowAt(path)
     }
  
     private func updateSeletion() {

@@ -5,8 +5,6 @@ import UIKit
 public typealias SearchedItemSelectionClosure = (SearchResultItem,ListSearchTable,IndexPath) -> Void
 
 
-
-
 public class ListSearchTable : UITableViewController {
     
     
@@ -39,8 +37,9 @@ public class ListSearchTable : UITableViewController {
         self.searchItems = searchItems
     }
     
+    
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        fatalError()
     }
     
     
@@ -91,7 +90,7 @@ public extension ListSearchTable {
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return dataSource.isEmpty ? 0 : 1
+        return 1
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
