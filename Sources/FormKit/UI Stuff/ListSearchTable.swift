@@ -52,11 +52,21 @@ public class ListSearchTable : UITableViewController {
 }
 
 
+
+
+
 extension ListSearchTable : UISearchResultsUpdating {
     
     public func updateSearchResults(for searchController: UISearchController) {
         guard let searchBarText = searchController.searchBar.text,searchBarText.isEmpty == false else { return }
-        dataSource = searchItems.filter({ ($0.primary ?? String()).contains(searchBarText) })
+        print("Search Text: \(searchBarText)")
+        
+        
+        
+        let matchedItems = searchItems.filter({ $0.primary!.contains(searchBarText) })
+        print("Matched cnt: \(matchedItems.count)")
+        
+        dataSource = matchedItems
     }
     
     
@@ -81,18 +91,18 @@ public extension ListSearchTable {
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return searchItems.isEmpty ? 0 : 1
+        return dataSource.isEmpty ? 0 : 1
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return searchItems.count
+        return dataSource.count
     }
     
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         if let cell = tableView.dequeueReusableCell(withIdentifier: ListSearchResultCell.ReuseID, for: indexPath) as? ListSearchResultCell {
-            cell.configureCell(searchItems[indexPath.row])
+            cell.configureCell(dataSource[indexPath.row])
             return cell
         }
         return .init()
