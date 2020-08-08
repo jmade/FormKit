@@ -32,11 +32,12 @@ public class ItemsLoadingView : UIView {
     required public init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(frame: CGRect) {
         super.init(frame: frame)
+        
         //backgroundColor = UIColor(white: 1.0, alpha: 0.9)
         
-//        loadingLabel.textColor = .gray
-//        loadingLabel.text = "LOADING"
-//        loadingLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
+        loadingLabel.textColor = .gray
+        loadingLabel.text = "LOADING"
+        loadingLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
         
         loadingLabel.textAlignment = .center
         loadingLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -44,9 +45,7 @@ public class ItemsLoadingView : UIView {
         addSubview(progress)
         addSubview(loadingLabel)
         
-        if #available(iOS 9.0, *) {
-            progress.topAnchor.constraint(equalTo: topAnchor, constant: 8.0).isActive = true
-        }
+        progress.topAnchor.constraint(equalTo: topAnchor, constant: 8.0).isActive = true
         progress.centerXAnchor.constraint(equalTo: centerXAnchor).isActive = true
         
         loadingLabel.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
@@ -71,10 +70,8 @@ public class ItemsLoadingView : UIView {
         defer {
             loadingLabel.font = UIFont.preferredFont(forTextStyle: textStyle)
             loadingLabel.textColor = color
-            print("Setting Label text: \(message)")
             loadingLabel.text = message
         }
-       
         
     }
     
@@ -97,7 +94,6 @@ public class ItemsLoadingView : UIView {
     }
 
     public func setLoadingMessage(_ loadingMessage:String) {
-        print("[Loading View] setting Loading Message")
         DispatchQueue.main.async(execute: { [weak self] in
             self?.loadingLabel.text = loadingMessage
         })

@@ -5,6 +5,7 @@ import UIKit
 // MARK: - ListSelectionDelegate -
 public protocol ListSelectionDelegate: class {
     func selectionUpdated(values: [String])
+    
 }
 
 // MARK: - ListSelectionChangeClosure -
@@ -70,6 +71,15 @@ extension ListSelectionControllerDescriptor {
 
 
 
+public protocol Selectable {
+    var selected: Bool { get }
+}
+
+public protocol Displayable {
+    var title: String { get }
+}
+
+public typealias ListSelectable = Displayable & Selectable
 
 
 
@@ -84,56 +94,39 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     weak var delegate:ListSelectionDelegate?
     
     // MARK: - DataSource -
-    private struct SelectionRow: Equatable {
-        let title: String
-        let selected: Bool
+    private struct SelectionRow: ListSelectable, Equatable {
+        
+        var title: String
+        
+        var selected: Bool
+        
+        let identifier: UUID = UUID()
+        
+        public func hash(into hasher: inout Hasher) {
+            return hasher.combine(identifier)
+        }
+        
+        public static func == (lhs: SelectionRow, rhs: SelectionRow) -> Bool {
+            return lhs.identifier == rhs.identifier
+        }
     }
+    
     
     private var completeDataSource:[SelectionRow] = []
     
     private var dataSource: [SelectionRow] = [] {
-        willSet {
-            
-            
-            
-            
-        }
-        
-        
         didSet {
-            
-            print("Setting dataSource")
-            print("Number of Sections: \(tableView.numberOfSections)")
-            
             tableView.tableFooterView = nil
             guard tableView.numberOfSections == 0 else {
                 tableView.reloadData()
+                listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: nil) })
                 return
             }
             tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
-            
-            
-            
-//            print("Setting dataSource")
-//            print("Number of Sections: \(tableView.numberOfSections)")
-//
-//            tableView.tableFooterView = nil
-//            guard tableView.numberOfSections == 0 else {
-//                tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
-//                return
-//            }
-//            tableView.reloadData()
-            
-            if oldValue.isEmpty && dataSource.isEmpty == false {
-                
-                print("old was empty new is not")
-            } else {
-               
-                
-            }
-
+            listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: nil) })
         }
     }
+    
     
     public var allowDismissal:Bool = true {
         didSet {
@@ -171,23 +164,29 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     
     // MARK: - Searching -
     private var searchEnabled = true
-    public lazy var searchController: UISearchController = {
-        let controller = UISearchController(searchResultsController: nil)
-        controller.hidesNavigationBarDuringPresentation = true
-        controller.searchBar.tintColor = UIColor.white
-        
-        if #available(iOS 13.0, *) {
-            controller.searchBar.searchTextField.backgroundColor = .systemBackground
-        } else {
-            if let searchBarTextField = controller.searchBar.textField {
-                searchBarTextField.textColor = .white
-            }
-        }
-        
-        controller.searchBar.searchBarStyle = .minimal
-        controller.searchBar.delegate = self
-        return controller
-    }()
+    
+    
+//    public lazy var searchController: UISearchController = {
+//        let controller = UISearchController(searchResultsController: nil)
+//        controller.hidesNavigationBarDuringPresentation = true
+//        controller.searchBar.tintColor = UIColor.white
+//
+//        if #available(iOS 13.0, *) {
+//            controller.searchBar.searchTextField.backgroundColor = .systemBackground
+//        } else {
+//            if let searchBarTextField = controller.searchBar.textField {
+//                searchBarTextField.textColor = .white
+//            }
+//        }
+//
+//        controller.searchBar.searchBarStyle = .minimal
+//        controller.searchBar.delegate = self
+//        return controller
+//    }()
+    
+    private var listSearchTable:ListSearchTable? = nil
+    private var resultSearchController:UISearchController? = nil
+    
 
     
     // MARK: - Init -
@@ -262,6 +261,22 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     public override func viewDidLoad() {
         super.viewDidLoad()
         
+        listSearchTable = ListSearchTable()
+        listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: nil) })
+        resultSearchController = UISearchController(searchResultsController: listSearchTable)
+        resultSearchController?.searchResultsUpdater = listSearchTable
+        
+        let searchBar = resultSearchController!.searchBar
+        searchBar.sizeToFit()
+        searchBar.placeholder = "Search Items"
+        navigationItem.titleView = resultSearchController?.searchBar
+        
+        resultSearchController?.hidesNavigationBarDuringPresentation = false
+        definesPresentationContext = true
+        
+        
+        /*
+        
         if searchEnabled {
             searchController.searchResultsUpdater = self
             searchController.searchBar.delegate = self
@@ -278,6 +293,8 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
             
             definesPresentationContext = true
         }
+        
+         */
         
         navigationController?.navigationBar.titleTextAttributes = [ .foregroundColor : UIColor.white ]
     }
@@ -340,7 +357,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
         var newDataSource: [SelectionRow] = []
         for (i,entry) in data.enumerated() {
             if selected.contains(i) {
-                newDataSource.append(SelectionRow(title: entry, selected: true))
+                newDataSource.append(SelectionRow(title: entry, selected: true ))
             } else {
                 newDataSource.append(SelectionRow(title: entry, selected: false))
             }
@@ -403,6 +420,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
         updateSeletion()
     }
     
+    
     public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         updateMasterStorage(title: dataSource[indexPath.row].title, selected: true)
         if allowsMultipleSelection == false {
@@ -425,7 +443,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
                 tableView.reloadRows(at: [indexPath], with: .none)
             }
             /// dissmiss the search Controller here...
-            self.searchController.dismiss(animated: true, completion: nil)
+            //self.searchController.dismiss(animated: true, completion: nil)
             updateSeletion()
             dismiss(animated: true, completion: nil)
         } else {

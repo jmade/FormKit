@@ -57,18 +57,6 @@ public struct SearchResultItem: Hashable {
 
 
 
-//fileprivate enum Section {
-//    case main
-//}
-//
-//if #available(iOS 13.0, *) {
-//    fileprivate typealias ItemsDataSource = UITableViewDiffableDataSource<Section, SearchResultItem>
-//    fileprivate typealias ItemsSnapShot = NSDiffableDataSourceSnapshot<Section,SearchResultItem>
-//} else {
-//
-//}
-
-
 class LocationSearchTable : UITableViewController {
     
     var handleMapSearchDelegate:HandleMapSearch? = nil
@@ -80,55 +68,18 @@ class LocationSearchTable : UITableViewController {
     }
     var mapView: MKMapView? = nil
     
-    
-    //private var dataSource: ItemsDataSource!
-    
     var searchItems:[SearchResultItem] = [] {
         didSet {
             tableView.reloadData()
-            //createSnapshot(from: searchItems)
         }
     }
-    
-   
     
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.register(SearchResultItemCell.self, forCellReuseIdentifier: SearchResultItemCell.ReuseID)
         tableView.rowHeight = UITableView.automaticDimension
-        
-        /*
-        configureDataSource()
-        createSnapshot(from: self.searchItems)
-        */
     }
-    
-    /*
-    private func configureDataSource() {
-        dataSource = ItemsDataSource(tableView: tableView, cellProvider: { (tableView, path, item) -> UITableViewCell? in
-            let cell = tableView.dequeueReusableCell(withIdentifier: SearchResultItemCell.ReuseID, for: path) as? SearchResultItemCell
-            cell?.configureCell(item)
-            return cell
-            }
-        )
-        dataSource.defaultRowAnimation = .fade
-    }
-    */
 }
-
-
-/*
-extension LocationSearchTable {
-    
-    private func createSnapshot(from items:[SearchResultItem]) {
-        var snapshot = ItemsSnapShot()
-        snapshot.appendSections([.main])
-        snapshot.appendItems(items)
-        dataSource.apply(snapshot, animatingDifferences: true, completion: nil)
-    }
-    
-}
-*/
 
 
 extension LocationSearchTable : UISearchResultsUpdating {
@@ -166,7 +117,7 @@ extension LocationSearchTable {
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
+        return searchItems.isEmpty ? 0 : 1
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
