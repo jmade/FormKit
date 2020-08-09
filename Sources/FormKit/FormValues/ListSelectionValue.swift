@@ -10,11 +10,8 @@ import UIKit
 
 public typealias ListSelectLoadingClosure = (ListSelectViewController) -> Void
 
-// JSON -> ListSelectionValue transform closure
-
-//public typealias JSONGenerationClosure = ([String:Any]) -> ListSelectionValue?
-
-public typealias JSONGenerationClosure = ([String:Any],ListSelectionValue.Loading) -> (ListSelectionValue?,[ListSelectViewController.ListItem])
+public typealias ListItem = ListSelectViewController.ListItem
+public typealias JSONGenerationClosure = ([String:Any],ListSelectionValue.Loading) -> ([ListItem])
 
  
 
