@@ -12,9 +12,9 @@ public typealias ListSelectLoadingClosure = (ListSelectViewController) -> Void
 
 // JSON -> ListSelectionValue transform closure
 
-public typealias JSONGenerationClosure = ([String:Any]) -> ListSelectionValue?
+//public typealias JSONGenerationClosure = ([String:Any]) -> ListSelectionValue?
 
-
+public typealias JSONGenerationClosure = ([String:Any],ListSelectionValue.Loading) -> ListSelectionValue?
 
  
 
@@ -26,28 +26,23 @@ public struct ListSelectionValue {
     public struct Loading {
        public var itemKey: String
        public var loadingClosure: ListSelectLoadingClosure? = nil
-       public var generationClosure: JSONGenerationClosure? = nil
        public var matchingIntegerValues: [Int]? = nil
        public var matchingStringValues: [String]? = nil
         
-        public init(_ matchingValues:[Int],itemKey:String,loadingClosure: @escaping ListSelectLoadingClosure, generationClosure: @escaping JSONGenerationClosure) {
+        public init(_ matchingValues:[Int],itemKey:String,loadingClosure: @escaping ListSelectLoadingClosure) {
             self.itemKey = itemKey
             self.loadingClosure = loadingClosure
-            self.generationClosure = generationClosure
             self.matchingIntegerValues = matchingValues
         }
         
-        public init(_ matchingValues:[String],itemKey:String,loadingClosure: @escaping ListSelectLoadingClosure, generationClosure: @escaping JSONGenerationClosure) {
+        public init(_ matchingValues:[String],itemKey:String,loadingClosure: @escaping ListSelectLoadingClosure) {
             self.itemKey = itemKey
             self.loadingClosure = loadingClosure
-            self.generationClosure = generationClosure
             self.matchingStringValues = matchingValues
             
         }
         
     }
-    
-    
     
     
     
@@ -63,7 +58,8 @@ public struct ListSelectionValue {
     
     public var loading:Loading? = nil
     
-    var loadingClosure: ListSelectLoadingClosure? = nil
+    public var loadingClosure: ListSelectLoadingClosure? = nil
+    public var genertionClossure: JSONGenerationClosure? = nil
     
     public var customKey: String? = nil
     var uuid:String = UUID().uuidString
