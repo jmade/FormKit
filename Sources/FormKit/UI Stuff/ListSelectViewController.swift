@@ -296,12 +296,14 @@ public final class ListSelectViewController: UITableViewController {
         
         self.formIndexPath = path
         self.formValue = listSelectValue
-        
+       
         
         if let loading = listSelectValue.loading {
             if let loadingClosure = loading.loadingClosure {
                 loadingClosure(self)
             }
+        } else {
+             dataSource = listSelectValue.selectionRows
         }
     }
     
