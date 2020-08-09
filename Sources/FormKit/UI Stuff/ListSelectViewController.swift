@@ -165,7 +165,12 @@ public final class ListSelectViewController: UITableViewController {
                 print("Empty Data")
             } else {
                 print("Inserting Section 1: Datasource Count: \(dataSource.count)")
-                tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
+                
+                UIViewPropertyAnimator(duration: 0.3, curve: .easeIn) {
+                    self.tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
+                }.startAnimation()
+                
+                
                 listSearchTable?.searchItems = dataSource.map({
                     SearchResultItem(primary: $0.title, secondary: nil, selected: $0.selected)
                 })
