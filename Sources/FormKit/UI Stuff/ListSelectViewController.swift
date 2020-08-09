@@ -483,8 +483,11 @@ public final class ListSelectViewController: UITableViewController {
     private func newDidSelect(_ indexPath: IndexPath) {
         
         let newIndicies = newSelectedIndicies(indexPath)
+        print(" newIndicies -> \(newIndicies) ")
         
         let newListValue = makeNewListSelectValue(newIndicies)
+        
+        print("NEw List value \(newListValue.selectedIndicies)")
         
         crawlDelegate(newListValue)
         

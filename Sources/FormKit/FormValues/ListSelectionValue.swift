@@ -134,6 +134,10 @@ extension ListSelectionValue {
     }
     
     var selectionTitle: String {
+        guard !selectedIndicies.isEmpty else {
+            return ""
+        }
+        
         switch selectionType {
         case .single:
             let idx = selectedIndicies.first ?? 0

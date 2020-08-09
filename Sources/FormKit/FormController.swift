@@ -265,6 +265,8 @@ open class FormController: UITableViewController, CustomTransitionable {
         }
                
         setupToolBar()
+        
+        navigationController?.navigationItem.largeTitleDisplayMode = .automatic
 
     }
     
