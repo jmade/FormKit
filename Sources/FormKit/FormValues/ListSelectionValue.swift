@@ -13,18 +13,22 @@ public typealias ListSelectLoadingClosure = (ListSelectViewController) -> Void
 // JSON -> ListSelectionValue transform closure
 
 public typealias JSONGenerationClosure = ([String:Any]) -> ListSelectionValue?
+
+
+
  
 
 
 // MARK: - ListSelectionValue -
 public struct ListSelectionValue {
     
+    
     public struct Loading {
-        var itemKey: String
-        var loadingClosure: ListSelectLoadingClosure? = nil
-        var generationClosure: JSONGenerationClosure? = nil
-        var matchingIntegerValues: [Int]? = nil
-        var matchingStringValues: [String]? = nil
+       public var itemKey: String
+       public var loadingClosure: ListSelectLoadingClosure? = nil
+       public var generationClosure: JSONGenerationClosure? = nil
+       public var matchingIntegerValues: [Int]? = nil
+       public var matchingStringValues: [String]? = nil
         
         public init(_ matchingValues:[Int],itemKey:String,loadingClosure: @escaping ListSelectLoadingClosure, generationClosure: @escaping JSONGenerationClosure) {
             self.itemKey = itemKey
@@ -42,6 +46,10 @@ public struct ListSelectionValue {
         }
         
     }
+    
+    
+    
+    
     
     public enum SelectionType { case single, multiple }
     public var selectionType: SelectionType
