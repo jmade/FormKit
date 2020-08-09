@@ -259,22 +259,18 @@ public final class ListSelectViewController: UITableViewController {
         self.formValue = listSelectValue
         self.formIndexPath = path
         
-        if let _ = listSelectValue.loading {
-            
+        if let loading = listSelectValue.loading {
+            if let loadingClosure = loading.loadingClosure {
+                print("Calling Loading.Loading Closure")
+                loadingClosure(self)
+            }
         } else {
             unformatedData = (listSelectValue.values,listSelectValue.selectedIndicies)
             formatData(listSelectValue.values,listSelectValue.selectedIndicies)
+            if let loadingClosure = listSelectValue.loadingClosure {
+                loadingClosure(self)
+            }
         }
-        
-        
-
-        
-
-        
-        if let loadingClosure = listSelectValue.loadingClosure {
-            loadingClosure(self)
-        }
-        
     }
     
     
