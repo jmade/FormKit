@@ -539,6 +539,11 @@ public final class ListSelectViewController: UITableViewController {
 
     
     private func crawlDelegate(_ new:ListSelectionValue) {
+        print(" new -> \(new) ")
+        
+       print("matching string vals: \( new.loading!.matchingStringValues!)")
+        
+        
         if let nav = navigationController {
             for vc in nav.viewControllers {
                 if let form = vc as? FormController {
