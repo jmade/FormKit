@@ -140,21 +140,21 @@ public final class ListSelectViewController: UITableViewController {
     
     
     // MARK: - DataSource -
-    private struct SelectionRow: ListSelectable, Equatable {
+    public struct SelectionRow: ListSelectable, Equatable {
         
-        var title: String
+        public var title: String
         
-        var selected: Bool
+        public var selected: Bool
         var valueIdentifier:String? = nil
         
-        let identifier: UUID = UUID()
+        let uuid: UUID = UUID()
         
         public func hash(into hasher: inout Hasher) {
-            return hasher.combine(identifier)
+            return hasher.combine(uuid)
         }
         
         public static func == (lhs: SelectionRow, rhs: SelectionRow) -> Bool {
-            return lhs.identifier == rhs.identifier
+            return lhs.uuid == rhs.uuid
         }
     }
     

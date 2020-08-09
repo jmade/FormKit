@@ -95,13 +95,18 @@ extension ListSelectionValue {
         var items:[ListSelectViewController.ListItem] = []
         
         for (i,value) in values.enumerated() {
-            var id:String? = nil
             
+            var id:String? = nil
             if let identifiers = valueIdentifiers {
                 if i <= (identifiers.count - 1) {
                     id = identifiers[i]
                 }
+            } else {
+                print("No Identifiers")
             }
+            
+            print("id: \(id ?? "nil")")
+            
             
             items.append(
                 ListSelectViewController.ListItem(
@@ -114,6 +119,16 @@ extension ListSelectionValue {
         
         return items
         
+    }
+    
+    
+    public var selectionRows:[ListSelectViewController.SelectionRow] {
+        return listItems.map({
+            ListSelectViewController.SelectionRow(title: $0.title,
+                                                  selected: $0.selected,
+                                                  valueIdentifier: $0.identifier
+            )
+        })
     }
 
 }
