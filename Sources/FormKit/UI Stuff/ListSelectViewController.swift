@@ -142,10 +142,17 @@ public final class ListSelectViewController: UITableViewController {
                 listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: nil, selected: $0.selected) })
                 return
             }
-            tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
-            listSearchTable?.searchItems = dataSource.map({
-                SearchResultItem(primary: $0.title, secondary: nil, selected: $0.selected)
-            })
+            
+            if dataSource.isEmpty {
+                print("Empty Data")
+            } else {
+                tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
+                listSearchTable?.searchItems = dataSource.map({
+                    SearchResultItem(primary: $0.title, secondary: nil, selected: $0.selected)
+                })
+            }
+            
+            
         }
     }
     
