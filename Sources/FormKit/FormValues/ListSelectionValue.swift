@@ -13,8 +13,8 @@ public typealias ListSelectLoadingClosure = (ListSelectViewController) -> Void
 // MARK: - ListSelectionValue -
 public struct ListSelectionValue {
     
-    enum SelectionType { case single, multiple }
-    var selectionType: SelectionType
+    public enum SelectionType { case single, multiple }
+    public var selectionType: SelectionType
     
     var values:[String]
     var selectedIndicies: [Int]

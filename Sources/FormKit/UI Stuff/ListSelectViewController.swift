@@ -245,18 +245,18 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     
     
     public init(_ listSelectValue:ListSelectionValue,at path:IndexPath) {
-        let descriptor = listSelectValue.makeDescriptor()
-        super.init(style: descriptor.tableViewStyle)
+        
+        super.init(style: listSelectValue.makeDescriptor().tableViewStyle)
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
         
         self.formValue = listSelectValue
         self.formIndexPath = path
-        unformatedData = (descriptor.listVales,descriptor.selectedIndicies)
-        formatData(descriptor.listVales,descriptor.selectedIndicies)
+        unformatedData = (listSelectValue.values,listSelectValue.selectedIndicies)
+        formatData(listSelectValue.values,listSelectValue.selectedIndicies)
 
-        self.title = descriptor.title
-        self.allowsMultipleSelection = descriptor.allowsMultipleSelection
-        self.sectionTile = descriptor.selectionMessage
+        self.title = listSelectValue.title
+        self.allowsMultipleSelection = listSelectValue.selectionType == .multiple
+        self.sectionTile = listSelectValue.selectionTitle
         
         if let loadingClosure = listSelectValue.loadingClosure {
             loadingClosure(self)
