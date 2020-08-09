@@ -330,16 +330,23 @@ extension ListSelectionValue {
         let newValues = listItems.map({ $0.title })
         let newIdentifiers = listItems.compactMap({ $0.identifier })
         
+        print(" newIdentifiers -> \(newIdentifiers) ")
+        
         
         var newLoading:Loading? = nil
         if let currentLoading = self.loading {
+            
+           
+            
             newLoading = currentLoading
             
             if currentLoading.matchingStringValues != nil {
                 /// `[String]`
+                print("NewLoading Matching String: \(currentLoading.matchingStringValues!)")
                 newLoading?.matchingStringValues = newIdentifiers
             } else {
                 /// `[Int]`
+                print("NewLoading Matching Int: \(currentLoading.matchingIntegerValues!)")
                 newLoading?.matchingIntegerValues = newIdentifiers.compactMap({ Int($0) })
             }
         }
