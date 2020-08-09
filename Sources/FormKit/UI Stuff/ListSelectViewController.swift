@@ -252,15 +252,24 @@ public final class ListSelectViewController: UITableViewController {
         
         super.init(style: listSelectValue.makeDescriptor().tableViewStyle)
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
-        
-        self.formValue = listSelectValue
-        self.formIndexPath = path
-        unformatedData = (listSelectValue.values,listSelectValue.selectedIndicies)
-        formatData(listSelectValue.values,listSelectValue.selectedIndicies)
-
         self.title = listSelectValue.title
         self.allowsMultipleSelection = listSelectValue.selectionType == .multiple
         self.sectionTile = listSelectValue.selectionTitle
+        
+        self.formValue = listSelectValue
+        self.formIndexPath = path
+        
+        if let _ = listSelectValue.loading {
+            
+        } else {
+            unformatedData = (listSelectValue.values,listSelectValue.selectedIndicies)
+            formatData(listSelectValue.values,listSelectValue.selectedIndicies)
+        }
+        
+        
+
+        
+
         
         if let loadingClosure = listSelectValue.loadingClosure {
             loadingClosure(self)
