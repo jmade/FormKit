@@ -269,6 +269,14 @@ public final class ListSelectViewController: UITableViewController {
     }
     
     
+    public func setValue(_ listSelectValue:ListSelectionValue) {
+        self.formValue = listSelectValue
+        unformatedData = (listSelectValue.values,listSelectValue.selectedIndicies)
+        formatData(listSelectValue.values,listSelectValue.selectedIndicies)
+        crawlDelegate(listSelectValue)
+    }
+    
+    
     // MARK: - Loading -
     
     
