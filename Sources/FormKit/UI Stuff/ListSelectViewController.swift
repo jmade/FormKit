@@ -153,6 +153,14 @@ public final class ListSelectViewController: UITableViewController {
     
     private var dataSource: [SelectionRow] = [] {
         didSet {
+            
+            
+            guard tableView.window != nil else {
+                print("got no window...")
+                return
+            }
+            
+            
             tableView.tableFooterView = nil
             guard tableView.numberOfSections == 0 else {
                 tableView.reloadData()
