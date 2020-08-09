@@ -19,6 +19,8 @@ let DefaultChangeClosure: ListSelectionChangeClosure = { (changes) in
 
 
 
+
+
 // MARK: - ListSelectionControllerDescriptor -
 public struct ListSelectionControllerDescriptor {
     let title: String
@@ -88,12 +90,27 @@ public typealias ListSelectable = Displayable & Selectable
 
 
 
-
+public protocol ListSelectRepresentable {
+    var item:ListSelectViewController.ListItem {get set}
+}
 
 
 
 //: MARK: - ListSelectViewController -
 public final class ListSelectViewController: UITableViewController {
+    
+    public struct ListItem {
+        public var title:String?
+        public var selected:Bool = false
+        public var identifier:String? = nil
+        
+    }
+    
+    
+    
+    
+    
+    
     
     static let ReuseID = "FormKit.ListSelectionCell"
     
@@ -138,8 +155,8 @@ public final class ListSelectViewController: UITableViewController {
         didSet {
             tableView.tableFooterView = nil
             guard tableView.numberOfSections == 0 else {
-                //tableView.reloadData()
-                tableView.reloadSections(IndexSet(integersIn: 0...0), with: .top)
+                tableView.reloadData()
+                //tableView.reloadSections(IndexSet(integersIn: 0...0), with: .top)
                 listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: nil, selected: $0.selected) })
                 return
             }
@@ -147,6 +164,7 @@ public final class ListSelectViewController: UITableViewController {
             if dataSource.isEmpty {
                 print("Empty Data")
             } else {
+                print("Inserting Section 1: Datasource Count: \(dataSource.count)")
                 tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
                 listSearchTable?.searchItems = dataSource.map({
                     SearchResultItem(primary: $0.title, secondary: nil, selected: $0.selected)

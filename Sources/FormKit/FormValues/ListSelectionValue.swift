@@ -63,7 +63,7 @@ public struct ListSelectionValue {
     public var loading:Loading? = nil
     
     public var loadingClosure: ListSelectLoadingClosure? = nil
-    public var genertionClosure: JSONGenerationClosure? = nil
+    public var generationClosure: JSONGenerationClosure? = nil
     
     public var customKey: String? = nil
     var uuid:String = UUID().uuidString
@@ -133,6 +133,18 @@ extension ListSelectionValue {
         self.selectionType = .single
         self.loadingClosure = loadingClosure
         self.color = nil
+    }
+    
+    // pass in matchedvalues...
+    public init(_ title:String,loading:Loading,_ loadingClosure: @escaping ListSelectLoadingClosure) {
+        self.values = []
+        self.selectedIndicies = []
+        self.title = title
+        self.selectionMessage = "Select a Value"
+        self.selectionType = .multiple
+        self.loadingClosure = loadingClosure
+        self.color = nil
+        self.loading = loading
     }
     
     
@@ -259,14 +271,20 @@ extension ListSelectionValue {
                 valueIdentifiers: selectedValueIdentifiers,
                 loading: self.loading,
                 loadingClosure: self.loadingClosure,
-                genertionClosure: self.genertionClosure,
+                generationClosure: self.generationClosure,
                 customKey: self.customKey,
                 uuid: self.uuid
         )
     }
     
-    
+    // TODO need to pass in newMatching...
     public func newWith(_ values:[String],_ newSelectedIndicies:[Int]) -> ListSelectionValue {
+        
+        
+        
+        
+        //var newLoading = self.loading
+        
         
         
         return
@@ -280,7 +298,7 @@ extension ListSelectionValue {
                 valueIdentifiers: self.valueIdentifiers,
                 loading: self.loading,
                 loadingClosure: self.loadingClosure,
-                genertionClosure: self.genertionClosure,
+                generationClosure: self.generationClosure,
                 customKey: self.customKey,
                 uuid: self.uuid
         )
