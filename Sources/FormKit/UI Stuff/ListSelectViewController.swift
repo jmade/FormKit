@@ -100,10 +100,20 @@ public protocol ListSelectRepresentable {
 public final class ListSelectViewController: UITableViewController {
     
     public struct ListItem {
-        public var title:String?
+        public var title:String
         public var selected:Bool = false
         public var identifier:String? = nil
         
+        public init(_ title:String,_ selected:Bool = false) {
+            self.title = title
+            self.selected = selected
+        }
+        
+        public init(_ title:String,_ identifier:String?,_ selected:Bool = false) {
+            self.title = title
+            self.selected = selected
+            self.identifier = identifier
+        }
     }
     
     
@@ -288,15 +298,20 @@ public final class ListSelectViewController: UITableViewController {
     
     
     public init(_ listSelectValue:ListSelectionValue,at path:IndexPath) {
-        
         super.init(style: listSelectValue.makeDescriptor().tableViewStyle)
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
         self.title = listSelectValue.title
         self.allowsMultipleSelection = listSelectValue.selectionType == .multiple
         self.sectionTile = listSelectValue.selectionTitle
         
-        self.formValue = listSelectValue
         self.formIndexPath = path
+        self.formValue = listSelectValue
+        
+        
+       
+        
+        
+        
         
         if let loading = listSelectValue.loading {
             if let loadingClosure = loading.loadingClosure {
@@ -304,11 +319,11 @@ public final class ListSelectViewController: UITableViewController {
                 loadingClosure(self)
             }
         } else {
-            unformatedData = (listSelectValue.values,listSelectValue.selectedIndicies)
-            formatData(listSelectValue.values,listSelectValue.selectedIndicies)
-            if let loadingClosure = listSelectValue.loadingClosure {
-                loadingClosure(self)
-            }
+//            unformatedData = (listSelectValue.values,listSelectValue.selectedIndicies)
+//            formatData(listSelectValue.values,listSelectValue.selectedIndicies)
+//            if let loadingClosure = listSelectValue.loadingClosure {
+//                loadingClosure(self)
+//            }
         }
     }
     
@@ -344,6 +359,11 @@ public final class ListSelectViewController: UITableViewController {
     
     public override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if let listSelectValue = formValue {
+           dataSource = listSelectValue.listItems.map({ SelectionRow(title: $0.title, selected: $0.selected, valueIdentifier: $0.identifier) })
+        }
+        
         addBackbutton(title: " ")
         
         listSearchTable = ListSearchTable()
@@ -534,30 +554,64 @@ public final class ListSelectViewController: UITableViewController {
     
     private func newDidSelect(_ indexPath: IndexPath) {
         
-        let newIndicies = newSelectedIndicies(indexPath)
-        print(" newIndicies -> \(newIndicies) ")
-        
-        let newListValue = makeNewListSelectValue(newIndicies)
-        
-        print("NEw List value \(newListValue.selectedIndicies)")
-        
-        crawlDelegate(newListValue)
+//        let newIndicies = newSelectedIndicies(indexPath)
+//        print(" newIndicies -> \(newIndicies) ")
+//
+//        let newListValue = makeNewListSelectValue(newIndicies)
+//
+//        print("NEw List value \(newListValue.selectedIndicies)")
+//
+//        crawlDelegate(newListValue)
         
         if allowsMultipleSelection {
             dataSource[indexPath.row].selected.toggle()
             tableView.reloadSections(IndexSet(integer: 0), with: .none)
-            //tableView.reloadRows(at: [indexPath], with: .none)
         } else {
             let selectedRow = dataSource[indexPath.row]
             if selectedRow.selected {
-                formatData(newListValue.values, [])
+                dataSource[indexPath.row].selected = false
+                //formatData(newListValue.values, [])
                 tableView.reloadSections(IndexSet(integer: 0), with: .none)
             } else {
-                formatData(newListValue.values, [indexPath.row])
+                dataSource = makeNewDataSourceSingleSelectionAt(indexPath.row)
                 tableView.reloadSections(IndexSet(integer: 0), with: .none)
             }
             
         }
+        
+        let listItems = dataSource.map({ ListItem($0.title, $0.valueIdentifier, $0.selected) })
+        
+        if let currentListSelectValue = formValue {
+            let newListSelectValue = currentListSelectValue.newWith(listItems)
+            crawlDelegate(newListSelectValue)
+        }
+        
+        
+    }
+    
+    
+    
+    private func makeNewDataSourceSingleSelectionAt(_ selectedIndex:Int?) -> [SelectionRow] {
+        
+        var newData: [SelectionRow] = []
+        
+        if let newSelected = selectedIndex {
+            for (row,value) in dataSource.enumerated() {
+                newData.append(
+                    SelectionRow(title: value.title,
+                                 selected: (newSelected == row),
+                                 valueIdentifier: value.valueIdentifier
+                    )
+                )
+            }
+        } else {
+            newData = dataSource.map({
+                SelectionRow(title: $0.title, selected: false, valueIdentifier: $0.valueIdentifier)
+                
+            })
+        }
+        
+        return newData
     }
     
      

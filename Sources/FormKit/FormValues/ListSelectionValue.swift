@@ -55,6 +55,7 @@ public struct ListSelectionValue {
     
     public var values:[String]
     public var selectedIndicies: [Int]
+    
     var title:String
     var selectionMessage:String = "Select a Value"
     var color:UIColor? = nil
@@ -80,6 +81,40 @@ extension ListSelectionValue: Equatable, Hashable {
     public static func == (lhs: ListSelectionValue, rhs: ListSelectionValue) -> Bool {
         return lhs.uuid == rhs.uuid
     }
+}
+
+
+/// Rules here would be, if `values.isEmpty == true`
+/// then the valueIdentifiers would serve as the loading matching index....
+
+
+extension ListSelectionValue {
+
+    public var listItems:[ListSelectViewController.ListItem] {
+        var items:[ListSelectViewController.ListItem] = []
+        
+        for (i,value) in values.enumerated() {
+            var id:String? = nil
+            
+            if let identifiers = valueIdentifiers {
+                if i <= (identifiers.count - 1) {
+                    id = identifiers[i]
+                }
+            }
+            
+            items.append(
+                ListSelectViewController.ListItem(
+                    value,
+                    id,
+                    selectedIndicies.contains(i)
+                )
+            )
+        }
+        
+        return items
+        
+    }
+
 }
 
 
@@ -277,25 +312,30 @@ extension ListSelectionValue {
         )
     }
     
-    // TODO need to pass in newMatching...
-    public func newWith(_ values:[String],_ newSelectedIndicies:[Int]) -> ListSelectionValue {
+    
+    
+    
+    public func newWith(_ listItems:[ListSelectViewController.ListItem]) -> ListSelectionValue  {
+        var newSelectedIndicies: [Int] = []
         
+        for (i,listItem) in listItems.enumerated() {
+            if listItem.selected {
+                newSelectedIndicies.append(i)
+            }
+        }
         
-        
-        
-        //var newLoading = self.loading
-        
-        
+        let newValues = listItems.map({ $0.title })
+        let newIdentifiers = listItems.compactMap({ $0.identifier })
         
         return
             ListSelectionValue(
                 selectionType: self.selectionType,
-                values: values,
+                values: newValues,
                 selectedIndicies: newSelectedIndicies,
                 title: self.title,
                 selectionMessage: self.selectionMessage,
                 color: self.color,
-                valueIdentifiers: self.valueIdentifiers,
+                valueIdentifiers: newIdentifiers,
                 loading: self.loading,
                 loadingClosure: self.loadingClosure,
                 generationClosure: self.generationClosure,
@@ -303,8 +343,6 @@ extension ListSelectionValue {
                 uuid: self.uuid
         )
     }
-    
-    
     
 }
 
