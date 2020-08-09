@@ -507,6 +507,8 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     
     
     private func newDidSelect(_ indexPath: IndexPath) {
+        print(" allowsMultipleSelection -> \(allowsMultipleSelection) ")
+        
         let newIndicies = newSelectedIndicies(indexPath)
         print("Updating delegate")
         
@@ -546,15 +548,18 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     
     
     private func newSelectedIndicies(_ indexPath: IndexPath) -> [Int] {
-        
+        print(" indexPath -> \(indexPath) ")
         if allowsMultipleSelection {
             let selectedRow = dataSource[indexPath.row]
             if selectedRow.selected {
-                return getSelectedIndicies(removingIndex: indexPath.row)
-                
+                let returnValue = getSelectedIndicies(removingIndex: indexPath.row)
+                print(" returnValue -> \(returnValue) ")
+                return returnValue
             } else {
                 var currentIndicies = getSelectedIndicies(removingIndex: nil)
+                print(" currentIndicies -> \(currentIndicies) ")
                 currentIndicies.append(indexPath.row)
+                print("return  -> \(currentIndicies) ")
                 return currentIndicies
             }
         } else {
@@ -567,6 +572,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     private func makeNewListSelectValue(_ selectedIndicies:[Int]) -> ListSelectionValue {
         
         guard let currentValue = formValue else {
+            print("ERROR could not get the listSelectValue")
             return .init(title: title ?? "",
                          values: dataSource.map({ $0.title }),
                          selected: selectedIndicies
