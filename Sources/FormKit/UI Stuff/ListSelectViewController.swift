@@ -455,7 +455,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
         return dataSource.count
     }
     
-//    
+//
 //    public override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
 //        updateMasterStorage(title: dataSource[indexPath.row].title, selected: false)
 //        let oldRow = dataSource[indexPath.row]
@@ -463,7 +463,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
 //        tableView.reloadRows(at: [indexPath], with: .none)
 //        updateSeletion()
 //    }
-//    
+//
     
     
     
@@ -477,25 +477,68 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
         
     }
     
+    private func crawlDelegate(_ new:ListSelectionValue) {
+        let presentVC =  navigationController?.presentedViewController
+        print(" presentVC -> \(String(describing: presentVC)) ")
+        
+        if let nav = navigationController {
+            for vc in nav.viewControllers {
+                if let form = vc as? FormController {
+                    print("Found Form")
+                    form.dataSource.log()
+                    print("-------")
+                    
+                    //form.updatedFormValue(new, formIndexPath)
+                    if let path = formIndexPath {
+                        form.dataSource.updateWith(formValue: new, at: path)
+                        form.tableView.reloadRows(at: [path], with: .none)
+                    }
+                    
+                 
+                    
+                }
+            }
+        }
+        
+        
+        
+    }
+    
     
     
     private func newDidSelect(_ indexPath: IndexPath) {
         let newIndicies = newSelectedIndicies(indexPath)
         print("Updating delegate")
-        formDelegate?.updatedFormValue(makeNewListSelectValue(newIndicies), formIndexPath)
+        
+        let newListValue = makeNewListSelectValue(newIndicies)
+        
+        formDelegate?.updatedFormValue(newListValue, formIndexPath)
+        
+        crawlDelegate(newListValue)
+        
         
         if allowsMultipleSelection {
             dataSource[indexPath.row].selected.toggle()
             tableView.reloadRows(at: [indexPath], with: .none)
             print("Need to handle change")
         } else {
-            let selected = getSelectedIndicies(removingIndex: nil)
-            if !selected.isEmpty {
-                dataSource[selected[0]].selected.toggle()
-                dataSource[indexPath.row].selected.toggle()
-                tableView.reloadRows(at: [indexPath,IndexPath(row: selected[0], section: 0)], with: .none)
-            }
-            print("Need to handle change")
+            
+            formatData(newListValue.values, [indexPath.row])
+            
+            tableView.reloadSections(IndexSet(integer: 0), with: .none)
+//
+//            let selected = getSelectedIndicies(removingIndex: nil)
+//            print("Current Selected: \(selected)")
+//
+//
+//
+//            if !selected.isEmpty {
+//                dataSource[selected[0]].selected.toggle()
+//                dataSource[indexPath.row].selected.toggle()
+//                tableView.reloadSections(IndexSet(integer: 0), with: .none)
+//                tableView.reloadRows(at: [indexPath,IndexPath(row: selected[0], section: 0)], with: .none)
+//            }
+//            print("Need to handle change")
         }
         
         
@@ -507,9 +550,10 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
         if selectedRow.selected {
             return getSelectedIndicies(removingIndex: indexPath.row)
         } else {
-            var currentIndicies = getSelectedIndicies(removingIndex: nil)
-            currentIndicies.append(indexPath.row)
-            return currentIndicies
+            return [indexPath.row]
+//            var currentIndicies = getSelectedIndicies(removingIndex: nil)
+//            currentIndicies.append()
+//            return currentIndicies
         }
     }
     

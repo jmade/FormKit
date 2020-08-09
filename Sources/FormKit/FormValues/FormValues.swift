@@ -53,7 +53,6 @@ public protocol UpdateFormValueDelegate: class {
     func toggleTo(_ direction:Direction,_ from:IndexPath)
 }
 
-
 // MARK: - UpdatedTextDelegate
 public protocol UpdatedTextDelegate: class {
     func updatedTextForIndexPath(_ newText:String,_ indexPath:IndexPath)
