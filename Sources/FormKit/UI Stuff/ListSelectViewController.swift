@@ -138,7 +138,8 @@ public final class ListSelectViewController: UITableViewController {
         didSet {
             tableView.tableFooterView = nil
             guard tableView.numberOfSections == 0 else {
-                tableView.reloadData()
+                //tableView.reloadData()
+                tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
                 listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: nil, selected: $0.selected) })
                 return
             }

@@ -42,6 +42,10 @@ public struct ListSelectionValue {
             
         }
         
+        public var matchingOnString: Bool {
+            return matchingIntegerValues == nil
+        }
+        
     }
     
     
@@ -59,7 +63,7 @@ public struct ListSelectionValue {
     public var loading:Loading? = nil
     
     public var loadingClosure: ListSelectLoadingClosure? = nil
-    public var genertionClossure: JSONGenerationClosure? = nil
+    public var genertionClosure: JSONGenerationClosure? = nil
     
     public var customKey: String? = nil
     var uuid:String = UUID().uuidString
@@ -253,7 +257,30 @@ extension ListSelectionValue {
                 selectionMessage: self.selectionMessage,
                 color: self.color,
                 valueIdentifiers: selectedValueIdentifiers,
+                loading: self.loading,
                 loadingClosure: self.loadingClosure,
+                genertionClosure: self.genertionClosure,
+                customKey: self.customKey,
+                uuid: self.uuid
+        )
+    }
+    
+    
+    public func newWith(_ values:[String],_ newSelectedIndicies:[Int]) -> ListSelectionValue {
+        
+        
+        return
+            ListSelectionValue(
+                selectionType: self.selectionType,
+                values: values,
+                selectedIndicies: newSelectedIndicies,
+                title: self.title,
+                selectionMessage: self.selectionMessage,
+                color: self.color,
+                valueIdentifiers: self.valueIdentifiers,
+                loading: self.loading,
+                loadingClosure: self.loadingClosure,
+                genertionClosure: self.genertionClosure,
                 customKey: self.customKey,
                 uuid: self.uuid
         )
