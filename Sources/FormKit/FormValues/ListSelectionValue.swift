@@ -54,14 +54,14 @@ public struct ListSelectionValue {
     public enum SelectionType { case single, multiple }
     public var selectionType: SelectionType
     
-    var values:[String]
-    var selectedIndicies: [Int]
+    public var values:[String]
+    public var selectedIndicies: [Int]
     var title:String
     var selectionMessage:String = "Select a Value"
     var color:UIColor? = nil
     var valueIdentifiers:[String]? = nil
     
-    var loading:Loading? = nil
+    public var loading:Loading? = nil
     
     var loadingClosure: ListSelectLoadingClosure? = nil
     
