@@ -664,6 +664,10 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
                             row
                         )
                     }
+                } else {
+                    selectedPaths.append(
+                        row
+                    )
                 }
             }
         }
