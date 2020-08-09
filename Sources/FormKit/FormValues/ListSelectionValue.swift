@@ -12,7 +12,7 @@ public typealias ListSelectLoadingClosure = (ListSelectViewController) -> Void
 
 // JSON -> ListSelectionValue transform closure
 
-public typealias JSONGenerationClosure = ([String:Any]) -> ListSelectViewController?
+public typealias JSONGenerationClosure = ([String:Any]) -> ListSelectionValue?
  
 
 
