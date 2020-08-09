@@ -11,6 +11,8 @@ import UIKit
 public typealias ListSelectLoadingClosure = (ListSelectViewController) -> Void
 
 // JSON -> ListSelectionValue transform closure
+
+public typealias JSONGenerationClosure = ([String:Any]) -> ListSelectViewController?
  
 
 
@@ -20,6 +22,7 @@ public struct ListSelectionValue {
     public struct Loading {
         var itemKey: String
         var loadingClosure: ListSelectLoadingClosure? = nil
+        var generationClosure: JSONGenerationClosure? = nil
         var matchingIntegerValues: [Int]? = nil
         var matchingStringValues: [String]? = nil
         
@@ -147,18 +150,6 @@ extension ListSelectionValue {
             } else {
                 return ""
             }
-            
-//            if selectedIndicies.isEmpty {
-//                return ""
-//            } else {
-//
-//            }
-//
-//            let idx = selectedIndicies.first ?? 0
-//            if values.count > idx {
-//                return values[idx]
-//            }
-//            return "-"
         case .multiple:
             return "\(selectedIndicies.count) Selected"
         }
