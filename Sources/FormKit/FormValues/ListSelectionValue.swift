@@ -101,12 +101,7 @@ extension ListSelectionValue {
                 if i <= (identifiers.count - 1) {
                     id = identifiers[i]
                 }
-            } else {
-                print("No Identifiers")
             }
-            
-            print("id: \(id ?? "nil")")
-            
             
             items.append(
                 ListSelectViewController.ListItem(
@@ -245,23 +240,13 @@ extension ListSelectionValue: FormValue {
         FormItem.listSelection(self)
     }
     
-    
-    
     public func encodedValue() -> [String : String] {
-        return [ (customKey ?? "\(title)_\(idKey)") : "\(selectedValues)" ]
         
-        /*
-        if customKey == nil {
-            switch selectionType {
-            case .single:
-                return ["\(title)_\(idKey)" : "\(selectedValues)" ]
-            case .multiple:
-                return ["\(title)_\(idKey)" : "\(selectedValues)" ]
-            }
-        } else {
-            return [(customKey ?? "-"):"\(selectedValues)"]
+        if let identifiers = valueIdentifiers {
+            let selectedidentifiers = identifiers.joined(separator: ",")
+            return [ (customKey ?? "\(title)") : selectedidentifiers ]
         }
-        */
+        return [ (customKey ?? "\(title)") : "\(selectedValues)" ]
     }
 }
 
@@ -332,9 +317,7 @@ extension ListSelectionValue {
     
     
     public func newWith(_ listItems:[ListSelectViewController.ListItem]) -> ListSelectionValue  {
-        
-        print("new with list items: \(listItems)")
-        
+      
         var newSelectedIndicies: [Int] = []
         var newMatchingStringValues:[String] = []
         
@@ -347,20 +330,15 @@ extension ListSelectionValue {
         
         let newValues = listItems.map({ $0.title })
         let newIdentifiers = listItems.compactMap({ $0.identifier })
-        
-        //print(" newIdentifiers -> \(newIdentifiers) ")
-        
-        
+       
         var newLoading:Loading? = nil
         if let currentLoading = self.loading {
             newLoading = currentLoading
             if currentLoading.matchingStringValues != nil {
                 /// `[String]`
-                print("NewLoading Matching String: \(newMatchingStringValues)")
                 newLoading?.matchingStringValues = newMatchingStringValues
             } else {
                 /// `[Int]`
-                //print("NewLoading Matching Int: \(currentLoading.matchingIntegerValues!)")
                 newLoading?.matchingIntegerValues = newMatchingStringValues.compactMap({ Int($0) })
             }
         }
