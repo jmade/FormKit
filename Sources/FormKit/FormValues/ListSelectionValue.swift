@@ -327,6 +327,20 @@ extension ListSelectionValue {
         let newValues = listItems.map({ $0.title })
         let newIdentifiers = listItems.compactMap({ $0.identifier })
         
+        
+        var newLoading:Loading? = nil
+        if let currentLoading = self.loading {
+            newLoading = currentLoading
+            
+            if currentLoading.matchingStringValues != nil {
+                /// `[String]`
+                newLoading?.matchingStringValues = newIdentifiers
+            } else {
+                /// `[Int]`
+                newLoading?.matchingIntegerValues = newIdentifiers.compactMap({ Int($0) })
+            }
+        }
+        
         return
             ListSelectionValue(
                 selectionType: self.selectionType,
@@ -336,7 +350,7 @@ extension ListSelectionValue {
                 selectionMessage: self.selectionMessage,
                 color: self.color,
                 valueIdentifiers: newIdentifiers,
-                loading: self.loading,
+                loading: newLoading,
                 loadingClosure: self.loadingClosure,
                 generationClosure: self.generationClosure,
                 customKey: self.customKey,
