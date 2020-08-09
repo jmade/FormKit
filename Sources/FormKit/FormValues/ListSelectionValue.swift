@@ -26,15 +26,17 @@ public struct ListSelectionValue {
         var matchingIntegerValues: [Int]? = nil
         var matchingStringValues: [String]? = nil
         
-        public init(_ matchingValues:[Int],itemKey:String,loadingClosure: @escaping ListSelectLoadingClosure) {
+        public init(_ matchingValues:[Int],itemKey:String,loadingClosure: @escaping ListSelectLoadingClosure, generationClosure: @escaping JSONGenerationClosure) {
             self.itemKey = itemKey
             self.loadingClosure = loadingClosure
+            self.generationClosure = generationClosure
             self.matchingIntegerValues = matchingValues
         }
         
-        public init(_ matchingValues:[String],itemKey:String,loadingClosure: @escaping ListSelectLoadingClosure) {
+        public init(_ matchingValues:[String],itemKey:String,loadingClosure: @escaping ListSelectLoadingClosure, generationClosure: @escaping JSONGenerationClosure) {
             self.itemKey = itemKey
             self.loadingClosure = loadingClosure
+            self.generationClosure = generationClosure
             self.matchingStringValues = matchingValues
             
         }
