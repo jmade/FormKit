@@ -578,12 +578,16 @@ public final class ListSelectViewController: UITableViewController {
             }
             
         }
-        
+    
+        print("About to set the Delegate")
         let listItems = dataSource.map({ ListItem($0.title, $0.valueIdentifier, $0.selected) })
         
         if let currentListSelectValue = formValue {
+            print("got a form value ")
             let newListSelectValue = currentListSelectValue.newWith(listItems)
             crawlDelegate(newListSelectValue)
+        } else {
+            print("Error no formvalue ")
         }
         
         
