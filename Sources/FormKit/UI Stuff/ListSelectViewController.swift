@@ -244,12 +244,13 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     }
     
     
-    public init(_ listSelectValue:ListSelectionValue) {
+    public init(_ listSelectValue:ListSelectionValue,at path:IndexPath) {
         let descriptor = listSelectValue.makeDescriptor()
         super.init(style: descriptor.tableViewStyle)
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
         
         self.formValue = listSelectValue
+        self.formIndexPath = path
         unformatedData = (descriptor.listVales,descriptor.selectedIndicies)
         formatData(descriptor.listVales,descriptor.selectedIndicies)
 

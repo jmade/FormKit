@@ -247,45 +247,14 @@ extension ListSelectionValue: FormValueDisplayable {
     }
 
     public func didSelect(_ formController: Controller, _ path: IndexPath) {
-        
        
         
-        let changeClosure: ListSelectionChangeClosure = {  (selectedValues) in
-            print("Changed Values: \(selectedValues)")
-            
-            /*
-            if let formItem = formController?.dataSource.itemAt(path) {
-                switch formItem {
-                case .listSelection(let list):
-                    let new = list.newWith(selectedValues)
-                    formController?.dataSource.updateWith(formValue: new, at: path)
-                    formController?.tableView.reloadRows(at: [path], with: .none)
-                default:
-                    break
-                }
-            }
-            */
-            
-        }
-        
-        
-        let descriptor = self.makeDescriptor(changeClosure)
-        
-        if let loadingClosure = self.loadingClosure {
-            let listVC = ListSelectViewController(descriptor: descriptor, loadingClosure: loadingClosure)
-            listVC.formDelegate = formController
-            
-            formController.navigationController?.pushViewController(
-                listVC,
-                animated: true
-            )
-        } else {
-            let listVC = ListSelectViewController(descriptor: descriptor)
-            formController.navigationController?.pushViewController(
-                listVC,
-                animated: true
-            )
-        }
+        let listVC = ListSelectViewController(self, at: path)
+        listVC.formDelegate = formController
+        formController.navigationController?.pushViewController(
+            listVC,
+            animated: true
+        )
         
     }
     
