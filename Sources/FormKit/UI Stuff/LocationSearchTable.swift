@@ -43,6 +43,7 @@ public extension MKPlacemark {
 public struct SearchResultItem: Hashable {
     var primary:String? = nil
     var secondary:String? = nil
+    var selected:Bool = false
     let identifier: UUID = UUID()
     
     public func hash(into hasher: inout Hasher) {

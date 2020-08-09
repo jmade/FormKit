@@ -66,6 +66,25 @@ public class ListSearchTable : UITableViewController {
 
 extension ListSearchTable : UISearchResultsUpdating {
     
+    
+    private func handleSearchText(_ searchText:String) {
+        
+//        if let searchText = searchController.searchBar.text {
+//        /// use a fresh copy of all entires
+//        let currentDataSource = completeDataSource
+//        let titles = currentDataSource.map({ $0.title })
+//        let filteredTitles = titles.filter { (title) -> Bool in
+//            let foundRange = title.range(of: searchText,
+//                                         options: .caseInsensitive,
+//                                         range: nil,
+//                                         locale: nil
+//            )
+//            return foundRange != nil
+//        }
+    }
+    
+    
+    
     public func updateSearchResults(for searchController: UISearchController) {
         guard let searchBarText = searchController.searchBar.text else { return }
         print("Search Text: \(searchBarText)")
@@ -181,12 +200,15 @@ final class ListSearchResultCell: UITableViewCell {
         super.prepareForReuse()
         primaryTextLabel.text = nil
         secondaryTextLabel.text = nil
+        accessoryType = .none
     }
     
     
     public func configureCell(_ item:SearchResultItem) {
         secondaryTextLabel.text = item.secondary
         primaryTextLabel.text = item.primary
+        accessoryType = item.selected ? .checkmark  : .none
+        
     }
     
 }

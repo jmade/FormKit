@@ -139,11 +139,13 @@ public final class ListSelectViewController: UITableViewController {
             tableView.tableFooterView = nil
             guard tableView.numberOfSections == 0 else {
                 tableView.reloadData()
-                listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: nil) })
+                listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: nil, selected: $0.selected) })
                 return
             }
             tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
-            listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: nil) })
+            listSearchTable?.searchItems = dataSource.map({
+                SearchResultItem(primary: $0.title, secondary: nil, selected: $0.selected)
+            })
         }
     }
     
@@ -211,7 +213,7 @@ public final class ListSelectViewController: UITableViewController {
         self.title = title
     
         navigationController?.navigationBar.prefersLargeTitles = true
-    navigationController?.navigationItem.largeTitleDisplayMode = .always
+        navigationController?.navigationItem.largeTitleDisplayMode = .always
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(donePressed))
         
@@ -299,7 +301,8 @@ public final class ListSelectViewController: UITableViewController {
             self?.handleSearchedSelection(item: item,at: path)
         }
         
-        listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: nil) })
+        
+        listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: nil, selected: $0.selected) })
         resultSearchController = UISearchController(searchResultsController: listSearchTable)
         resultSearchController?.searchResultsUpdater = listSearchTable
         
@@ -514,7 +517,12 @@ public final class ListSelectViewController: UITableViewController {
                 return currentIndicies
             }
         } else {
-            return [indexPath.row]
+            let selectedRow = dataSource[indexPath.row]
+            if selectedRow.selected {
+                return []
+            } else {
+                return [indexPath.row]
+            }
         }
     }
     
