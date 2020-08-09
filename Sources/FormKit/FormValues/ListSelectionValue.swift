@@ -336,34 +336,32 @@ extension ListSelectionValue {
         print("new with list items: \(listItems)")
         
         var newSelectedIndicies: [Int] = []
+        var newMatchingStringValues:[String] = []
         
         for (i,listItem) in listItems.enumerated() {
             if listItem.selected {
                 newSelectedIndicies.append(i)
+                newMatchingStringValues.append(listItem.identifier ?? "!?")
             }
         }
         
         let newValues = listItems.map({ $0.title })
         let newIdentifiers = listItems.compactMap({ $0.identifier })
         
-        print(" newIdentifiers -> \(newIdentifiers) ")
+        //print(" newIdentifiers -> \(newIdentifiers) ")
         
         
         var newLoading:Loading? = nil
         if let currentLoading = self.loading {
-            
-           
-            
             newLoading = currentLoading
-            
             if currentLoading.matchingStringValues != nil {
                 /// `[String]`
-                print("NewLoading Matching String: \(currentLoading.matchingStringValues!)")
-                newLoading?.matchingStringValues = newIdentifiers
+                print("NewLoading Matching String: \(newMatchingStringValues)")
+                newLoading?.matchingStringValues = newMatchingStringValues
             } else {
                 /// `[Int]`
-                print("NewLoading Matching Int: \(currentLoading.matchingIntegerValues!)")
-                newLoading?.matchingIntegerValues = newIdentifiers.compactMap({ Int($0) })
+                //print("NewLoading Matching Int: \(currentLoading.matchingIntegerValues!)")
+                newLoading?.matchingIntegerValues = newMatchingStringValues.compactMap({ Int($0) })
             }
         }
         
