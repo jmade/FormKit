@@ -317,7 +317,7 @@ extension ListSelectionValue {
     
     public func newWith(_ listItems:[ListSelectViewController.ListItem]) -> ListSelectionValue  {
         
-        print("new with list items")
+        print("new with list items: \(listItems)")
         
         var newSelectedIndicies: [Int] = []
         
