@@ -455,14 +455,15 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
         return dataSource.count
     }
     
-    public override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
-        updateMasterStorage(title: dataSource[indexPath.row].title, selected: false)
-        let oldRow = dataSource[indexPath.row]
-        dataSource[indexPath.row] = SelectionRow(title: oldRow.title, selected: false)
-        tableView.reloadRows(at: [indexPath], with: .none)
-        updateSeletion()
-    }
-    
+//    
+//    public override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+//        updateMasterStorage(title: dataSource[indexPath.row].title, selected: false)
+//        let oldRow = dataSource[indexPath.row]
+//        dataSource[indexPath.row] = SelectionRow(title: oldRow.title, selected: false)
+//        tableView.reloadRows(at: [indexPath], with: .none)
+//        updateSeletion()
+//    }
+//    
     
     
     
@@ -480,11 +481,13 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     
     private func newDidSelect(_ indexPath: IndexPath) {
         let newIndicies = newSelectedIndicies(indexPath)
+        print("Updating delegate")
+        formDelegate?.updatedFormValue(makeNewListSelectValue(newIndicies), formIndexPath)
         
         if allowsMultipleSelection {
             dataSource[indexPath.row].selected.toggle()
             tableView.reloadRows(at: [indexPath], with: .none)
-            //print("Need to handle change")
+            print("Need to handle change")
         } else {
             let selected = getSelectedIndicies(removingIndex: nil)
             if !selected.isEmpty {
@@ -492,10 +495,10 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
                 dataSource[indexPath.row].selected.toggle()
                 tableView.reloadRows(at: [indexPath,IndexPath(row: selected[0], section: 0)], with: .none)
             }
-            //print("Need to handle change")
+            print("Need to handle change")
         }
         
-        formDelegate?.updatedFormValue(makeNewListSelectValue(newIndicies), formIndexPath)
+        
     }
     
     
@@ -521,6 +524,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
             )
         }
         
+        print("Got current value ")
         var new = currentValue
         new.values = dataSource.map({ $0.title })
         new.selectedIndicies = selectedIndicies
