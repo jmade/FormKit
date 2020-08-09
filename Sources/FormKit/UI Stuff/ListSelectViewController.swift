@@ -546,14 +546,19 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     
     
     private func newSelectedIndicies(_ indexPath: IndexPath) -> [Int] {
-        let selectedRow = dataSource[indexPath.row]
-        if selectedRow.selected {
-            return getSelectedIndicies(removingIndex: indexPath.row)
+        
+        if allowsMultipleSelection {
+            let selectedRow = dataSource[indexPath.row]
+            if selectedRow.selected {
+                return getSelectedIndicies(removingIndex: indexPath.row)
+                
+            } else {
+                var currentIndicies = getSelectedIndicies(removingIndex: nil)
+                currentIndicies.append(indexPath.row)
+                return currentIndicies
+            }
         } else {
             return [indexPath.row]
-//            var currentIndicies = getSelectedIndicies(removingIndex: nil)
-//            currentIndicies.append()
-//            return currentIndicies
         }
     }
     
