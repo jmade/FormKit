@@ -68,33 +68,39 @@ extension ListSearchTable : UISearchResultsUpdating {
     
     
     private func handleSearchText(_ searchText:String) {
+        searchString = searchText
         
-//        if let searchText = searchController.searchBar.text {
-//        /// use a fresh copy of all entires
-//        let currentDataSource = completeDataSource
-//        let titles = currentDataSource.map({ $0.title })
-//        let filteredTitles = titles.filter { (title) -> Bool in
-//            let foundRange = title.range(of: searchText,
-//                                         options: .caseInsensitive,
-//                                         range: nil,
-//                                         locale: nil
-//            )
-//            return foundRange != nil
-//        }
+
+        /// use a fresh copy of all entires
+        let currentDataSource = searchItems
+        let titles = currentDataSource.map({ $0.primary! })
+        let filteredTitles = titles.filter { (title) -> Bool in
+            let foundRange = title.range(of: searchText,
+                                         options: .caseInsensitive,
+                                         range: nil,
+                                         locale: nil
+            )
+            return foundRange != nil
+        }
+        
+        let searchedData = searchText.isEmpty ? titles : filteredTitles
+       dataSource = currentDataSource.filter { searchedData.contains($0.primary!) }
+        
     }
     
     
     
     public func updateSearchResults(for searchController: UISearchController) {
         guard let searchBarText = searchController.searchBar.text else { return }
-        print("Search Text: \(searchBarText)")
-        searchString = searchBarText
-        
-        
-        let matchedItems = searchItems.filter({ $0.primary!.contains(searchBarText) })
-        print("Matched cnt: \(matchedItems.count)")
-        
-        dataSource = matchedItems
+        handleSearchText(searchBarText)
+//        print("Search Text: \(searchBarText)")
+//        
+//        
+//        
+//        let matchedItems = searchItems.filter({ $0.primary!.contains(searchBarText) })
+//        print("Matched cnt: \(matchedItems.count)")
+//        
+//        dataSource = matchedItems
     }
     
     

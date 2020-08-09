@@ -134,17 +134,31 @@ extension ListSelectionValue {
     }
     
     var selectionTitle: String {
-        guard !selectedIndicies.isEmpty else {
-            return ""
-        }
-        
+       
         switch selectionType {
         case .single:
-            let idx = selectedIndicies.first ?? 0
-            if values.count > idx {
-                return values[idx]
+            
+            if let idx = selectedIndicies.first {
+                if values.count > idx {
+                    return values[idx]
+                } else {
+                    return "-"
+                }
+            } else {
+                return ""
             }
-            return "-"
+            
+//            if selectedIndicies.isEmpty {
+//                return ""
+//            } else {
+//
+//            }
+//
+//            let idx = selectedIndicies.first ?? 0
+//            if values.count > idx {
+//                return values[idx]
+//            }
+//            return "-"
         case .multiple:
             return "\(selectedIndicies.count) Selected"
         }
