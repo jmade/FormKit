@@ -450,7 +450,7 @@ public final class ListSelectViewController: UITableViewController {
     }
     
     public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return sectionTile
+        return "\(getSelectedIndicies(removingIndex: nil).count) Selected"
     }
     
     public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -483,16 +483,22 @@ public final class ListSelectViewController: UITableViewController {
         
         let newListValue = makeNewListSelectValue(newIndicies)
         
-        //formDelegate?.updatedFormValue(newListValue, formIndexPath)
-        
         crawlDelegate(newListValue)
         
         if allowsMultipleSelection {
             dataSource[indexPath.row].selected.toggle()
-            tableView.reloadRows(at: [indexPath], with: .none)
-        } else {
-            formatData(newListValue.values, [indexPath.row])
             tableView.reloadSections(IndexSet(integer: 0), with: .none)
+            //tableView.reloadRows(at: [indexPath], with: .none)
+        } else {
+            let selectedRow = dataSource[indexPath.row]
+            if selectedRow.selected {
+                formatData(newListValue.values, [])
+                tableView.reloadSections(IndexSet(integer: 0), with: .none)
+            } else {
+                formatData(newListValue.values, [indexPath.row])
+                tableView.reloadSections(IndexSet(integer: 0), with: .none)
+            }
+            
         }
     }
     

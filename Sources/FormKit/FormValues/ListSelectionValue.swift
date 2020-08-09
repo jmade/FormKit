@@ -10,8 +10,33 @@ import UIKit
 
 public typealias ListSelectLoadingClosure = (ListSelectViewController) -> Void
 
+// JSON -> ListSelectionValue transform closure
+ 
+
+
 // MARK: - ListSelectionValue -
 public struct ListSelectionValue {
+    
+    public struct Loading {
+        var itemKey: String
+        var loadingClosure: ListSelectLoadingClosure? = nil
+        var matchingIntegerValues: [Int]? = nil
+        var matchingStringValues: [String]? = nil
+        
+        public init(_ matchingValues:[Int],itemKey:String,loadingClosure: @escaping ListSelectLoadingClosure) {
+            self.itemKey = itemKey
+            self.loadingClosure = loadingClosure
+            self.matchingIntegerValues = matchingValues
+        }
+        
+        public init(_ matchingValues:[String],itemKey:String,loadingClosure: @escaping ListSelectLoadingClosure) {
+            self.itemKey = itemKey
+            self.loadingClosure = loadingClosure
+            self.matchingStringValues = matchingValues
+            
+        }
+        
+    }
     
     public enum SelectionType { case single, multiple }
     public var selectionType: SelectionType
@@ -22,6 +47,8 @@ public struct ListSelectionValue {
     var selectionMessage:String = "Select a Value"
     var color:UIColor? = nil
     var valueIdentifiers:[String]? = nil
+    
+    var loading:Loading? = nil
     
     var loadingClosure: ListSelectLoadingClosure? = nil
     
