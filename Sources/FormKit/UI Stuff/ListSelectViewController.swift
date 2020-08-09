@@ -337,6 +337,7 @@ public final class ListSelectViewController: UITableViewController {
         super.viewDidLoad()
         
         if let listSelectValue = formValue {
+            print("[LSC] viewDidLoad Setting dataSource: \(listSelectValue.selectionRows.count) ")
             dataSource = listSelectValue.selectionRows
         }
         
