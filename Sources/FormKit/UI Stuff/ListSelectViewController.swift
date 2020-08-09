@@ -297,6 +297,7 @@ public final class ListSelectViewController: UITableViewController {
         self.formIndexPath = path
         self.formValue = listSelectValue
         
+        
         if let loading = listSelectValue.loading {
             if let loadingClosure = loading.loadingClosure {
                 loadingClosure(self)
@@ -339,6 +340,7 @@ public final class ListSelectViewController: UITableViewController {
             dataSource = listSelectValue.selectionRows
         }
         
+        
         addBackbutton(title: " ")
         
         listSearchTable = ListSearchTable()
@@ -360,6 +362,8 @@ public final class ListSelectViewController: UITableViewController {
         
         resultSearchController?.hidesNavigationBarDuringPresentation = false
         definesPresentationContext = true
+        
+        tableView.reloadSections(IndexSet(integer: 0), with: .none)
         
         //navigationController?.navigationBar.titleTextAttributes = [ .foregroundColor : UIColor.white ]
     }

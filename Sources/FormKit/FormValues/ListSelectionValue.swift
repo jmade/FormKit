@@ -402,21 +402,23 @@ extension ListSelectionValue: FormValueDisplayable {
 extension ListSelectionValue {
     
    public static func DemoSingle() -> ListSelectionValue {
+        let list = Array(stride(from: 0, to: 32, by: 1))
         return
             ListSelectionValue(
                 title: "Single-Demo",
-                values: stride(from: 0, to: 32, by: 1).map({ "Item \($0)" }),
-                selectedIndex: 1
+                values: list.map({ "Item \($0)" }),
+                selectedIndex: list.randomElement()!
         )
     }
     
     
    public static func DemoMulti() -> ListSelectionValue {
+        let random = Array(stride(from: 0, to: 32, by: 1))
         return
             ListSelectionValue(
                 title: "Multi-Demo",
-                values: stride(from: 0, to: 32, by: 1).map({ "Multiple Item: \($0)" }),
-                selected: [1,3,7]
+                values: random.map({ "Multiple Item: \($0)" }),
+                selected: [random.randomElement()!,random.randomElement()!,random.randomElement()!]
         )
     }
     
