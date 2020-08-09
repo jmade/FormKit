@@ -107,6 +107,8 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     
     
     public var formValue:ListSelectionValue? = nil
+    private var formIndexPath: IndexPath? = nil
+    
     weak var formDelegate:UpdateFormValueDelegate?
     
     
@@ -476,11 +478,12 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     
     
     private func newDidSelect(_ indexPath: IndexPath) {
+        let newIndicies = newSelectedIndicies(indexPath)
         
         if allowsMultipleSelection {
             dataSource[indexPath.row].selected.toggle()
             tableView.reloadRows(at: [indexPath], with: .none)
-            print("Need to handle change")
+            //print("Need to handle change")
         } else {
             let selected = getSelectedIndicies(removingIndex: nil)
             if !selected.isEmpty {
@@ -488,12 +491,14 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
                 dataSource[indexPath.row].selected.toggle()
                 tableView.reloadRows(at: [indexPath,IndexPath(row: selected[0], section: 0)], with: .none)
             }
-            print("Need to handle change")
+            //print("Need to handle change")
         }
+        
+        formDelegate?.updatedFormValue(makeNewListSelectValue(newIndicies), formIndexPath)
     }
     
     
-    private func newProcessSelected(indexPath: IndexPath) -> [Int] {
+    private func newSelectedIndicies(_ indexPath: IndexPath) -> [Int] {
         let selectedRow = dataSource[indexPath.row]
         if selectedRow.selected {
             return getSelectedIndicies(removingIndex: indexPath.row)
@@ -505,18 +510,23 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     }
     
     
-    /*
-    private func makeNewListSelectValue() -> ListSelectionValue {
-        if let currentValue = formValue {
-            var new = currentValue
-            
-            
+    
+    private func makeNewListSelectValue(_ selectedIndicies:[Int]) -> ListSelectionValue {
+        
+        guard let currentValue = formValue else {
+            return .init(title: title ?? "",
+                         values: dataSource.map({ $0.title }),
+                         selected: selectedIndicies
+            )
         }
         
-        
+        var new = currentValue
+        new.values = dataSource.map({ $0.title })
+        new.selectedIndicies = selectedIndicies
+        return new
         
     }
-    */
+    
     
     private func handleDidSelectRowAt(_ path:IndexPath) {
         let indexPath = path

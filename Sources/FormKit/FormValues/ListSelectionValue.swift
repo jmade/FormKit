@@ -268,6 +268,7 @@ extension ListSelectionValue: FormValueDisplayable {
             
         }
         
+        
         let descriptor = self.makeDescriptor(changeClosure)
         
         if let loadingClosure = self.loadingClosure {
