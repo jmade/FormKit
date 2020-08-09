@@ -14,7 +14,7 @@ public typealias ListSelectLoadingClosure = (ListSelectViewController) -> Void
 
 //public typealias JSONGenerationClosure = ([String:Any]) -> ListSelectionValue?
 
-public typealias JSONGenerationClosure = ([String:Any],ListSelectionValue.Loading) -> ListSelectionValue?
+public typealias JSONGenerationClosure = ([String:Any],ListSelectionValue.Loading) -> (ListSelectionValue?,[ListSelectViewController.ListItem])
 
  
 
