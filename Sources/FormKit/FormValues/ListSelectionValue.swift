@@ -91,6 +91,7 @@ extension ListSelectionValue: Equatable, Hashable {
 extension ListSelectionValue {
 
     public var listItems:[ListSelectViewController.ListItem] {
+        
         var items:[ListSelectViewController.ListItem] = []
         
         for (i,value) in values.enumerated() {

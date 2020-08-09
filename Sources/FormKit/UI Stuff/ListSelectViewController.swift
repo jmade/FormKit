@@ -330,9 +330,9 @@ public final class ListSelectViewController: UITableViewController {
     
     public func setValue(_ listSelectValue:ListSelectionValue) {
         self.formValue = listSelectValue
-        unformatedData = (listSelectValue.values,listSelectValue.selectedIndicies)
-        formatData(listSelectValue.values,listSelectValue.selectedIndicies)
-        crawlDelegate(listSelectValue)
+//        unformatedData = (listSelectValue.values,listSelectValue.selectedIndicies)
+//        formatData(listSelectValue.values,listSelectValue.selectedIndicies)
+//        crawlDelegate(listSelectValue)
     }
     
     
@@ -361,7 +361,7 @@ public final class ListSelectViewController: UITableViewController {
         super.viewDidLoad()
         
         if let listSelectValue = formValue {
-           dataSource = listSelectValue.listItems.map({ SelectionRow(title: $0.title, selected: $0.selected, valueIdentifier: $0.identifier) })
+            dataSource = listSelectValue.listItems.map({ SelectionRow(title: $0.title, selected: $0.selected, valueIdentifier: $0.identifier) })
         }
         
         addBackbutton(title: " ")
