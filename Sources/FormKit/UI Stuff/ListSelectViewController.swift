@@ -93,7 +93,7 @@ public typealias ListSelectable = Displayable & Selectable
 
 
 //: MARK: - ListSelectViewController -
-public final class ListSelectViewController: UITableViewController, UISearchResultsUpdating, UISearchBarDelegate {
+public final class ListSelectViewController: UITableViewController {
     
     static let ReuseID = "FormKit.ListSelectionCell"
     
@@ -165,8 +165,8 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     
     
     // sectionTitles = []
-    
     private var sectionTile: String = ""
+    
     
     /// setting the data from outside
     private var unformatedData: ([String],[Int]) = ([],[]) {
@@ -194,7 +194,6 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     private var listSearchTable:ListSearchTable? = nil
     private var resultSearchController:UISearchController? = nil
     
-
     
     // MARK: - Init -
     required init?(coder aDecoder: NSCoder) {fatalError()}
@@ -210,6 +209,9 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
         unformatedData = (data,selected)
         formatData(data,selected)
         self.title = title
+    
+        navigationController?.navigationBar.prefersLargeTitles = true
+    navigationController?.navigationItem.largeTitleDisplayMode = .always
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(donePressed))
         
@@ -402,7 +404,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     }
     
     
-    
+    /*
     //: MARK: - UISearchBarDelegate -
     public func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
         tableView.reloadData()
@@ -435,7 +437,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
             dataSource = currentDataSource.filter { searchedData.contains($0.title) }
         }
     }
-    
+    */
     
     
     
@@ -455,111 +457,54 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
         return dataSource.count
     }
     
-//
-//    public override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
-//        updateMasterStorage(title: dataSource[indexPath.row].title, selected: false)
-//        let oldRow = dataSource[indexPath.row]
-//        dataSource[indexPath.row] = SelectionRow(title: oldRow.title, selected: false)
-//        tableView.reloadRows(at: [indexPath], with: .none)
-//        updateSeletion()
-//    }
-//
-    
-    
-    
-    
     public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-            
         newDidSelect(indexPath)
-        
-        //handleDidSelectRowAt(indexPath)
-        
-        
     }
     
+
+    
     private func crawlDelegate(_ new:ListSelectionValue) {
-        let presentVC =  navigationController?.presentedViewController
-        print(" presentVC -> \(String(describing: presentVC)) ")
-        
         if let nav = navigationController {
             for vc in nav.viewControllers {
                 if let form = vc as? FormController {
-                    print("Found Form")
-                    form.dataSource.log()
-                    print("-------")
-                    
-                    //form.updatedFormValue(new, formIndexPath)
                     if let path = formIndexPath {
                         form.dataSource.updateWith(formValue: new, at: path)
                         form.tableView.reloadRows(at: [path], with: .none)
                     }
-                    
-                 
-                    
                 }
             }
         }
-        
-        
-        
     }
     
     
-    
     private func newDidSelect(_ indexPath: IndexPath) {
-        print(" allowsMultipleSelection -> \(allowsMultipleSelection) ")
         
         let newIndicies = newSelectedIndicies(indexPath)
-        print("Updating delegate")
         
         let newListValue = makeNewListSelectValue(newIndicies)
         
-        formDelegate?.updatedFormValue(newListValue, formIndexPath)
+        //formDelegate?.updatedFormValue(newListValue, formIndexPath)
         
         crawlDelegate(newListValue)
-        
         
         if allowsMultipleSelection {
             dataSource[indexPath.row].selected.toggle()
             tableView.reloadRows(at: [indexPath], with: .none)
-            print("Need to handle change")
         } else {
-            
             formatData(newListValue.values, [indexPath.row])
-            
             tableView.reloadSections(IndexSet(integer: 0), with: .none)
-//
-//            let selected = getSelectedIndicies(removingIndex: nil)
-//            print("Current Selected: \(selected)")
-//
-//
-//
-//            if !selected.isEmpty {
-//                dataSource[selected[0]].selected.toggle()
-//                dataSource[indexPath.row].selected.toggle()
-//                tableView.reloadSections(IndexSet(integer: 0), with: .none)
-//                tableView.reloadRows(at: [indexPath,IndexPath(row: selected[0], section: 0)], with: .none)
-//            }
-//            print("Need to handle change")
         }
-        
-        
     }
     
-    
+     
     private func newSelectedIndicies(_ indexPath: IndexPath) -> [Int] {
-        print(" indexPath -> \(indexPath) ")
         if allowsMultipleSelection {
             let selectedRow = dataSource[indexPath.row]
             if selectedRow.selected {
-                let returnValue = getSelectedIndicies(removingIndex: indexPath.row)
-                print(" returnValue -> \(returnValue) ")
-                return returnValue
+                return getSelectedIndicies(removingIndex: indexPath.row)
             } else {
                 var currentIndicies = getSelectedIndicies(removingIndex: nil)
-                print(" currentIndicies -> \(currentIndicies) ")
                 currentIndicies.append(indexPath.row)
-                print("return  -> \(currentIndicies) ")
                 return currentIndicies
             }
         } else {
@@ -579,15 +524,13 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
             )
         }
         
-        print("Got current value ")
         var new = currentValue
         new.values = dataSource.map({ $0.title })
         new.selectedIndicies = selectedIndicies
         return new
-        
     }
     
-    
+    /*
     private func handleDidSelectRowAt(_ path:IndexPath) {
         let indexPath = path
         updateMasterStorage(title: dataSource[indexPath.row].title, selected: true)
@@ -622,6 +565,8 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
             updateSeletion()
         }
     }
+    */
+    
     
     
     public override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
@@ -640,6 +585,11 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
         return cell
     }
     
+    
+    
+    
+    
+    /*
     /// Keep Master Data Source Current with Selection
     private func updateMasterStorage(title:String,selected:Bool) {
           for (index,selectionRow) in completeDataSource.enumerated() {
@@ -650,7 +600,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
               }
           }
       }
-    
+    */
     
     
     private func getSelectedIndicies(removingIndex:Int?) -> [Int] {
@@ -678,26 +628,17 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     
     
     private func handleSearchedSelection(item:SearchResultItem, at path:IndexPath) {
-        print("Item Selected: \(item)")
-        
         if let title = item.primary {
             for (index,value) in dataSource.enumerated() {
                 if value.title == title {
-                    let foundPath = IndexPath(row: index, section: 0)
-                    
-                    print("Found the matching value at: \(foundPath)")
-                    
+                    let foundPath = IndexPath(row: index, section: path.section)
                     DispatchQueue.main.async(execute: { [weak self] in
                         guard let self = self else { return }
-                        self.handleDidSelectRowAt(foundPath)
+                        self.newDidSelect(foundPath)
                     })
-
-                    
                 }
             }
-            
         }
-        
     }
  
     /// When a selection is made, we need to make a new `ListSelectValue`
