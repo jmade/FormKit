@@ -21,6 +21,7 @@ public struct StepperValue: FormValue, TableViewSelectable, Equatable, Hashable 
     public var customKey:String? = nil
     
     public var title:String
+    public var info:String? = nil
     public var value:Double
 }
 
@@ -33,7 +34,39 @@ extension StepperValue {
         self.value = value
     }
     
+    public init(title: String) {
+        self.title = title
+        self.value = 0.0
+    }
+    
+    public init(_ title:String,_ customKey:String? = nil,_ info:String?,_ value:Double = 0.0) {
+        self.title = title
+        self.value = value
+        self.customKey = customKey
+        self.info = info
+    }
+    
+    
+    public init(_ title:String,_ customKey:String? = nil) {
+        self.title = title
+        self.value = 0.0
+        self.customKey = customKey
+    }
+    
 }
+
+
+extension StepperValue {
+    
+    public func newWith(_ newTitle:String) -> StepperValue {
+        var copy = self
+        copy.title = newTitle
+        return copy
+    }
+    
+}
+
+
 
 
 //: MARK: - FormValueDisplayable -
@@ -105,6 +138,9 @@ public final class StepperCell: UITableViewCell {
         stepper.maximumValue = 99
         stepper.minimumValue = 0
         stepper.wraps = false
+        stepper.addTarget(self, action: #selector(stepperStepped(_:)), for: .valueChanged)
+        stepper.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(stepper)
         return stepper
     }()
     
@@ -116,15 +152,33 @@ public final class StepperCell: UITableViewCell {
         } else {
             badge.badgeColor = .lightGray
         }
+        badge.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(badge)
         return badge
     }()
+    
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: .body)
         label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(label)
         return label
     }()
+    
+    
+    
+    private lazy var infoLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.preferredFont(forTextStyle: .body)
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(label)
+        return label
+    }()
+    
+    
     
     var indexPath:IndexPath?
     
@@ -134,6 +188,7 @@ public final class StepperCell: UITableViewCell {
                 stepper.value = stepperValue.value
                 stepperLabel.text = String(Int(stepperValue.value))
                 titleLabel.text = stepperValue.title
+                infoLabel.text = stepperValue.info
                 if stepperValue.isSelectable == false {
                     self.selectionStyle = .none
                 }
@@ -145,12 +200,12 @@ public final class StepperCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        [stepper,stepperLabel,titleLabel].forEach({
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview($0)
-        })
-        
-        stepper.addTarget(self, action: #selector(stepperStepped(_:)), for: .valueChanged)
+//        [stepper,stepperLabel,titleLabel].forEach({
+//            $0.translatesAutoresizingMaskIntoConstraints = false
+//            contentView.addSubview($0)
+//        })
+//
+//        //stepper.addTarget(self, action: #selector(stepperStepped(_:)), for: .valueChanged)
         
         activateDefaultHeightAnchorConstraint()
         
@@ -159,15 +214,23 @@ public final class StepperCell: UITableViewCell {
             titleLabel.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
             stepperLabel.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 8.0),
             stepperLabel.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
+            
+            infoLabel.leadingAnchor.constraint(equalTo: stepperLabel.trailingAnchor, constant: 8.0),
+            infoLabel.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
+            infoLabel.trailingAnchor.constraint(equalTo: stepper.leadingAnchor, constant: -8.0),
+            
             stepper.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor, constant: -4.0),
             stepper.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
             contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: stepper.bottomAnchor, constant: 2.0)
             ])
     }
     
+    
     override public func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(false, animated: false)
     }
+    
+    
     
     @objc
     func stepperStepped(_ sender:UIStepper) {

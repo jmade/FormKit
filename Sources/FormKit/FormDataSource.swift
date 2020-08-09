@@ -7,12 +7,6 @@ import Foundation
 public typealias FormDataSourceUpdateClosure = ( (FormDataSource) -> Void )
 
 
-/// TODO: Consider turning this into a struct? and make the function a mutating one? would it change automattically?
-
-
-
-
-
 
 public class FormDataSource {
     
@@ -191,7 +185,25 @@ extension FormDataSource {
 }
 
 
+
+
+
 extension FormDataSource {
+    
+    
+    public var params:[String:String] {
+        var value:[ [String:String] ] = []
+        
+        for section in sections {
+            for row in section.rows {
+                value.append(row.encodedValues)
+            }
+        }
+        
+        return value.merged()
+    }
+    
+    
     
     // MARK: - EncodedFormDataSource -
     public typealias EncodedFormDataSource = [String:[[String:[String:String]]]]
@@ -243,6 +255,10 @@ extension FormDataSource {
         return sections.isEmpty
     }
     
+    /// Idea: somehow find a way to connect / bind this to the tableview.
+       /// and it can handle figuring out what  to do.
+    
+    
     public func rowsForSection(_ section:Int) -> [FormItem] {
         if sections.count-1 >= section {
             return sections[section].rows
@@ -256,8 +272,11 @@ extension FormDataSource {
         self.sections = [[section],existingSections].reduce([],+)
     }
     
+   
     
     public func updateWith(formValue:FormValue,at path:IndexPath) {
+        
+        
         let qualifiedSections = path.section >= 0 && path.section <= sections.count - 1
         if qualifiedSections {
             let rowCount = sections[path.section].rows.count

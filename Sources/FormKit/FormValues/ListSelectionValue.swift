@@ -250,7 +250,10 @@ extension ListSelectionValue: FormValueDisplayable {
         
        
         
-        let changeClosure: ListSelectionChangeClosure = { [weak formController] (selectedValues) in
+        let changeClosure: ListSelectionChangeClosure = {  (selectedValues) in
+            print("Changed Values: \(selectedValues)")
+            
+            /*
             if let formItem = formController?.dataSource.itemAt(path) {
                 switch formItem {
                 case .listSelection(let list):
@@ -261,18 +264,24 @@ extension ListSelectionValue: FormValueDisplayable {
                     break
                 }
             }
+            */
+            
         }
         
         let descriptor = self.makeDescriptor(changeClosure)
         
         if let loadingClosure = self.loadingClosure {
+            let listVC = ListSelectViewController(descriptor: descriptor, loadingClosure: loadingClosure)
+            listVC.formDelegate = formController
+            
             formController.navigationController?.pushViewController(
-                ListSelectViewController(descriptor: descriptor, loadingClosure: loadingClosure),
+                listVC,
                 animated: true
             )
         } else {
+            let listVC = ListSelectViewController(descriptor: descriptor)
             formController.navigationController?.pushViewController(
-                ListSelectViewController(descriptor: descriptor),
+                listVC,
                 animated: true
             )
         }

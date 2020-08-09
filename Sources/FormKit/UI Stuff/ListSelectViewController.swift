@@ -99,8 +99,16 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     
     /// Closure
     var listSelectionChangeClosure: ListSelectionChangeClosure = { _ in }
+    
+    
+    
     /// Delegation
     weak var delegate:ListSelectionDelegate?
+    
+    
+    public var formValue:ListSelectionValue? = nil
+    weak var formDelegate:UpdateFormValueDelegate?
+    
     
     // MARK: - DataSource -
     private struct SelectionRow: ListSelectable, Equatable {
@@ -231,6 +239,26 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
         self.allowsMultipleSelection = descriptor.allowsMultipleSelection
         self.sectionTile = descriptor.selectionMessage
         loadingClosure(self)
+    }
+    
+    
+    public init(_ listSelectValue:ListSelectionValue) {
+        let descriptor = listSelectValue.makeDescriptor()
+        super.init(style: descriptor.tableViewStyle)
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
+        
+        self.formValue = listSelectValue
+        unformatedData = (descriptor.listVales,descriptor.selectedIndicies)
+        formatData(descriptor.listVales,descriptor.selectedIndicies)
+
+        self.title = descriptor.title
+        self.allowsMultipleSelection = descriptor.allowsMultipleSelection
+        self.sectionTile = descriptor.selectionMessage
+        
+        if let loadingClosure = listSelectValue.loadingClosure {
+            loadingClosure(self)
+        }
+        
     }
     
     
@@ -384,6 +412,8 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     
     //: MARK: - UISearchResultsUpdating -
     public func updateSearchResults(for searchController: UISearchController) {
+        
+        
         if let searchText = searchController.searchBar.text {
             /// use a fresh copy of all entires
             let currentDataSource = completeDataSource
@@ -402,6 +432,12 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
             dataSource = currentDataSource.filter { searchedData.contains($0.title) }
         }
     }
+    
+    
+    
+    
+    
+    
 
     // MARK: - TableView functions -
     public override func numberOfSections(in tableView: UITableView) -> Int {
@@ -425,10 +461,62 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     }
     
     
+    
+    
+    
     public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        handleDidSelectRowAt(indexPath)
+            
+        newDidSelect(indexPath)
+        
+        //handleDidSelectRowAt(indexPath)
+        
+        
     }
     
+    
+    
+    private func newDidSelect(_ indexPath: IndexPath) {
+        
+        if allowsMultipleSelection {
+            dataSource[indexPath.row].selected.toggle()
+            tableView.reloadRows(at: [indexPath], with: .none)
+            print("Need to handle change")
+        } else {
+            let selected = getSelectedIndicies(removingIndex: nil)
+            if !selected.isEmpty {
+                dataSource[selected[0]].selected.toggle()
+                dataSource[indexPath.row].selected.toggle()
+                tableView.reloadRows(at: [indexPath,IndexPath(row: selected[0], section: 0)], with: .none)
+            }
+            print("Need to handle change")
+        }
+    }
+    
+    
+    private func newProcessSelected(indexPath: IndexPath) -> [Int] {
+        let selectedRow = dataSource[indexPath.row]
+        if selectedRow.selected {
+            return getSelectedIndicies(removingIndex: indexPath.row)
+        } else {
+            var currentIndicies = getSelectedIndicies(removingIndex: nil)
+            currentIndicies.append(indexPath.row)
+            return currentIndicies
+        }
+    }
+    
+    
+    /*
+    private func makeNewListSelectValue() -> ListSelectionValue {
+        if let currentValue = formValue {
+            var new = currentValue
+            
+            
+        }
+        
+        
+        
+    }
+    */
     
     private func handleDidSelectRowAt(_ path:IndexPath) {
         let indexPath = path
@@ -475,6 +563,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: ListSelectViewController.ReuseID, for: indexPath)
         let row = dataSource[indexPath.row]
+        
         cell.textLabel?.font = .preferredFont(forTextStyle: .headline)
         cell.textLabel?.text = row.title
         cell.accessoryType = row.selected ? .checkmark : .none
@@ -493,6 +582,25 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
       }
     
     
+    
+    private func getSelectedIndicies(removingIndex:Int?) -> [Int] {
+        var selectedPaths: [Int] = []
+        
+        for (row,value) in dataSource.enumerated() {
+            if value.selected {
+                if let indexToSkip = removingIndex {
+                    if row != indexToSkip {
+                        selectedPaths.append(
+                            row
+                        )
+                    }
+                }
+            }
+        }
+        
+        
+        return selectedPaths
+    }
     
     
     private func handleSearchedSelection(item:SearchResultItem, at path:IndexPath) {
@@ -518,6 +626,7 @@ public final class ListSelectViewController: UITableViewController, UISearchResu
         
     }
  
+    /// When a selection is made, we need to make a new `ListSelectValue`
     
     private func updateSeletion() {
         let selectedValues = dataSource.filter({ $0.selected }).map({ $0.title })
