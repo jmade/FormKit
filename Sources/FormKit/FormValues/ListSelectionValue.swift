@@ -399,9 +399,9 @@ extension ListSelectionValue: FormValueDisplayable {
 }
 
 
-extension ListSelectionValue {
+public extension ListSelectionValue {
     
-   public static func DemoSingle() -> ListSelectionValue {
+    static func DemoSingle() -> ListSelectionValue {
         let list = Array(stride(from: 0, to: 32, by: 1))
         return
             ListSelectionValue(
@@ -412,7 +412,7 @@ extension ListSelectionValue {
     }
     
     
-   public static func DemoMulti() -> ListSelectionValue {
+    static func DemoMulti() -> ListSelectionValue {
         let random = Array(stride(from: 0, to: 32, by: 1))
         return
             ListSelectionValue(

@@ -187,7 +187,7 @@ open class FormController: UITableViewController, CustomTransitionable {
     }
     
     
-    private var defaultContentInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+    private var defaultContentInsets = UIEdgeInsets(top: 4.0, left: 0, bottom: 0, right: 0)
     
     
     /// Loading
@@ -205,6 +205,17 @@ open class FormController: UITableViewController, CustomTransitionable {
     public var showsDoneButton:Bool = false
     // MARK: - Activates Input On Appear -
     public var activatesInputOnAppear: Bool = false
+    
+    
+    public var allowModalDismissal:Bool = false {
+        didSet {
+            if #available(iOS 13.0, *) {
+                isModalInPresentation = !allowModalDismissal
+            }
+        }
+    }
+
+    
     
     private var alertTextFieldInput: String? = nil
     
@@ -266,7 +277,7 @@ open class FormController: UITableViewController, CustomTransitionable {
                
         setupToolBar()
         
-        navigationController?.navigationItem.largeTitleDisplayMode = .automatic
+        navigationController?.navigationItem.largeTitleDisplayMode = .always
 
     }
     
