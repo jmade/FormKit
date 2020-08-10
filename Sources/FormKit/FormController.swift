@@ -190,6 +190,9 @@ open class FormController: UITableViewController, CustomTransitionable {
     private var defaultContentInsets = UIEdgeInsets(top: 4.0, left: 0, bottom: 0, right: 0)
     
     
+    
+    
+    
     /// Loading
     public typealias FormDataLoadingClosure = ( () -> (FormDataSource) )
     public var loadingClosure: FormDataLoadingClosure? = nil
