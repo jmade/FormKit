@@ -373,7 +373,7 @@ public final class ListSelectViewController: UITableViewController {
         resultSearchController?.hidesNavigationBarDuringPresentation = false
         definesPresentationContext = true
         
-        tableView.reloadSections(IndexSet(integer: 0), with: .none)
+        //tableView.reloadSections(IndexSet(integer: 0), with: .none)
         
         //navigationController?.navigationBar.titleTextAttributes = [ .foregroundColor : UIColor.white ]
     }
@@ -494,7 +494,13 @@ public final class ListSelectViewController: UITableViewController {
                     // Turning Selected Row Off
                     dataSource[currentSelectedPath.row].selected = false
                     selectedIndexPaths = []
-                    tableView.reloadRows(at: [currentSelectedPath], with: .fade)
+                    
+                    if let cell = tableView.cellForRow(at: indexPath) {
+                        cell.accessoryType = .none
+                        tableView.deselectRow(at: indexPath, animated: true)
+                    }
+                    
+                    //tableView.reloadRows(at: [currentSelectedPath], with: .fade)
                 } else {
                     // Changing to new Selection
                     // Turn current Row off...
@@ -503,26 +509,24 @@ public final class ListSelectViewController: UITableViewController {
                     dataSource[indexPath.row].selected = true
                     selectedIndexPaths = [indexPath]
                     // Reload Rows
-                    tableView.reloadRows(at: [indexPath,currentSelectedPath], with: .fade)
+                    if let cell = tableView.cellForRow(at: indexPath) {
+                        cell.accessoryType = .checkmark
+                        tableView.deselectRow(at: indexPath, animated: true)
+                    }
+
+                    tableView.reloadRows(at: [currentSelectedPath], with: .none)
                 }
             } else {
                 // No Selected Row
                 dataSource[indexPath.row].selected = true
                 selectedIndexPaths = [indexPath]
-                tableView.reloadRows(at: [indexPath], with: .fade)
+                if let cell = tableView.cellForRow(at: indexPath) {
+                    cell.accessoryType = .checkmark
+                    tableView.deselectRow(at: indexPath, animated: true)
+                }
+                //tableView.reloadRows(at: [indexPath], with: .fade)
             }
             
-            /*
-            let selectedRow = dataSource[indexPath.row]
-            if selectedRow.selected {
-                dataSource[indexPath.row].selected = false
-                tableView.reloadSections(IndexSet(integer: 0), with: .none)
-                // tableView.reloadRows(at: [indexPath,currentSelectedEndpointPath], with: .fade)
-            } else {
-                dataSource = makeNewDataSourceSingleSelectionAt(indexPath.row)
-                tableView.reloadSections(IndexSet(integer: 0), with: .none)
-            }
-            */
         }
     
         
@@ -637,9 +641,9 @@ public final class ListSelectViewController: UITableViewController {
     
     
     
-    public override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        cell.accessoryType = dataSource[indexPath.row].selected ? .checkmark : .none
-    }
+//    public override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+//        cell.accessoryType = dataSource[indexPath.row].selected ? .checkmark : .none
+//    }
     
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: ListSelectViewController.ReuseID, for: indexPath)
