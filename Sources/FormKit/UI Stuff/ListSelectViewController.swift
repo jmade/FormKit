@@ -212,10 +212,6 @@ public final class ListSelectViewController: UITableViewController {
     }
     
     
-    
-    
-    
-    
     public var allowsMultipleSelection: Bool = true {
         didSet {
             if allowsMultipleSelection {
@@ -225,6 +221,17 @@ public final class ListSelectViewController: UITableViewController {
             }
         }
     }
+    
+    
+    
+    private var selectedIndexPaths:[IndexPath] = []
+    
+    private var lastSelectedIndexPath:IndexPath? {
+        get {
+           return selectedIndexPaths.first
+        }
+    }
+    
     
     
     // MARK: - Searching -
@@ -480,20 +487,48 @@ public final class ListSelectViewController: UITableViewController {
             dataSource[indexPath.row].selected.toggle()
             tableView.reloadSections(IndexSet(integer: 0), with: .none)
         } else {
+            /// Single Selection Mode
+            if let currentSelectedPath = selectedIndexPaths.first {
+                /// Has A Selected Row
+                if currentSelectedPath == indexPath {
+                    // Turning Selected Row Off
+                    dataSource[currentSelectedPath.row].selected = false
+                    selectedIndexPaths = []
+                    tableView.reloadRows(at: [currentSelectedPath], with: .fade)
+                } else {
+                    // Changing to new Selection
+                    // Turn current Row off...
+                    dataSource[currentSelectedPath.row].selected = false
+                    // Turn New Row On
+                    dataSource[indexPath.row].selected = true
+                    selectedIndexPaths = [indexPath]
+                    // Reload Rows
+                    tableView.reloadRows(at: [indexPath,currentSelectedPath], with: .fade)
+                }
+            } else {
+                // No Selected Row
+                dataSource[indexPath.row].selected = true
+                selectedIndexPaths = [indexPath]
+                tableView.reloadRows(at: [indexPath], with: .fade)
+            }
+            
+            /*
             let selectedRow = dataSource[indexPath.row]
             if selectedRow.selected {
                 dataSource[indexPath.row].selected = false
                 tableView.reloadSections(IndexSet(integer: 0), with: .none)
+                // tableView.reloadRows(at: [indexPath,currentSelectedEndpointPath], with: .fade)
             } else {
                 dataSource = makeNewDataSourceSingleSelectionAt(indexPath.row)
                 tableView.reloadSections(IndexSet(integer: 0), with: .none)
             }
-            
+            */
         }
     
-        let listItems = dataSource.map({ ListItem($0.title, $0.valueIdentifier, $0.selected) })
+        
         
         if let currentListSelectValue = formValue {
+            let listItems = dataSource.map({ ListItem($0.title, $0.valueIdentifier, $0.selected) })
             let newListSelectValue = currentListSelectValue.newWith(listItems)
             crawlDelegate(newListSelectValue)
         }
