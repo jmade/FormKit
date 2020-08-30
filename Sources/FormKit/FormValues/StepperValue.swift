@@ -216,7 +216,7 @@ public final class StepperCell: UITableViewCell {
             stepperLabel.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 12.0),
             stepperLabel.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
             
-            infoLabel.leadingAnchor.constraint(equalTo: stepperLabel.trailingAnchor, constant: 8.0),
+            infoLabel.leadingAnchor.constraint(equalTo: stepperLabel.trailingAnchor, constant: 12.0),
             infoLabel.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
             infoLabel.trailingAnchor.constraint(equalTo: stepper.leadingAnchor, constant: -8.0),
             
