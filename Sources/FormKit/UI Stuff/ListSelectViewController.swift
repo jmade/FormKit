@@ -373,14 +373,14 @@ public final class ListSelectViewController: UITableViewController {
                 loadingClosure(self)
             }
         } else {
-             dataSource = listSelectValue.selectionRows
+            dataSource = listSelectValue.listItems //  listSelectValue.selectionRows
         }
     }
     
     
     public func setValue(_ listSelectValue:ListSelectionValue) {
         self.formValue = listSelectValue
-        dataSource = listSelectValue.selectionRows
+        dataSource = listSelectValue.listItems
     }
     
     
@@ -424,7 +424,7 @@ public final class ListSelectViewController: UITableViewController {
         }
         
         
-        listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: nil, selected: $0.selected) })
+        listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: $0.detail, selected: $0.selected) })
         resultSearchController = UISearchController(searchResultsController: listSearchTable)
         resultSearchController?.searchResultsUpdater = listSearchTable
         
