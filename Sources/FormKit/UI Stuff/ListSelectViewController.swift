@@ -595,8 +595,8 @@ public final class ListSelectViewController: UITableViewController {
         
         
         if let currentListSelectValue = formValue {
-            let listItems = dataSource.map({ ListItem($0.title, $0.valueIdentifier, $0.selected) })
-            let newListSelectValue = currentListSelectValue.newWith(listItems)
+            //let listItems = dataSource.map({ ListItem($0.title, $0.valueIdentifier, $0.selected) })
+            let newListSelectValue = currentListSelectValue.newWith(dataSource)
             crawlDelegate(newListSelectValue)
         }
         
