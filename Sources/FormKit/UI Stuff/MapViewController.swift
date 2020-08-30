@@ -193,8 +193,6 @@ extension MapViewController: HandleMapSearch {
         self.selectedPin = placemark
         
         displayAnnotationAt(coordinate: placemark.coordinate, title: searchItem?.primary, subtitle: searchItem?.secondary)
-        
-         //mapValueChangeClosure?(self.mapValue)
          mapActionUpdateClosure?(self.mapActionValue)
     }
     
@@ -244,59 +242,6 @@ extension MapViewController: HandleMapSearch {
         
     }
     
-    
-    
-//    private func handlePlacemark(_ placemark:MKPlacemark) {
-//
-//        var subtitle:String? = nil
-//        if let city = placemark.locality,
-//            let state = placemark.administrativeArea {
-//            annotation.subtitle = "\(city) \(state)"
-//        }
-//
-//
-//
-//    }
-    
-    
-//
-//    func dropPinZoomIn(placemark:MKPlacemark) {
-//
-//
-//
-//
-//    }
+
     
 }
-
-
-
-
-
-
-
-
-////: MARK: - CircleGeoZoneRenderer -
-//public class CircleGeoZoneRenderer : MKCircleRenderer {
-//
-//    override public func applyStrokeProperties(to context: CGContext, atZoomScale zoomScale: MKZoomScale) {
-//        super.applyStrokeProperties(to: context, atZoomScale: zoomScale)
-//        context.setLineWidth(4.0)
-//        if #available(iOS 13.0, *) {
-//            context.setStrokeColor(UIColor.systemRed.cgColor)
-//        } else {
-//            context.setStrokeColor(UIColor.red.cgColor)
-//        }
-//
-//    }
-//
-//    public override func applyFillProperties(to context: CGContext, atZoomScale zoomScale: MKZoomScale) {
-//        super.applyFillProperties(to: context, atZoomScale: zoomScale)
-//        if #available(iOS 13.0, *) {
-//            context.setStrokeColor(UIColor.systemRed.withAlphaComponent(0.1).cgColor)
-//        } else {
-//            context.setStrokeColor(UIColor.green.withAlphaComponent(0.1).cgColor)
-//        }
-//
-//    }
-//}

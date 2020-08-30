@@ -373,7 +373,7 @@ public final class ListSelectViewController: UITableViewController {
         resultSearchController?.hidesNavigationBarDuringPresentation = false
         definesPresentationContext = true
         
-        //tableView.reloadSections(IndexSet(integer: 0), with: .none)
+        tableView.reloadSections(IndexSet(integer: 0), with: .none)
         
         //navigationController?.navigationBar.titleTextAttributes = [ .foregroundColor : UIColor.white ]
     }
