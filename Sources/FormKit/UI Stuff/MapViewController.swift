@@ -78,16 +78,10 @@ final class MapViewController: UIViewController {
     
     override func loadView() {
         let view = UIView()
-        
-        if let mapView = mapView {
-            mapView.delegate = self
-        } else {
-            self.mapView = makeMapView()
-        }
-
         self.view = view
     }
     
+        
     
     fileprivate func makeMapView() -> MKMapView {
         let mapView = MKMapView()
@@ -106,6 +100,14 @@ final class MapViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if let mapView = mapView {
+            mapView.delegate = self
+        } else {
+            self.mapView = makeMapView()
+        }
+
+        
         
         let locationSearchTable = LocationSearchTable()
         locationSearchTable.mapView = mapView
