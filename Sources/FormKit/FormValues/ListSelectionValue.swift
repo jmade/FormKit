@@ -66,6 +66,8 @@ public struct ListSelectionValue {
     public var customKey: String? = nil
     var uuid:String = UUID().uuidString
     
+    public var listItems:[ListItem] = []
+    
 }
 
 
@@ -87,7 +89,11 @@ extension ListSelectionValue: Equatable, Hashable {
 
 extension ListSelectionValue {
 
+    
+    /*
     public var listItems:[ListSelectViewController.ListItem] {
+        
+        
         
         var items:[ListSelectViewController.ListItem] = []
         
@@ -112,6 +118,8 @@ extension ListSelectionValue {
         return items
         
     }
+    */
+    
     
     
     public var selectionRows:[ListSelectViewController.SelectionRow] {
@@ -340,8 +348,8 @@ extension ListSelectionValue {
             }
         }
         
-        return
-            ListSelectionValue(
+        
+        var newValue = ListSelectionValue(
                 selectionType: self.selectionType,
                 values: newValues,
                 selectedIndicies: newSelectedIndicies,
@@ -355,6 +363,13 @@ extension ListSelectionValue {
                 customKey: self.customKey,
                 uuid: self.uuid
         )
+        
+        newValue.listItems = listItems
+        
+        
+        
+        return newValue
+            
     }
     
 }
