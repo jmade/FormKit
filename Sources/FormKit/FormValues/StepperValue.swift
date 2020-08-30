@@ -201,13 +201,6 @@ public final class StepperCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-//        [stepper,stepperLabel,titleLabel].forEach({
-//            $0.translatesAutoresizingMaskIntoConstraints = false
-//            contentView.addSubview($0)
-//        })
-//
-//        //stepper.addTarget(self, action: #selector(stepperStepped(_:)), for: .valueChanged)
-        
         activateDefaultHeightAnchorConstraint()
         
         NSLayoutConstraint.activate([
