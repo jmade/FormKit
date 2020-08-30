@@ -44,6 +44,7 @@ extension MapValue: FormValueDisplayable {
     }
     
     public func configureCell(_ formController: Controller, _ cell: Cell, _ path: IndexPath) {
+        
         cell.formValue = self
         cell.indexPath = path
         cell.updateFormValueDelegate = formController
@@ -135,14 +136,18 @@ public extension MapValue {
 
 
 public final class MapValueCell: UITableViewCell {
-    static let identifier = "jmade.FormKit.MapValueCell.identifier"
+    
+    static let identifier = "com.jmade.FormKit.MapValueCell.identifier"
     
     
     var formValue : MapValue? {
         didSet {
             guard let mapValue = formValue else { return }
-            handleMapValue(mapValue)
+            if mapView == nil {
+                self.mapView = createMapView()
+            }
             
+            handleMapValue(mapValue)
             self.selectionStyle = .none
         }
     }
@@ -150,16 +155,24 @@ public final class MapValueCell: UITableViewCell {
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
     var indexPath:IndexPath?
     
+    public var mapView: MKMapView? = nil
+    
+    /*
     private lazy var mapView: MKMapView = {
-        let mapView = MKMapView()
-        mapView.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(mapView)
-        mapView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor).isActive = true
-        mapView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
-        mapView.topAnchor.constraint(equalTo: contentView.topAnchor).isActive = true
-        mapView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).isActive = true
-        mapView.delegate = self
-        return mapView
+        
+    }()
+    */
+    
+    private lazy var overView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(view)
+        view.leadingAnchor.constraint(equalTo: contentView.leadingAnchor).isActive = true
+        view.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
+        view.topAnchor.constraint(equalTo: contentView.topAnchor).isActive = true
+        view.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).isActive = true
+        view.backgroundColor = .init(white: 0.7, alpha: 0.5)
+        return view
     }()
     
     
@@ -167,13 +180,23 @@ public final class MapValueCell: UITableViewCell {
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         activateDefaultHeightAnchorConstraint(220)
-        //contentView.heightAnchor.constraint(equalToConstant: 220.0).isActive = true
+        
+        overView.isHidden = false
+        contentView.bringSubviewToFront(overView)
     }
     
     override public func prepareForReuse() {
         super.prepareForReuse()
         formValue = nil
-        mapView.removeAnnotations(mapView.annotations)
+        
+        if let annos = mapView?.annotations {
+            if annos.isEmpty == false {
+                mapView?.removeAnnotations(annos)
+            }
+        }
+        
+        overView.isHidden = false
+        contentView.bringSubviewToFront(overView)
     }
     
     
@@ -184,7 +207,10 @@ extension MapValueCell {
     
     private func handleMapValue(_ mapValue:MapValue) {
         
-        guard let coordinate = mapValue.coordinate else {
+        guard
+            let coordinate = mapValue.coordinate,
+            let mapView = mapView
+        else {
             return
         }
         
@@ -209,6 +235,19 @@ extension MapValueCell {
         mapView.setRegion(region, animated: true)
     }
     
+    
+    private func createMapView() -> MKMapView {
+        let mapView = MKMapView()
+        mapView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(mapView)
+        mapView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor).isActive = true
+        mapView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
+        mapView.topAnchor.constraint(equalTo: contentView.topAnchor).isActive = true
+        mapView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).isActive = true
+        mapView.delegate = self
+        return mapView
+    }
+    
 }
 
 
@@ -231,6 +270,18 @@ extension MapValueCell: MKMapViewDelegate  {
         }
 
         return MKOverlayRenderer()
+    }
+    
+    public func mapViewDidFinishLoadingMap(_ mapView: MKMapView) {
+        UIViewPropertyAnimator(duration: 0.3, curve: .easeIn) { [weak self] in
+            guard let self = self else { return }
+            self.overView.isHidden = false
+            if let mapView = self.mapView {
+                self.contentView.bringSubviewToFront(mapView)
+            }
+            
+        }.startAnimation()
+        
     }
     
 }

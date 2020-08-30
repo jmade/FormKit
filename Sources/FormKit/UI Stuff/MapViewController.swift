@@ -22,7 +22,7 @@ final class MapViewController: UIViewController {
     
     private var searchItem: SearchResultItem? = nil
     
-    var mapView: MKMapView?
+    public var mapView: MKMapView?
     
     private var radius:Measurement<UnitLength>? = nil
     
@@ -78,6 +78,18 @@ final class MapViewController: UIViewController {
     
     override func loadView() {
         let view = UIView()
+        
+        if let mapView = mapView {
+            mapView.delegate = self
+        } else {
+            self.mapView = makeMapView()
+        }
+
+        self.view = view
+    }
+    
+    
+    fileprivate func makeMapView() -> MKMapView {
         let mapView = MKMapView()
         mapView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(mapView)
@@ -85,11 +97,11 @@ final class MapViewController: UIViewController {
         mapView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         mapView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
         mapView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-        
-        self.mapView = mapView
-        self.mapView?.delegate = self
-        self.view = view
+        mapView.delegate = self
+        return mapView
     }
+    
+    
     
     
     override func viewDidLoad() {
