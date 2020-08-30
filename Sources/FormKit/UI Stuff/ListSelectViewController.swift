@@ -551,7 +551,13 @@ public final class ListSelectViewController: UITableViewController {
         
         if allowsMultipleSelection {
             dataSource[indexPath.row].selected.toggle()
-            tableView.reloadSections(IndexSet(integer: 0), with: .none)
+            
+            if let cell = tableView.cellForRow(at: indexPath) {
+                cell.accessoryType = dataSource[indexPath.row].selected ? .checkmark : .none
+                tableView.deselectRow(at: indexPath, animated: true)
+            }
+            
+            //tableView.reloadSections(IndexSet(integer: 0), with: .none)
         } else {
             /// Single Selection Mode
             if let currentSelectedPath = selectedIndexPaths.first {
@@ -850,8 +856,8 @@ final class ListItemCell: UITableViewCell {
     
     
     public func configureCell(_ item:ListItem) {
-        secondaryTextLabel.text = item.title
-        primaryTextLabel.text = item.detail
+        secondaryTextLabel.text = item.detail
+        primaryTextLabel.text = item.title
         accessoryType = item.selected ? .checkmark  : .none
         
     }
