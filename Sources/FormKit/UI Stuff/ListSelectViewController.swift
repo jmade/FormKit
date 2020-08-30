@@ -712,6 +712,8 @@ public final class ListSelectViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: ListSelectViewController.ReuseID, for: indexPath)
         let row = dataSource[indexPath.row]
         
+        print(" row -> \(row) ")
+        
         cell.textLabel?.font = .preferredFont(forTextStyle: .headline)
         cell.textLabel?.text = row.title
         cell.detailTextLabel?.text = row.detail
