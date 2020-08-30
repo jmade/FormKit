@@ -157,12 +157,6 @@ public final class MapValueCell: UITableViewCell {
     
     public var mapView: MKMapView? = nil
     
-    /*
-    private lazy var mapView: MKMapView = {
-        
-    }()
-    */
-    
     private lazy var overView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -180,8 +174,6 @@ public final class MapValueCell: UITableViewCell {
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         activateDefaultHeightAnchorConstraint(220)
-        
-        overView.isHidden = false
         contentView.bringSubviewToFront(overView)
     }
     
@@ -195,8 +187,6 @@ public final class MapValueCell: UITableViewCell {
             }
         }
         
-        overView.isHidden = false
-        contentView.bringSubviewToFront(overView)
     }
     
     
@@ -273,14 +263,19 @@ extension MapValueCell: MKMapViewDelegate  {
     }
     
     public func mapViewDidFinishLoadingMap(_ mapView: MKMapView) {
-        UIViewPropertyAnimator(duration: 0.3, curve: .easeIn) { [weak self] in
+        print("[MapValueCell] mapViewDidFinishLoadingMap")
+        DispatchQueue.main.async(execute: { [weak self] in
             guard let self = self else { return }
-            self.overView.isHidden = false
-            if let mapView = self.mapView {
-                self.contentView.bringSubviewToFront(mapView)
-            }
-            
-        }.startAnimation()
+            UIViewPropertyAnimator(duration: 0.3, curve: .easeIn) { [weak self] in
+                guard let self = self else { return }
+                self.overView.isHidden = false
+                if let mapView = self.mapView {
+                    self.contentView.bringSubviewToFront(mapView)
+                }
+                
+            }.startAnimation()
+        })
+        
         
     }
     

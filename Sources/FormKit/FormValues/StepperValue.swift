@@ -153,6 +153,8 @@ public final class StepperCell: UITableViewCell {
             badge.badgeColor = .lightGray
         }
         badge.translatesAutoresizingMaskIntoConstraints = false
+        badge.setContentHuggingPriority(.required, for: .horizontal)
+        badge.setContentHuggingPriority(.required, for: .vertical)
         contentView.addSubview(badge)
         return badge
     }()
