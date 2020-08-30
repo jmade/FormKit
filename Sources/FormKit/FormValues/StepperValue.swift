@@ -175,7 +175,12 @@ public final class StepperCell: UITableViewCell {
     private lazy var infoLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: .body)
-        label.textAlignment = .center
+        label.textAlignment = .left
+        if #available(iOS 13.0, *) {
+            label.textColor = .secondaryLabel
+        } else {
+            label.textColor = .lightGray
+        }
         label.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(label)
         return label
