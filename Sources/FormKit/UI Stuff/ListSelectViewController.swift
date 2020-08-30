@@ -99,14 +99,53 @@ public protocol ListSelectRepresentable {
 //: MARK: - ListSelectViewController -
 public final class ListSelectViewController: UITableViewController {
     
+    // MARK: - ListItem -
     public struct ListItem {
         public var title:String
         public var selected:Bool = false
+        public var detail:String? = nil
         public var identifier:String? = nil
+        
+        public var underlyingObject:Any? = nil
+        
+        public typealias ValueExtractionClosure = (Any?) -> Any?
+        public var valueExtractionClosure: ValueExtractionClosure? = { _ in return nil }
+        
+        
+        public var extractedValue:Any? {
+            get {
+                if let underlying = underlyingObject {
+                    if let closure = valueExtractionClosure {
+                        return closure(underlying)
+                    }
+                }
+
+                return identifier
+            }
+        }
+        
+        
+        public var valueIdentifier: String? {
+            get {
+                return identifier
+            }
+        }
+        
         
         public init(_ title:String,_ selected:Bool = false) {
             self.title = title
             self.selected = selected
+        }
+        
+        public init(title:String, selected:Bool = false) {
+            self.title = title
+            self.selected = selected
+        }
+        
+        public init(title:String, detail:String?,_ selected:Bool = false) {
+            self.title = title
+            self.selected = selected
+            self.detail = detail
         }
         
         public init(_ title:String,_ identifier:String?,_ selected:Bool = false) {
@@ -114,6 +153,24 @@ public final class ListSelectViewController: UITableViewController {
             self.selected = selected
             self.identifier = identifier
         }
+        
+        public init(title:String, selected:Bool, valueIdentifier:String?) {
+            self.title = title
+            self.selected = selected
+            self.identifier = valueIdentifier
+        }
+
+        
+        public init(title:String,detail:String?,selected:Bool, underlyingObject:Any?, valueExtractionClosure: ValueExtractionClosure?) {
+            self.title = title
+            self.detail = detail
+            self.selected = selected
+            self.underlyingObject = underlyingObject
+            self.valueExtractionClosure = valueExtractionClosure
+        }
+        
+        
+        
     }
     
     
@@ -140,9 +197,12 @@ public final class ListSelectViewController: UITableViewController {
     
     
     // MARK: - DataSource -
+    public typealias SelectionRow = ListItem
+    /*
     public struct SelectionRow: ListSelectable, Equatable {
         
         public var title: String
+        public var detail:String? = nil
         
         public var selected: Bool
         var valueIdentifier:String? = nil
@@ -157,6 +217,7 @@ public final class ListSelectViewController: UITableViewController {
             return lhs.uuid == rhs.uuid
         }
     }
+    */
     
     
     private var completeDataSource:[SelectionRow] = []
@@ -171,7 +232,9 @@ public final class ListSelectViewController: UITableViewController {
             tableView.tableFooterView = nil
             guard tableView.numberOfSections == 0 else {
                 tableView.reloadData()
-                listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: nil, selected: $0.selected) })
+                listSearchTable?.searchItems = dataSource.map({
+                    SearchResultItem(primary: $0.title, secondary: nil, selected: $0.selected)
+                })
                 return
             }
             
@@ -651,6 +714,7 @@ public final class ListSelectViewController: UITableViewController {
         
         cell.textLabel?.font = .preferredFont(forTextStyle: .headline)
         cell.textLabel?.text = row.title
+        cell.detailTextLabel?.text = row.detail
         cell.accessoryType = row.selected ? .checkmark : .none
         return cell
     }
