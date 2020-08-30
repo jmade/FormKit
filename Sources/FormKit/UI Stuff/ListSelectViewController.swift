@@ -332,7 +332,8 @@ public final class ListSelectViewController: UITableViewController {
     
     public init(descriptor:ListSelectionControllerDescriptor) {
         super.init(style: descriptor.tableViewStyle)
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
+        tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
+        //tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
         unformatedData = (descriptor.listVales,descriptor.selectedIndicies)
         formatData(descriptor.listVales,descriptor.selectedIndicies)
         self.listSelectionChangeClosure = descriptor.selectionChangeClosure
@@ -345,7 +346,8 @@ public final class ListSelectViewController: UITableViewController {
     
     public init(descriptor:ListSelectionControllerDescriptor,loadingClosure: @escaping  ListSelectLoadingClosure) {
         super.init(style: descriptor.tableViewStyle)
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
+        tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
+        //tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
         unformatedData = (descriptor.listVales,descriptor.selectedIndicies)
         formatData(descriptor.listVales,descriptor.selectedIndicies)
         self.listSelectionChangeClosure = descriptor.selectionChangeClosure
@@ -359,7 +361,8 @@ public final class ListSelectViewController: UITableViewController {
     /// Using
     public init(_ listSelectValue:ListSelectionValue,at path:IndexPath) {
         super.init(style: listSelectValue.makeDescriptor().tableViewStyle)
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
+        tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
+        //tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
         self.title = listSelectValue.title
         self.allowsMultipleSelection = listSelectValue.selectionType == .multiple
         self.sectionTile = listSelectValue.selectionTitle
@@ -397,7 +400,7 @@ public final class ListSelectViewController: UITableViewController {
         }
         self.title = title
         self.listSelectionChangeClosure = updateClosure
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
+        tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(donePressed))
         loadingClosure(self)
     }
@@ -709,16 +712,14 @@ public final class ListSelectViewController: UITableViewController {
 //    }
     
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: ListSelectViewController.ReuseID, for: indexPath)
-        let row = dataSource[indexPath.row]
         
-        print(" row -> \(row) ")
-        
-        cell.textLabel?.font = .preferredFont(forTextStyle: .headline)
-        cell.textLabel?.text = row.title
-        cell.detailTextLabel?.text = row.detail
-        cell.accessoryType = row.selected ? .checkmark : .none
-        return cell
+        if let cell = tableView.dequeueReusableCell(withIdentifier: ListItemCell.ReuseID, for: indexPath) as? ListItemCell {
+             let row = dataSource[indexPath.row]
+                print(" row -> \(row) ")
+            cell.configureCell(row)
+            return cell
+        }
+        return .init()
     }
     
     
@@ -785,4 +786,76 @@ public final class ListSelectViewController: UITableViewController {
         listSelectionChangeClosure(selectedValues)
     }
 }
+
+
+
+
+// MARK: - ListItemCell -
+final class ListItemCell: UITableViewCell {
+    
+    static let ReuseID = "FormKit.ListItemCell"
+    
+    private lazy var primaryTextLabel: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .left
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        label.font = .preferredFont(forTextStyle: .body)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(label)
+        return label
+    }()
+    
+    
+    private lazy var secondaryTextLabel: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .left
+        label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle:  .caption2).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(label)
+        return label
+    }()
+    
+    
+    required init?(coder aDecoder: NSCoder) {fatalError()}
+       
+       override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+           super.init(style: style, reuseIdentifier: reuseIdentifier)
+          
+            activateDefaultHeightAnchorConstraint()
+        
+           NSLayoutConstraint.activate([
+            
+               primaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+               primaryTextLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+               primaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+               
+               secondaryTextLabel.topAnchor.constraint(equalTo: primaryTextLabel.bottomAnchor),
+               secondaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+               secondaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+               
+               contentView.bottomAnchor.constraint(equalTo: secondaryTextLabel.bottomAnchor, constant: 8.0),
+               
+           ])
+           
+       }
+    
+    
+    public override func prepareForReuse() {
+        super.prepareForReuse()
+        primaryTextLabel.text = nil
+        secondaryTextLabel.text = nil
+        accessoryType = .none
+    }
+    
+    
+    public func configureCell(_ item:ListItem) {
+        secondaryTextLabel.text = item.title
+        primaryTextLabel.text = item.detail
+        accessoryType = item.selected ? .checkmark  : .none
+        
+    }
+    
+}
+
 
