@@ -123,12 +123,15 @@ extension ListSelectionValue {
     
     
     public var selectionRows:[ListSelectViewController.SelectionRow] {
+        return listItems
+        /*
         return listItems.map({
             ListSelectViewController.SelectionRow(title: $0.title,
                                                   selected: $0.selected,
                                                   valueIdentifier: $0.identifier
             )
         })
+        */
     }
 
 }
@@ -163,6 +166,29 @@ extension ListSelectionValue {
         self.selectionMessage = "Select a Value"
         self.selectionType = .single
         self.color = nil
+        
+        var items:[ListSelectViewController.ListItem] = []
+        
+        for (i,value) in values.enumerated() {
+            
+            var id:String? = nil
+            if let identifiers = valueIdentifiers {
+                if i <= (identifiers.count - 1) {
+                    id = identifiers[i]
+                }
+            }
+            
+            items.append(
+                ListSelectViewController.ListItem(
+                    value,
+                    id,
+                    selectedIndicies.contains(i)
+                )
+            )
+        }
+        
+        self.listItems = items
+        
     }
     
     /// Multi Selection
@@ -184,6 +210,28 @@ extension ListSelectionValue {
         self.selectionType = .single
         self.loadingClosure = loadingClosure
         self.color = nil
+        
+        var items:[ListSelectViewController.ListItem] = []
+        
+        for (i,value) in values.enumerated() {
+            
+            var id:String? = nil
+            if let identifiers = valueIdentifiers {
+                if i <= (identifiers.count - 1) {
+                    id = identifiers[i]
+                }
+            }
+            
+            items.append(
+                ListSelectViewController.ListItem(
+                    value,
+                    id,
+                    selectedIndicies.contains(i)
+                )
+            )
+        }
+        
+        self.listItems = items
     }
     
     // pass in matchedvalues...
@@ -196,6 +244,29 @@ extension ListSelectionValue {
         self.loadingClosure = loadingClosure
         self.color = nil
         self.loading = loading
+        
+        var items:[ListSelectViewController.ListItem] = []
+        
+        for (i,value) in values.enumerated() {
+            
+            var id:String? = nil
+            if let identifiers = valueIdentifiers {
+                if i <= (identifiers.count - 1) {
+                    id = identifiers[i]
+                }
+            }
+            
+            items.append(
+                ListSelectViewController.ListItem(
+                    value,
+                    id,
+                    selectedIndicies.contains(i)
+                )
+            )
+        }
+        
+        self.listItems = items
+        
     }
     
     

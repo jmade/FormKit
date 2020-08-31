@@ -362,7 +362,6 @@ public final class ListSelectViewController: UITableViewController {
     public init(_ listSelectValue:ListSelectionValue,at path:IndexPath) {
         super.init(style: listSelectValue.makeDescriptor().tableViewStyle)
         tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
-        //tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
         self.title = listSelectValue.title
         self.allowsMultipleSelection = listSelectValue.selectionType == .multiple
         self.sectionTile = listSelectValue.selectionTitle
@@ -556,8 +555,6 @@ public final class ListSelectViewController: UITableViewController {
                 cell.accessoryType = dataSource[indexPath.row].selected ? .checkmark : .none
                 tableView.deselectRow(at: indexPath, animated: true)
             }
-            
-            //tableView.reloadSections(IndexSet(integer: 0), with: .none)
         } else {
             /// Single Selection Mode
             if let currentSelectedPath = selectedIndexPaths.first {
