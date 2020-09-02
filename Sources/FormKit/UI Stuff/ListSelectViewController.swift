@@ -412,7 +412,9 @@ public final class ListSelectViewController: UITableViewController {
         
         if let listSelectValue = formValue {
             print("[LSC] viewDidLoad Setting dataSource: \(listSelectValue.selectionRows.count) ")
-            dataSource = listSelectValue.selectionRows
+            dataSource = listSelectValue.listItems
+            
+            print(" listSelectValue -> \(listSelectValue) ")
         }
         
         
@@ -718,7 +720,6 @@ public final class ListSelectViewController: UITableViewController {
         
         if let cell = tableView.dequeueReusableCell(withIdentifier: ListItemCell.ReuseID, for: indexPath) as? ListItemCell {
              let row = dataSource[indexPath.row]
-                print(" row -> \(row) ")
             cell.configureCell(row)
             return cell
         }
