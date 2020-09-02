@@ -361,6 +361,7 @@ public final class ListSelectViewController: UITableViewController {
     
     /// Using
     public init(_ listSelectValue:ListSelectionValue,at path:IndexPath) {
+        print("LSCinit")
         super.init(style: listSelectValue.makeDescriptor().tableViewStyle)
         tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
         self.title = listSelectValue.title
@@ -369,6 +370,8 @@ public final class ListSelectViewController: UITableViewController {
         
         self.formIndexPath = path
         self.formValue = listSelectValue
+        
+        
        
         
         if let loading = listSelectValue.loading {
@@ -376,8 +379,13 @@ public final class ListSelectViewController: UITableViewController {
                 loadingClosure(self)
             }
         } else {
+            print("No Loading")
+            print(" listSelectValue.listItems  -> \(listSelectValue.listItems ) ")
             dataSource = listSelectValue.listItems //  listSelectValue.selectionRows
         }
+        
+        
+        
     }
     
     
@@ -418,6 +426,8 @@ public final class ListSelectViewController: UITableViewController {
             print(" listSelectValue -> \(listSelectValue) ")
         }
         
+        
+        print("viewDidLoad")
         print(" dataSource -> \(dataSource) ")
         addBackbutton(title: " ")
         
@@ -441,7 +451,7 @@ public final class ListSelectViewController: UITableViewController {
         resultSearchController?.hidesNavigationBarDuringPresentation = false
         definesPresentationContext = true
         
-        tableView.reloadSections(IndexSet(integer: 0), with: .none)
+        //tableView.reloadSections(IndexSet(integer: 0), with: .none)
         
         //navigationController?.navigationBar.titleTextAttributes = [ .foregroundColor : UIColor.white ]
     }
@@ -674,6 +684,7 @@ public final class ListSelectViewController: UITableViewController {
         var new = currentValue
         new.values = dataSource.map({ $0.title })
         new.selectedIndicies = selectedIndicies
+        new.listItems = dataSource
         return new
     }
     
