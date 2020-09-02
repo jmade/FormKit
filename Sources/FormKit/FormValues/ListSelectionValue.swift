@@ -348,8 +348,8 @@ extension ListSelectionValue {
                 newSelectedIndicies.append(index)
             }
         }
-        return
-            ListSelectionValue(
+        
+        var new = ListSelectionValue(
                 selectionType: self.selectionType,
                 values: self.values,
                 selectedIndicies: newSelectedIndicies,
@@ -361,6 +361,8 @@ extension ListSelectionValue {
                 customKey: self.customKey,
                 uuid: self.uuid
         )
+        new.listItems = listItems
+        return new
     }
     
     
@@ -372,8 +374,8 @@ extension ListSelectionValue {
             }
         }
         
-        return
-            ListSelectionValue(
+        
+        var new = ListSelectionValue(
                 selectionType: self.selectionType,
                 values: self.values,
                 selectedIndicies: newSelectedIndicies,
@@ -387,6 +389,10 @@ extension ListSelectionValue {
                 customKey: self.customKey,
                 uuid: self.uuid
         )
+        
+        new.listItems = listItems
+        return new
+            
     }
     
     
