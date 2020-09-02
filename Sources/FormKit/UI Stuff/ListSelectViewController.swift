@@ -560,6 +560,9 @@ public final class ListSelectViewController: UITableViewController {
             }
         } else {
             /// Single Selection Mode
+            let selectedCount = dataSource.filter({ $0.selected }).count
+            print(" selectedCount -> \(selectedCount) ")
+            
             if let currentSelectedPath = selectedIndexPaths.first {
                 /// Has A Selected Row
                 if currentSelectedPath == indexPath {

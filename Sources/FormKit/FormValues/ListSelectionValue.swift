@@ -199,6 +199,29 @@ extension ListSelectionValue {
         self.selectionMessage = "Select Values"
         self.selectionType = .multiple
         self.color = nil
+        
+        var items:[ListSelectViewController.ListItem] = []
+        
+        for (i,value) in values.enumerated() {
+            
+            var id:String? = nil
+            if let identifiers = valueIdentifiers {
+                if i <= (identifiers.count - 1) {
+                    id = identifiers[i]
+                }
+            }
+            
+            items.append(
+                ListSelectViewController.ListItem(
+                    value,
+                    id,
+                    selectedIndicies.contains(i)
+                )
+            )
+        }
+        
+        self.listItems = items
+        
     }
     
     
