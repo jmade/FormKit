@@ -308,7 +308,8 @@ public final class ListSelectViewController: UITableViewController {
     // MARK: - Init -
     required init?(coder aDecoder: NSCoder) {fatalError()}
 
-   public  init(data: [String],selected: [Int], title:String) {
+    /*
+    public init(data: [String],selected: [Int], title:String) {
         if #available(iOS 13.0, *) {
             super.init(style: .insetGrouped)
         } else {
@@ -328,34 +329,34 @@ public final class ListSelectViewController: UITableViewController {
         navigationController?.navigationBar.titleTextAttributes = [ .foregroundColor : UIColor.white ]
         
     }
+    */
+    
+//    public init(descriptor:ListSelectionControllerDescriptor) {
+//        super.init(style: descriptor.tableViewStyle)
+//        tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
+//        //tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
+//        unformatedData = (descriptor.listVales,descriptor.selectedIndicies)
+//        formatData(descriptor.listVales,descriptor.selectedIndicies)
+//        self.listSelectionChangeClosure = descriptor.selectionChangeClosure
+//        self.title = descriptor.title
+//        self.allowsMultipleSelection = descriptor.allowsMultipleSelection
+//        self.sectionTile = descriptor.selectionMessage
+//    }
     
     
-    public init(descriptor:ListSelectionControllerDescriptor) {
-        super.init(style: descriptor.tableViewStyle)
-        tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
-        //tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
-        unformatedData = (descriptor.listVales,descriptor.selectedIndicies)
-        formatData(descriptor.listVales,descriptor.selectedIndicies)
-        self.listSelectionChangeClosure = descriptor.selectionChangeClosure
-        self.title = descriptor.title
-        self.allowsMultipleSelection = descriptor.allowsMultipleSelection
-        self.sectionTile = descriptor.selectionMessage
-    }
     
-    
-    
-    public init(descriptor:ListSelectionControllerDescriptor,loadingClosure: @escaping  ListSelectLoadingClosure) {
-        super.init(style: descriptor.tableViewStyle)
-        tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
-        //tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
-        unformatedData = (descriptor.listVales,descriptor.selectedIndicies)
-        formatData(descriptor.listVales,descriptor.selectedIndicies)
-        self.listSelectionChangeClosure = descriptor.selectionChangeClosure
-        self.title = descriptor.title
-        self.allowsMultipleSelection = descriptor.allowsMultipleSelection
-        self.sectionTile = descriptor.selectionMessage
-        loadingClosure(self)
-    }
+//    public init(descriptor:ListSelectionControllerDescriptor,loadingClosure: @escaping  ListSelectLoadingClosure) {
+//        super.init(style: descriptor.tableViewStyle)
+//        tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
+//        //tableView.register(UITableViewCell.self, forCellReuseIdentifier: ListSelectViewController.ReuseID)
+//        unformatedData = (descriptor.listVales,descriptor.selectedIndicies)
+//        formatData(descriptor.listVales,descriptor.selectedIndicies)
+//        self.listSelectionChangeClosure = descriptor.selectionChangeClosure
+//        self.title = descriptor.title
+//        self.allowsMultipleSelection = descriptor.allowsMultipleSelection
+//        self.sectionTile = descriptor.selectionMessage
+//        loadingClosure(self)
+//    }
     
     
     /// Using
@@ -391,19 +392,19 @@ public final class ListSelectViewController: UITableViewController {
     
     public typealias ListSelectLoadingClosure = (ListSelectViewController) -> Void
     
-   public init(title:String,loadingClosure: @escaping ListSelectLoadingClosure, updateClosure: @escaping ListSelectionChangeClosure) {
-        if #available(iOS 13.0, *) {
-            super.init(style: .insetGrouped)
-        } else {
-            super.init(style: .plain)
-        }
-        self.title = title
-        self.listSelectionChangeClosure = updateClosure
-        tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(donePressed))
-        loadingClosure(self)
-    }
-    
+//   public init(title:String,loadingClosure: @escaping ListSelectLoadingClosure, updateClosure: @escaping ListSelectionChangeClosure) {
+//        if #available(iOS 13.0, *) {
+//            super.init(style: .insetGrouped)
+//        } else {
+//            super.init(style: .plain)
+//        }
+//        self.title = title
+//        self.listSelectionChangeClosure = updateClosure
+//        tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
+//        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(donePressed))
+//        loadingClosure(self)
+//    }
+//
     
     
     
@@ -417,7 +418,7 @@ public final class ListSelectViewController: UITableViewController {
             print(" listSelectValue -> \(listSelectValue) ")
         }
         
-        
+        print(" dataSource -> \(dataSource) ")
         addBackbutton(title: " ")
         
         listSearchTable = ListSearchTable()
