@@ -372,6 +372,7 @@ public final class ListSelectViewController: UITableViewController {
         self.formValue = listSelectValue
         
         
+        print("LS Value: \(listSelectValue)")
         
         guard
             let loading = listSelectValue.loading,
