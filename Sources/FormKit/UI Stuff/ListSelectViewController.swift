@@ -637,7 +637,7 @@ public final class ListSelectViewController: UITableViewController {
                      // Turn New Row On
                      dataSource[indexPath.row].selected = true
                      // Reload Rows
-                    tableView.beginUpdates()
+                    //tableView.beginUpdates()
                     if let selectedCell = tableView.cellForRow(at: IndexPath(row: selectedRow, section: 0)) {
                         selectedCell.accessoryType = .none
                     }
@@ -647,7 +647,7 @@ public final class ListSelectViewController: UITableViewController {
                          tableView.deselectRow(at: indexPath, animated: true)
                      }
                     // tableView.reloadRows(at: [IndexPath(row: selectedRow, section: 0)], with: .fade)
-                    tableView.endUpdates()
+                    //tableView.endUpdates()
                 }
                 
                    
