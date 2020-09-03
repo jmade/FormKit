@@ -428,7 +428,7 @@ public final class ListSelectViewController: UITableViewController {
     public override func viewWillAppear(_ animated: Bool) {
         print("[ListSelectViewController] viewWillAppear")
         super.viewWillAppear(animated)
-        
+        setup()
     }
     
     
@@ -441,38 +441,43 @@ public final class ListSelectViewController: UITableViewController {
         print("[ListSelectViewController] viewDidLoad")
         super.viewDidLoad()
         
+  
+    }
+    
+    
+    private func setup() {
         print("FormValue: \(String(describing: formValue))")
-        
-        if let listSelectValue = formValue {
-            
-            guard
-                let loading = listSelectValue.loading,
-                let loadingClosure = loading.loadingClosure
-                else {
-                    print("Setting data source")
-                    dataSource = listSelectValue.listItems
-                    return
-            }
-            print("Found a Locaing Closure, loading it.")
-            loadingClosure(self)
-            
-        } else {
-            print("No ListSelectValue Found!")
-        }
-        
-        /*
-        if let listSelectValue = formValue {
-            print("[LSC] viewDidLoad Setting dataSource: \(listSelectValue.selectionRows.count) ")
-            dataSource = listSelectValue.listItems
-            
-            print(" listSelectValue -> \(listSelectValue) ")
-        }
-        */
-        
-        print("viewDidLoad")
-        print(" dataSource -> \(dataSource) ")
-        addBackbutton(title: " ")
-        setupSearch()
+          
+          if let listSelectValue = formValue {
+              
+              guard
+                  let loading = listSelectValue.loading,
+                  let loadingClosure = loading.loadingClosure
+                  else {
+                      print("Setting data source")
+                      dataSource = listSelectValue.listItems
+                      return
+              }
+              print("Found a Locaing Closure, loading it.")
+              loadingClosure(self)
+              
+          } else {
+              print("No ListSelectValue Found!")
+          }
+          
+          /*
+          if let listSelectValue = formValue {
+              print("[LSC] viewDidLoad Setting dataSource: \(listSelectValue.selectionRows.count) ")
+              dataSource = listSelectValue.listItems
+              
+              print(" listSelectValue -> \(listSelectValue) ")
+          }
+          */
+          
+          print("viewDidLoad")
+          print(" dataSource -> \(dataSource) ")
+          addBackbutton(title: " ")
+          setupSearch()
     }
     
     
