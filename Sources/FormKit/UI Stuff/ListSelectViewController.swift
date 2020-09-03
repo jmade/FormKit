@@ -638,11 +638,15 @@ public final class ListSelectViewController: UITableViewController {
                      dataSource[indexPath.row].selected = true
                      // Reload Rows
                     tableView.beginUpdates()
+                    if let selectedCell = tableView.cellForRow(at: IndexPath(row: selectedRow, section: 0)) {
+                        selectedCell.accessoryType = .none
+                    }
+                    
                      if let cell = tableView.cellForRow(at: indexPath) {
                          cell.accessoryType = .checkmark
                          tableView.deselectRow(at: indexPath, animated: true)
                      }
-                     tableView.reloadRows(at: [IndexPath(row: selectedRow, section: 0)], with: .fade)
+                    // tableView.reloadRows(at: [IndexPath(row: selectedRow, section: 0)], with: .fade)
                     tableView.endUpdates()
                 }
                 
