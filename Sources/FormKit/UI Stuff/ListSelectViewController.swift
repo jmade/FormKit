@@ -372,19 +372,16 @@ public final class ListSelectViewController: UITableViewController {
         self.formValue = listSelectValue
         
         
-       
         
-        if let loading = listSelectValue.loading {
-            if let loadingClosure = loading.loadingClosure {
-                loadingClosure(self)
-            }
-        } else {
-            print("No Loading")
-            print(" listSelectValue.listItems  -> \(listSelectValue.listItems ) ")
-            dataSource = listSelectValue.listItems //  listSelectValue.selectionRows
+        guard
+            let loading = listSelectValue.loading,
+            let loadingClosure = loading.loadingClosure
+            else {
+                dataSource = listSelectValue.listItems
+                return
         }
         
-        
+        loadingClosure(self)
         
     }
     
