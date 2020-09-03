@@ -371,7 +371,7 @@ public final class ListSelectViewController: UITableViewController {
         self.formIndexPath = path
         self.formValue = listSelectValue
         
-        
+        /*
         print("LS Value: \(listSelectValue)")
         
         guard
@@ -383,6 +383,8 @@ public final class ListSelectViewController: UITableViewController {
         }
         
         loadingClosure(self)
+        */
+        
         
     }
     
@@ -415,28 +417,45 @@ public final class ListSelectViewController: UITableViewController {
     
     
     public override func viewDidLoad() {
+        print("[ListSelectViewController] viewDidLoad")
         super.viewDidLoad()
         
+        if let listSelectValue = formValue {
+            guard
+                let loading = listSelectValue.loading,
+                let loadingClosure = loading.loadingClosure
+                else {
+                    dataSource = listSelectValue.listItems
+                    return
+            }
+            print("Found a Locaing Closure, loading it.")
+            loadingClosure(self)
+        } else {
+            print("No ListSelectValue Found!")
+        }
+        
+        /*
         if let listSelectValue = formValue {
             print("[LSC] viewDidLoad Setting dataSource: \(listSelectValue.selectionRows.count) ")
             dataSource = listSelectValue.listItems
             
             print(" listSelectValue -> \(listSelectValue) ")
         }
-        
+        */
         
         print("viewDidLoad")
         print(" dataSource -> \(dataSource) ")
         addBackbutton(title: " ")
-        
+        setupSearch()
+    }
+    
+    
+    private func setupSearch() {
         listSearchTable = ListSearchTable()
-        
         listSearchTable?.itemSelectedClosure = { [weak self] (item,ctrl,path) in
             ctrl.dismiss(animated: true, completion: nil)
             self?.handleSearchedSelection(item: item,at: path)
         }
-        
-        
         listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: $0.detail, selected: $0.selected) })
         resultSearchController = UISearchController(searchResultsController: listSearchTable)
         resultSearchController?.searchResultsUpdater = listSearchTable
@@ -448,10 +467,6 @@ public final class ListSelectViewController: UITableViewController {
         
         resultSearchController?.hidesNavigationBarDuringPresentation = false
         definesPresentationContext = true
-        
-        //tableView.reloadSections(IndexSet(integer: 0), with: .none)
-        
-        //navigationController?.navigationBar.titleTextAttributes = [ .foregroundColor : UIColor.white ]
     }
     
     
