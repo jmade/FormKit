@@ -628,7 +628,7 @@ public final class ListSelectViewController: UITableViewController {
                     // Tapping The Selected Row
                     dataSource[indexPath.row].selected = false
                     if let cell = tableView.cellForRow(at: indexPath) {
-                        cell.accessoryType = .checkmark
+                        cell.accessoryType = .none
                         tableView.deselectRow(at: indexPath, animated: true)
                     }
                 } else {
