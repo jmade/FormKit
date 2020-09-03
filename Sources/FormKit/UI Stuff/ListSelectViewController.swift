@@ -426,28 +426,36 @@ public final class ListSelectViewController: UITableViewController {
 //
     
     public override func viewWillAppear(_ animated: Bool) {
-        print("[ListSelectViewController] viewDidLoad")
+        print("[ListSelectViewController] viewWillAppear")
         super.viewWillAppear(animated)
         
     }
     
     
+    public override func viewDidAppear(_ animated: Bool) {
+        print("[ListSelectViewController] viewDidAppear")
+        super.viewDidAppear(animated)
+    }
+    
     public override func viewDidLoad() {
         print("[ListSelectViewController] viewDidLoad")
         super.viewDidLoad()
         
-        print(formValue)
+        print("FormValue: \(String(describing: formValue))")
         
         if let listSelectValue = formValue {
+            
             guard
                 let loading = listSelectValue.loading,
                 let loadingClosure = loading.loadingClosure
                 else {
+                    print("Setting data source")
                     dataSource = listSelectValue.listItems
                     return
             }
             print("Found a Locaing Closure, loading it.")
             loadingClosure(self)
+            
         } else {
             print("No ListSelectValue Found!")
         }
