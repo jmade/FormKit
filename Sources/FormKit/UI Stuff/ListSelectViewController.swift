@@ -190,7 +190,11 @@ public final class ListSelectViewController: UITableViewController {
     weak var delegate:ListSelectionDelegate?
     
     
-    public var formValue:ListSelectionValue? = nil
+    public var formValue:ListSelectionValue? = nil {
+        didSet {
+            print("[LIST VC] formValue Set")
+        }
+    }
     private var formIndexPath: IndexPath? = nil
     
     weak var formDelegate:UpdateFormValueDelegate?
@@ -369,7 +373,14 @@ public final class ListSelectViewController: UITableViewController {
         self.sectionTile = listSelectValue.selectionTitle
         
         self.formIndexPath = path
-        self.formValue = listSelectValue
+        
+        defer {
+             print("Setting List Select Value")
+            self.formValue = listSelectValue
+        }
+        
+       
+        
         
         /*
         print("LS Value: \(listSelectValue)")
@@ -414,11 +425,18 @@ public final class ListSelectViewController: UITableViewController {
 //    }
 //
     
+    public override func viewWillAppear(_ animated: Bool) {
+        print("[ListSelectViewController] viewDidLoad")
+        super.viewWillAppear(animated)
+        
+    }
     
     
     public override func viewDidLoad() {
         print("[ListSelectViewController] viewDidLoad")
         super.viewDidLoad()
+        
+        print(formValue)
         
         if let listSelectValue = formValue {
             guard
