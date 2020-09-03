@@ -607,56 +607,128 @@ public final class ListSelectViewController: UITableViewController {
         
         if allowsMultipleSelection {
             dataSource[indexPath.row].selected.toggle()
-            
             if let cell = tableView.cellForRow(at: indexPath) {
                 cell.accessoryType = dataSource[indexPath.row].selected ? .checkmark : .none
                 tableView.deselectRow(at: indexPath, animated: true)
             }
-        } else {
-            /// Single Selection Mode
-            let selectedCount = dataSource.filter({ $0.selected }).count
-            print(" selectedCount -> \(selectedCount) ")
-            
-            if let currentSelectedPath = selectedIndexPaths.first {
-                /// Has A Selected Row
-                if currentSelectedPath == indexPath {
-                    // Turning Selected Row Off
-                    dataSource[currentSelectedPath.row].selected = false
-                    selectedIndexPaths = []
-                    
-                    if let cell = tableView.cellForRow(at: indexPath) {
-                        cell.accessoryType = .none
-                        tableView.deselectRow(at: indexPath, animated: true)
-                    }
-                    
-                    //tableView.reloadRows(at: [currentSelectedPath], with: .fade)
-                } else {
-                    // Changing to new Selection
-                    // Turn current Row off...
-                    dataSource[currentSelectedPath.row].selected = false
-                    // Turn New Row On
-                    dataSource[indexPath.row].selected = true
-                    selectedIndexPaths = [indexPath]
-                    // Reload Rows
-                    if let cell = tableView.cellForRow(at: indexPath) {
-                        cell.accessoryType = .checkmark
-                        tableView.deselectRow(at: indexPath, animated: true)
-                    }
-
-                    tableView.reloadRows(at: [currentSelectedPath], with: .none)
-                }
-            } else {
-                // No Selected Row
+        } else { /// Single Selection Mode
+            let selectedIndicies = getSelectedIndicies(removingIndex: nil)
+            if selectedIndicies.count > 1 { print("WARNING MORE ARE SELECTED THAT CAN BE") }
+            if selectedIndicies.isEmpty {
+                /// No Selection
                 dataSource[indexPath.row].selected = true
-                selectedIndexPaths = [indexPath]
                 if let cell = tableView.cellForRow(at: indexPath) {
                     cell.accessoryType = .checkmark
                     tableView.deselectRow(at: indexPath, animated: true)
                 }
-                //tableView.reloadRows(at: [indexPath], with: .fade)
+            } else {
+                // Has Selection
+                let selectedRow = selectedIndicies[0]
+                if selectedRow == indexPath.row {
+                    // Tapping The Selected Row
+                    dataSource[indexPath.row].selected = false
+                    if let cell = tableView.cellForRow(at: indexPath) {
+                        cell.accessoryType = .checkmark
+                        tableView.deselectRow(at: indexPath, animated: true)
+                    }
+                } else {
+                    // Tapping a New Row
+                    dataSource[selectedRow].selected = false
+                     // Turn New Row On
+                     dataSource[indexPath.row].selected = true
+                     // Reload Rows
+                    tableView.beginUpdates()
+                     if let cell = tableView.cellForRow(at: indexPath) {
+                         cell.accessoryType = .checkmark
+                         tableView.deselectRow(at: indexPath, animated: true)
+                     }
+                     tableView.reloadRows(at: [IndexPath(row: selectedRow, section: 0)], with: .fade)
+                    tableView.endUpdates()
+                }
+                
+                   
+                    
+                    
+                
             }
-            
         }
+            
+//
+//            if selectedIndicies > 0 {
+//                if let selectedRow = selectedIndicies.first {
+//
+//                    if selectedRow == indexPath.row {
+//
+//                    } else {
+//
+//                    }
+//
+//
+//                }
+//
+//                for row in selectedIndicies {
+//                    dataSource[row].selected = false
+//                }
+//                dataSource[indexPath.row].selected = true
+//                tableView.reloadRows(at: selectedIndicies.map({ IndexPath(row: $0, section: 0) }), with: .fade)
+//                if let cell = tableView.cellForRow(at: indexPath) {
+//                    cell.accessoryType = dataSource[indexPath.row].selected ? .checkmark : .none
+//                    tableView.deselectRow(at: indexPath, animated: true)
+//                }
+//
+//            } else {
+//
+//            }
+//
+//
+//            let selectedCount = dataSource.filter({ $0.selected }).count
+//            print(" selectedCount -> \(selectedCount) ")
+//
+//            if selectedCount > 0 {
+//
+//            }
+//
+//
+//            if let currentSelectedPath = selectedIndexPaths.first {
+//                /// Has A Selected Row
+//                if currentSelectedPath == indexPath {
+//                    // Turning Selected Row Off
+//                    dataSource[currentSelectedPath.row].selected = false
+//                    selectedIndexPaths = []
+//
+//                    if let cell = tableView.cellForRow(at: indexPath) {
+//                        cell.accessoryType = .none
+//                        tableView.deselectRow(at: indexPath, animated: true)
+//                    }
+//
+//                    //tableView.reloadRows(at: [currentSelectedPath], with: .fade)
+//                } else {
+//                    // Changing to new Selection
+//                    // Turn current Row off...
+//                    dataSource[currentSelectedPath.row].selected = false
+//                    // Turn New Row On
+//                    dataSource[indexPath.row].selected = true
+//                    selectedIndexPaths = [indexPath]
+//                    // Reload Rows
+//                    if let cell = tableView.cellForRow(at: indexPath) {
+//                        cell.accessoryType = .checkmark
+//                        tableView.deselectRow(at: indexPath, animated: true)
+//                    }
+//
+//                    tableView.reloadRows(at: [currentSelectedPath], with: .none)
+//                }
+//            } else {
+//                // No Selected Row
+//                dataSource[indexPath.row].selected = true
+//                selectedIndexPaths = [indexPath]
+//                if let cell = tableView.cellForRow(at: indexPath) {
+//                    cell.accessoryType = .checkmark
+//                    tableView.deselectRow(at: indexPath, animated: true)
+//                }
+//                //tableView.reloadRows(at: [indexPath], with: .fade)
+//            }
+//
+//        }
     
         
         
