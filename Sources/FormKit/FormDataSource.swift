@@ -144,24 +144,34 @@ extension FormDataSource {
 extension FormDataSource {
     
    public func newWithSection(_ section:FormSection, at sectionIndex:Int) -> FormDataSource {
+    print("newWithSection")
         
-        var newSections: [FormSection] = []
+//        var newSections: [FormSection] = []
+//
+//        if sectionIndex > 0 {
+//            Array(0...(sectionIndex-1)).forEach({
+//                newSections.append(sections[$0])
+//            })
+//        }
+//
+//        newSections.append(section)
+//
+//        if (sections.count-1) > sectionIndex {
+//            Array(sectionIndex+1...sections.count-1).forEach({
+//                newSections.append(sections[$0])
+//            })
+//        }
+    
+    var newSection = section
+    newSection.updateClosure = {  [weak self] (section) in
+        self?.sectionWasUpdated(section: section)
+    }
+    
+    
+        sections[sectionIndex] = newSection
+        return self
         
-        if sectionIndex > 0 {
-            Array(0...(sectionIndex-1)).forEach({
-                newSections.append(sections[$0])
-            })
-        }
-        
-        newSections.append(section)
-        
-        if (sections.count-1) > sectionIndex {
-            Array(sectionIndex+1...sections.count-1).forEach({
-                newSections.append(sections[$0])
-            })
-        }
-        
-        return FormDataSource(title: self.title, sections: newSections)
+        //return FormDataSource(title: self.title, sections: newSections)
     }
     
 }
