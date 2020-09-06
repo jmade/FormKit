@@ -31,9 +31,18 @@ public class FormDataSource {
     }
     
     private func update() {
+        print("UPDATE")
+        if let delegate = delegate {
+            print("have delegate")
+            delegate.dataSourceWasUpdated(
+                FormDataSource(title: self.title, sections: self.sections, self.updateClosure)
+            )
+        } else {
+            print("No delegate found")
+        }
         
-        delegate?.dataSourceWasUpdated(self)
-        updateClosure(self)
+        print("calling update closure")
+        updateClosure( FormDataSource(title: self.title, sections: self.sections, self.updateClosure) )
     }
     
     public var updateClosure: FormDataSourceUpdateClosure = { _ in }
