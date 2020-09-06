@@ -49,13 +49,14 @@ extension FormDataSource {
     
     public convenience init(sections:[FormSection]) {
         self.init()
-        self.sections = sections
         
         sections.forEach( {
             $0.updateClosure = { [weak self] (section) in
                 self?.sectionWasUpdated(section: section)
             }
         })
+        
+        self.sections = sections
         
     }
     
@@ -75,13 +76,14 @@ extension FormDataSource {
     public convenience init(title: String, sections:[FormSection]) {
         self.init()
         self.title = title
-        self.sections = sections
         
         sections.forEach( {
             $0.updateClosure = { [weak self] (section) in
                 self?.sectionWasUpdated(section: section)
             }
         })
+        
+        self.sections = sections
         
     }
     
@@ -89,7 +91,6 @@ extension FormDataSource {
     public convenience init(title: String, sections:[FormSection],_ updateClosure: @escaping FormDataSourceUpdateClosure) {
         self.init()
         self.title = title
-        self.sections = sections
         self.updateClosure = updateClosure
         
         sections.forEach( {
@@ -97,6 +98,8 @@ extension FormDataSource {
                 self?.sectionWasUpdated(section: section)
             }
         })
+        
+        self.sections = sections
         
     }
     
@@ -108,6 +111,7 @@ extension FormDataSource {
     
     /// Trickle down the update closure, when a section changes
     private func sectionWasUpdated(section: FormSection) {
+        print("[FormKit][FormDataSource](sectionWasUpdated)")
         updateClosure(self)
     }
     
