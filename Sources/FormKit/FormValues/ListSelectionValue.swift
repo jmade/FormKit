@@ -537,7 +537,7 @@ extension ListSelectionValue {
                 loadingClosure: self.loadingClosure,
                 generationClosure: self.generationClosure,
                 customKey: self.customKey,
-                uuid: self.uuid
+                uuid: UUID().uuidString
         )
         
         newValue.listItems = listItems

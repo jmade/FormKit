@@ -16,6 +16,9 @@ public class FormDataSource {
         didSet {
             if oldValue != sections {
                 updateClosure(self)
+            } else {
+                print("Same Sectoions")
+              
             }
         }
     }
