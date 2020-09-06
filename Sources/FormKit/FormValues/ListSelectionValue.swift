@@ -26,18 +26,50 @@ public struct ListSelectionValue {
        public var matchingIntegerValues: [Int]? = nil
        public var matchingStringValues: [String]? = nil
         
-        public init(_ matchingValues:[Int],itemKey:String,loadingClosure: @escaping ListSelectLoadingClosure) {
-            self.itemKey = itemKey
+        public init(_ matchingValues:[Int]?,itemKey:String?,loadingClosure: @escaping ListSelectLoadingClosure) {
+            if let _itemKey = itemKey {
+                self.itemKey = _itemKey
+            } else {
+                self.itemKey = ""
+            }
+            
             self.loadingClosure = loadingClosure
             self.matchingIntegerValues = matchingValues
         }
         
-        public init(_ matchingValues:[String],itemKey:String,loadingClosure: @escaping ListSelectLoadingClosure) {
-            self.itemKey = itemKey
+        public init(_ matchingValues:[String]?,itemKey:String?,loadingClosure: @escaping ListSelectLoadingClosure) {
+            if let _itemKey = itemKey {
+                self.itemKey = _itemKey
+            } else {
+                self.itemKey = ""
+            }
+            
             self.loadingClosure = loadingClosure
             self.matchingStringValues = matchingValues
             
         }
+        
+        
+        public init(itemKey:String?,loadingClosure: @escaping ListSelectLoadingClosure) {
+            if let _itemKey = itemKey {
+                self.itemKey = _itemKey
+            } else {
+                self.itemKey = ""
+            }
+            
+            self.loadingClosure = loadingClosure
+            self.matchingStringValues = nil
+            
+        }
+        
+        
+        public init(loadingClosure: @escaping ListSelectLoadingClosure) {
+            self.itemKey = ""
+            self.loadingClosure = loadingClosure
+            self.matchingStringValues = nil
+            
+        }
+        
         
         public var matchingOnString: Bool {
             return matchingIntegerValues == nil

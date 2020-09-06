@@ -183,7 +183,27 @@ public final class ListSelectViewController: UITableViewController {
     weak var delegate:ListSelectionDelegate?
     
     
-    public var formValue:ListSelectionValue? = nil
+    
+    public var formValue:ListSelectionValue? = nil {
+        didSet {
+            self._formValue = formValue
+        }
+    }
+    
+    
+    public var listSelectValue:ListSelectionValue? = nil {
+        didSet {
+            self._formValue = formValue
+        }
+    }
+    
+    
+    private var _formValue:ListSelectionValue? = nil
+    
+    //public var
+    
+    
+    
     private var formIndexPath: IndexPath? = nil
     
     weak var formDelegate:UpdateFormValueDelegate?
@@ -286,7 +306,7 @@ public final class ListSelectViewController: UITableViewController {
         self.allowsMultipleSelection = listSelectValue.selectionType == .multiple
         self.sectionTile = listSelectValue.selectionTitle
         self.formIndexPath = path
-        self.formValue = listSelectValue
+        self._formValue = listSelectValue
         /*
         defer {
             self.formValue = listSelectValue
@@ -296,7 +316,7 @@ public final class ListSelectViewController: UITableViewController {
     
     
     public func setValue(_ listSelectValue:ListSelectionValue) {
-        self.formValue = listSelectValue
+        self._formValue = listSelectValue
         dataSource = listSelectValue.listItems
     }
     
@@ -313,7 +333,7 @@ public final class ListSelectViewController: UITableViewController {
     }
     
     private func setup() {
-          if let listSelectValue = formValue {
+          if let listSelectValue = _formValue {
               guard
                   let loading = listSelectValue.loading,
                   let loadingClosure = loading.loadingClosure
@@ -321,6 +341,7 @@ public final class ListSelectViewController: UITableViewController {
                       dataSource = listSelectValue.listItems
                       return
               }
+              prepareTableForLoading()
               loadingClosure(self)
           }
           addBackbutton(title: " ")
@@ -360,15 +381,19 @@ public final class ListSelectViewController: UITableViewController {
 
     
     public func setLoading() {
+        guard tableView.tableFooterView == nil else {
+            return
+        }
         prepareTableForLoading()
     }
     
+    
     private func prepareTableForLoading() {
-           dataSource = []
-           sectionTile = ""
-           tableView.deleteSections(IndexSet(integersIn: 0..<tableView.numberOfSections), with: .top)
-           tableView.tableFooterView = ItemsLoadingView()
-       }
+        dataSource = []
+        sectionTile = ""
+        tableView.tableFooterView = ItemsLoadingView()
+        tableView.deleteSections(IndexSet(integersIn: 0..<tableView.numberOfSections), with: .top)
+    }
     
     
     public func reloadExistingData() {
@@ -491,7 +516,7 @@ public final class ListSelectViewController: UITableViewController {
             }
         }
             
-        if let currentListSelectValue = formValue {
+        if let currentListSelectValue = _formValue {
             let newListSelectValue = currentListSelectValue.newWith(dataSource)
             crawlDelegate(newListSelectValue)
         }
@@ -548,7 +573,7 @@ public final class ListSelectViewController: UITableViewController {
     
     private func makeNewListSelectValue(_ selectedIndicies:[Int]) -> ListSelectionValue {
         
-        guard let currentValue = formValue else {
+        guard let currentValue = _formValue else {
             return .init(title: title ?? "",
                          values: dataSource.map({ $0.title }),
                          selected: selectedIndicies
