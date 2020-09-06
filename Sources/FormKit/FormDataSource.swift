@@ -7,20 +7,33 @@ import Foundation
 public typealias FormDataSourceUpdateClosure = ( (FormDataSource) -> Void )
 
 
+public protocol FormDataSourceUpdateDelegate: class {
+    func dataSourceWasUpdated(_ dataSource:FormDataSource)
+}
+
 
 public class FormDataSource {
+    
+    public weak var delegate:FormDataSourceUpdateDelegate?
     
     public var title:String = ""
     
     public var sections:[FormSection] = [] {
         didSet {
             if oldValue != sections {
-                updateClosure(self)
+                update()
+                //
             } else {
                 print("Same Sectoions")
               
             }
         }
+    }
+    
+    private func update() {
+        
+        delegate?.dataSourceWasUpdated(self)
+        updateClosure(self)
     }
     
     public var updateClosure: FormDataSourceUpdateClosure = { _ in }
@@ -112,7 +125,8 @@ extension FormDataSource {
     /// Trickle down the update closure, when a section changes
     private func sectionWasUpdated(section: FormSection) {
         print("[FormKit][FormDataSource](sectionWasUpdated)")
-        updateClosure(self)
+        update()
+        //updateClosure(self)
     }
     
 }
