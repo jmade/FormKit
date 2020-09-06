@@ -286,8 +286,8 @@ extension FormDataSource {
             if path.row >= 0 && path.row <= rowCount - 1 {
                 
                 print("[FormKit] Update FormValue at \(path)")
-                
                 sections[path.section].rows[path.row] = formValue.formItem
+                updateClosure(self)
             } else {
                 print("[FormKit Error]: (Row Error) Unable to update FormValue at IndexPath: \(path)")
             }
