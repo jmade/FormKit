@@ -307,6 +307,7 @@ extension FormDataSource {
         }
     }
     
+    
     public func updateFirstSection(_ section:FormSection) {
         let existingSections = self.sections.dropFirst()
         self.sections = [[section],existingSections].reduce([],+)
@@ -324,7 +325,7 @@ extension FormDataSource {
                 
                 print("[FormKit] Update FormValue at \(path)")
                 sections[path.section].rows[path.row] = formValue.formItem
-                updateClosure(self)
+                update()
             } else {
                 print("[FormKit Error]: (Row Error) Unable to update FormValue at IndexPath: \(path)")
             }
