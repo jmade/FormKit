@@ -20,11 +20,10 @@ public class FormSection: Equatable {
     public var rows:[FormItem] = [] {
         didSet {
             if oldValue != rows {
-                print("\n------")
-                print("OLD: \(oldValue)")
-                print("NEW: \(rows)")
-                print("------\n")
+                //print("\n------\nOLD: \(oldValue)\nNEW: \(rows)\n------\n")
                 updateClosure(self)
+            } else {
+                print("same rows.. ")
             }
         }
     }
