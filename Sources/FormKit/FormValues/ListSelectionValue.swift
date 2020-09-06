@@ -71,6 +71,15 @@ public struct ListSelectionValue {
         }
         
         
+        
+     
+        
+        
+        
+        
+        
+        
+        
         public var matchingOnString: Bool {
             return matchingIntegerValues == nil
         }
@@ -323,6 +332,41 @@ extension ListSelectionValue {
         self.listItems = items
         
     }
+    
+    
+    public init(title:String,_ selectionType: SelectionType = .multiple,_ loadingClosure: @escaping ListSelectLoadingClosure) {
+        self.values = []
+        self.selectedIndicies = []
+        self.title = title
+        self.selectionMessage = "Select a Value"
+        self.selectionType = selectionType
+        self.loadingClosure = loadingClosure
+        self.color = nil
+        self.loading = nil
+        
+        var items:[ListSelectViewController.ListItem] = []
+        
+        for (i,value) in values.enumerated() {
+            
+            var id:String? = nil
+            if let identifiers = valueIdentifiers {
+                if i <= (identifiers.count - 1) {
+                    id = identifiers[i]
+                }
+            }
+            
+            items.append(
+                ListSelectViewController.ListItem(
+                    value,
+                    id,
+                    selectedIndicies.contains(i)
+                )
+            )
+        }
+        
+        self.listItems = items
+    }
+         
     
     
 }
