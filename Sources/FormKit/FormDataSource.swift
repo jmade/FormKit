@@ -20,32 +20,20 @@ public class FormDataSource {
     
     public var sections:[FormSection] = [] {
         didSet {
-            if oldValue != sections {
-                update()
-                //
-            } else {
-                print("Same Sectoions")
-              
-            }
+            update()
         }
     }
+    
     
     private func update() {
-        print("UPDATE")
+        let copy = self
         if let delegate = delegate {
-            print("have delegate")
-            delegate.dataSourceWasUpdated(
-                FormDataSource(title: self.title, sections: self.sections, self.updateClosure)
-            )
-        } else {
-            print("No delegate found")
+            delegate.dataSourceWasUpdated(copy)
         }
-        
-        print("calling update closure")
-        updateClosure( FormDataSource(title: self.title, sections: self.sections, self.updateClosure) )
+        updateClosure?(copy)
     }
     
-    public var updateClosure: FormDataSourceUpdateClosure = { _ in }
+    public var updateClosure: FormDataSourceUpdateClosure? = nil
     
 }
 
@@ -81,6 +69,40 @@ extension FormDataSource {
         self.sections = sections
         
     }
+    
+    
+    
+    public convenience init(section:FormSection) {
+           self.init()
+            
+        let newSections = [section]
+           
+           newSections.forEach( {
+               $0.updateClosure = { [weak self] (section) in
+                   self?.sectionWasUpdated(section: section)
+               }
+           })
+           
+           self.sections = newSections
+           
+       }
+    
+    
+    public convenience init(title: String?,_ section:FormSection) {
+        self.init()
+         
+     let newSections = [section]
+        
+        newSections.forEach( {
+            $0.updateClosure = { [weak self] (section) in
+                self?.sectionWasUpdated(section: section)
+            }
+        })
+        
+        self.sections = newSections
+        
+    }
+    
     
     public convenience init(_ sections:[FormSection] = []) {
         self.init()
@@ -133,9 +155,7 @@ extension FormDataSource {
     
     /// Trickle down the update closure, when a section changes
     private func sectionWasUpdated(section: FormSection) {
-        print("[FormKit][FormDataSource](sectionWasUpdated)")
         update()
-        //updateClosure(self)
     }
     
 }
@@ -143,35 +163,17 @@ extension FormDataSource {
 
 extension FormDataSource {
     
-   public func newWithSection(_ section:FormSection, at sectionIndex:Int) -> FormDataSource {
-    print("newWithSection")
+    public func newWithSection(_ section:FormSection, at sectionIndex:Int) -> FormDataSource {
         
-//        var newSections: [FormSection] = []
-//
-//        if sectionIndex > 0 {
-//            Array(0...(sectionIndex-1)).forEach({
-//                newSections.append(sections[$0])
-//            })
-//        }
-//
-//        newSections.append(section)
-//
-//        if (sections.count-1) > sectionIndex {
-//            Array(sectionIndex+1...sections.count-1).forEach({
-//                newSections.append(sections[$0])
-//            })
-//        }
-    
-    var newSection = section
-    newSection.updateClosure = {  [weak self] (section) in
-        self?.sectionWasUpdated(section: section)
-    }
-    
-    
+        let newSection = section
+        newSection.updateClosure = {  [weak self] (section) in
+            self?.sectionWasUpdated(section: section)
+        }
+        
         sections[sectionIndex] = newSection
-        return self
         
-        //return FormDataSource(title: self.title, sections: newSections)
+        let copy = self
+        return copy
     }
     
 }
