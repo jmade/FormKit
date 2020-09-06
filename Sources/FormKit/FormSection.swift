@@ -24,6 +24,12 @@ public class FormSection: Equatable {
                 updateClosure(self)
             } else {
                 print("same rows.. ")
+                if oldValue.map({ $0.hash }) != rows.map({ $0.hash }) {
+                    print("diff has vals")
+                } else {
+                    print("same vals...")
+                }
+                
             }
         }
     }
