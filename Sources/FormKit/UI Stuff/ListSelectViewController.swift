@@ -184,23 +184,30 @@ public final class ListSelectViewController: UITableViewController {
     
     
     
-    public var formValue:ListSelectionValue? = nil {
-        didSet {
-            self._formValue = formValue
+    public var formValue:ListSelectionValue? {
+        set {
+            self._formValue = newValue
+        }
+        
+        get {
+            return _formValue
         }
     }
     
     
-    public var listSelectValue:ListSelectionValue? = nil {
-        didSet {
-            self._formValue = formValue
+    public var listSelectValue:ListSelectionValue? {
+        set {
+            self._formValue = newValue
+        }
+        
+        get {
+            return _formValue
         }
     }
     
     
     private var _formValue:ListSelectionValue? = nil
-    
-    //public var
+
     
     
     
