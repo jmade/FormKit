@@ -261,7 +261,7 @@ public final class ListSelectViewController: UITableViewController {
     
     
     // sectionTitles = []
-    private var sectionTile: String = ""
+    private var sectionTitle: String = ""
     
     
     /// setting the data from outside
@@ -311,7 +311,7 @@ public final class ListSelectViewController: UITableViewController {
         tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
         self.title = listSelectValue.title
         self.allowsMultipleSelection = listSelectValue.selectionType == .multiple
-        self.sectionTile = listSelectValue.selectionTitle
+        self.sectionTitle = listSelectValue.selectionTitle
         self.formIndexPath = path
         self._formValue = listSelectValue
         /*
@@ -416,24 +416,13 @@ public final class ListSelectViewController: UITableViewController {
     
     private func prepareTableForLoading() {
         dataSource = []
-        sectionTile = ""
+        sectionTitle = ""
         tableView.tableFooterView = ItemsLoadingView()
         tableView.deleteSections(IndexSet(integersIn: 0..<tableView.numberOfSections), with: .top)
     }
     
     
-    public func reloadExistingData() {
-        let existingData = self.unformatedData
-        setUnformatedData(existingData)
-    }
-    
-
-    public func setUnformatedData(_ unformated: ([String],[Int])) {
-        DispatchQueue.main.async(execute: { [weak self] in
-            self?.unformatedData = unformated
-        })
-    }
-      
+  
 
     
     
@@ -449,6 +438,20 @@ public final class ListSelectViewController: UITableViewController {
     
   
     
+    
+    
+    public func reloadExistingData() {
+          let existingData = self.unformatedData
+          setUnformatedData(existingData)
+      }
+      
+
+      public func setUnformatedData(_ unformated: ([String],[Int])) {
+          DispatchQueue.main.async(execute: { [weak self] in
+              self?.unformatedData = unformated
+          })
+      }
+        
     
     
     private func formatData(_ data:[String],_ selected:[Int]) {
@@ -473,8 +476,16 @@ public final class ListSelectViewController: UITableViewController {
         return dataSource.isEmpty ? 0 : 1
     }
     
+    
     public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return "\(getSelectedIndicies(removingIndex: nil).count) Selected"
+        let selectedCount = getSelectedIndicies(removingIndex: nil).count
+        if selectedCount == 0 {
+            return "Make a Selection"
+        } else {
+            return "\(selectedCount) Selected"
+        }
+        
+        
     }
     
     public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -487,18 +498,7 @@ public final class ListSelectViewController: UITableViewController {
     
 
     
-    private func crawlDelegate(_ new:ListSelectionValue) {
-        if let nav = navigationController {
-            for vc in nav.viewControllers {
-                if let form = vc as? FormController {
-                    if let path = formIndexPath {
-                        form.dataSource.updateWith(formValue: new, at: path)
-                        form.tableView.reloadRows(at: [path], with: .none)
-                    }
-                }
-            }
-        }
-    }
+   
     
     
     private func newDidSelect(_ indexPath: IndexPath) {
@@ -548,6 +548,26 @@ public final class ListSelectViewController: UITableViewController {
         }
         
     }
+    
+    
+    private func crawlDelegate(_ new:ListSelectionValue) {
+           if let nav = navigationController {
+               for vc in nav.viewControllers {
+                   if let form = vc as? FormController {
+                       if let path = formIndexPath {
+                           form.dataSource.updateWith(formValue: new, at: path)
+                           form.tableView.reloadRows(at: [path], with: .none)
+                       }
+                   }
+               }
+           }
+       }
+    
+    
+    
+    
+    
+    
     
     
     

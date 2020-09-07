@@ -246,6 +246,11 @@ extension FormDataSource {
     }
     
     
+    public func logParams() {
+        
+    }
+    
+    
     
     // MARK: - EncodedFormDataSource -
     public typealias EncodedFormDataSource = [String:[[String:[String:String]]]]
@@ -297,10 +302,7 @@ extension FormDataSource {
         return sections.isEmpty
     }
     
-    /// Idea: somehow find a way to connect / bind this to the tableview.
-       /// and it can handle figuring out what  to do.
-    
-    
+
     public func rowsForSection(_ section:Int) -> [FormItem] {
         if sections.count-1 >= section {
             return sections[section].rows
@@ -318,16 +320,12 @@ extension FormDataSource {
    
     
     public func updateWith(formValue:FormValue,at path:IndexPath) {
-        
-        
         let qualifiedSections = path.section >= 0 && path.section <= sections.count - 1
         if qualifiedSections {
             let rowCount = sections[path.section].rows.count
             if path.row >= 0 && path.row <= rowCount - 1 {
-                
-                print("[FormKit] Update FormValue at \(path)")
+                //print("[FormKit] Update FormValue at \(path)")
                 sections[path.section].rows[path.row] = formValue.formItem
-                //update()
             } else {
                 print("[FormKit Error]: (Row Error) Unable to update FormValue at IndexPath: \(path)")
             }
@@ -342,6 +340,15 @@ extension FormDataSource {
     public func itemAt(_ path:IndexPath) -> FormItem? {
         if sections.count-1 >= path.section {
             return sections[path.section].itemForRowAt(path.row)
+        } else {
+            return nil
+        }
+    }
+    
+    
+    public func sectionTitle(at section:Int) -> String? {
+        if sections.count-1 >= section {
+            return sections[section].title
         } else {
             return nil
         }
