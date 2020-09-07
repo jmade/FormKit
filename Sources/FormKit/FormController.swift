@@ -188,7 +188,7 @@ open class FormController: UITableViewController, CustomTransitionable {
         tableView.keyboardDismissMode = .interactive
         tableView.estimatedRowHeight = 44.0
         tableView.rowHeight = UITableView.automaticDimension
-        tableView.tableFooterView = ItemsLoadingView()
+        //tableView.tableFooterView = ItemsLoadingView()
         tableView.contentInset = defaultContentInsets
         
         /*
@@ -206,6 +206,7 @@ open class FormController: UITableViewController, CustomTransitionable {
         }
         
         setupToolBar()
+        
         
         if let loadingMessage = checkInMessage {
             print("[FormController] we got `checkInMessage`")
