@@ -332,11 +332,6 @@ public final class ListSelectViewController: UITableViewController {
         self.sectionTitle = listSelectValue.selectionTitle
         self.formIndexPath = path
         self._formValue = listSelectValue
-        /*
-        defer {
-            self.formValue = listSelectValue
-        }
-        */
     }
     
     
@@ -357,9 +352,12 @@ public final class ListSelectViewController: UITableViewController {
         setup()
     }
     
+    
+    
+    
     private func setup() {
         
-          if let listSelectValue = _formValue {
+        if let listSelectValue = _formValue {
             
             if let loading = listSelectValue.loading {
                 if let loadingClosure = loading.loadingClosure {
@@ -375,21 +373,9 @@ public final class ListSelectViewController: UITableViewController {
                 }
             }
         }
-            
-            
-//              guard
-//                let loadingClosure = listSelectValue.loadingClosure
-//                  let loading = listSelectValue.loading
-//                  let loadingClosure = loading.loadingClosure
-//                  else {
-//                      dataSource = listSelectValue.listItems
-//                      return
-//              }
-//              prepareTableForLoading()
-//              loadingClosure(self)
-//          }
-          addBackbutton(title: " ")
-          setupSearch()
+        
+        //addBackbutton(title: " ")
+        setupSearch()
     }
     
     

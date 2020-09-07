@@ -81,11 +81,6 @@ open class FormController: UITableViewController, CustomTransitionable {
         didSet {
             
             guard !dataSource.isEmpty else {
-                /*
-                if let loadingView = tableView.tableFooterView as? ItemsLoadingView {
-                    loadingView.displayMessage("No Data")
-                }
-                */
                 print("[FromController] Empty `FormDataSource` loaded")
                 return
             }
@@ -113,86 +108,15 @@ open class FormController: UITableViewController, CustomTransitionable {
                     }
                 })
             } else {
-                
-                /*
-                let old = oldValue
-                let new = dataSource
-
-                
-                var sectionChanges:[SectionChange] = []
-                
-                for i in 0..<max(old.sections.count, new.sections.count) {
-                    let isOldSectionEmpty = old.rowsForSection(i).isEmpty
-                    let isNewSectionEmpty = new.rowsForSection(i).isEmpty
-                    let changingSection = (isOldSectionEmpty == false) && (isNewSectionEmpty == false)
-                    let addingSection = (isOldSectionEmpty == true) && (isNewSectionEmpty == false)
-                    let removingSection = (isOldSectionEmpty == false) && (isNewSectionEmpty == true)
-                    if changingSection {
-                        let changes = diff(old: old.rowsForSection(i), new: new.rowsForSection(i))
-                        sectionChanges.append(SectionChange(operation: .reloading, section: i, changes: changes, indexSet: nil))
-                    }
-                    if addingSection {
-                        sectionChanges.append(SectionChange(operation: .adding, section: i, changes: nil, indexSet: IndexSet(arrayLiteral: i)))
-                    }
-                    if removingSection {
-                        sectionChanges.append(SectionChange(operation: .deleting, section: i, changes: nil, indexSet: IndexSet(arrayLiteral: i)))
-                    }
-                }
-                
-                let inserts = sectionChanges.filter({ $0.operation == .adding }).map({$0.section})
-                let deletes = sectionChanges.filter({ $0.operation == .deleting }).map({$0.section})
-                let reloads = sectionChanges.filter({ $0.operation == .reloading })
-                
-                var sectionReloads:[Int] = []
-                var actualInserts:[Int] = []
-                for i in inserts {
-                    if Array(0..<old.sections.count).contains(i) {
-                        sectionReloads.append(i)
-                    } else {
-                        actualInserts.append(i)
-                    }
-                }
-                */
-                
-                let eval = FormDataSource.evaluate(oldValue, new: dataSource)
-                handleDataEvaluation(eval)
-                /*
-                DispatchQueue.main.async(execute: { [weak self] in
-                    guard let self = self else { return }
-                    self.tableView.beginUpdates()
-                    self.tableView.insertSections(eval.sets.insert, with: .automatic)
-                    self.tableView.deleteSections(eval.sets.delete, with: .automatic)
-                    self.tableView.reloadSections(eval.sets.reload, with: .automatic)
-                    eval.reloads.forEach({
-                        if let sectionHeader = self.tableView.headerView(forSection: $0.section) as? FormHeaderCell {
-                            sectionHeader.titleLabel.text = self.dataSource.sections[$0.section].title
-                        }
-                        if let changes = $0.changes {
-                            self.tableView.reload(
-                                changes: changes,
-                                section: $0.section,
-                                insertionAnimation: .automatic,
-                                deletionAnimation:  .automatic,
-                                replacementAnimation:  .automatic,
-                                completion: nil
-                            )
-                        }
-                    })
-                    self.tableView.endUpdates()
-                })
-                */
-                
+                handleDataEvaluation(
+                    FormDataSource.evaluate(oldValue, new: dataSource)
+                )
             }
-            
-
         }
     }
     
     
     private var defaultContentInsets = UIEdgeInsets(top: 8.0, left: 0, bottom: 0, right: 0)
-    
-    
-    
     
     
     /// Loading
@@ -256,8 +180,9 @@ open class FormController: UITableViewController, CustomTransitionable {
     }
 
     // MARK: - Controller Base Initialize -
-    private func controllerInitialize() {
-        
+    private func controllerInitialize() { }
+    
+    private func setupUI() {
         // Header Cell
         tableView.register(FormHeaderCell.self, forHeaderFooterViewReuseIdentifier: FormHeaderCell.identifier)
         tableView.keyboardDismissMode = .interactive
@@ -267,8 +192,8 @@ open class FormController: UITableViewController, CustomTransitionable {
         tableView.contentInset = defaultContentInsets
         
         /*
-        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Reload", style: .plain, target: self, action: #selector(cancelPressed))
-        */
+         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Reload", style: .plain, target: self, action: #selector(cancelPressed))
+         */
         
         if showsDoneButton {
             navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(barButtonItemPressed(_:)))
@@ -279,16 +204,8 @@ open class FormController: UITableViewController, CustomTransitionable {
             refreshControl.addTarget(self, action: #selector(refresh(_:)), for: .valueChanged)
             tableView.refreshControl = refreshControl
         }
-               
-        setupToolBar()
         
-        navigationController?.navigationItem.largeTitleDisplayMode = .always
-
-    }
-    
-
-    open override func viewDidLoad() {
-        super.viewDidLoad()
+        setupToolBar()
         
         if let loadingMessage = checkInMessage {
             print("[FormController] we got `checkInMessage`")
@@ -298,7 +215,16 @@ open class FormController: UITableViewController, CustomTransitionable {
                 tableView.tableFooterView = ItemsLoadingView(message: loadingMessage, textStyle: .body, color: .black)
             }
         }
+            
+        
     }
+    
+
+    open override func viewDidLoad() {
+        super.viewDidLoad()
+    }
+    
+
     
     
     private func handleDataEvaluation(_ eval:FormDataSource.Evaluation) {
@@ -329,11 +255,10 @@ open class FormController: UITableViewController, CustomTransitionable {
         })
     }
     
-
-    
     
     override open func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        setupUI()
         if toolbarItems != nil {
             self.navigationController?.setToolbarHidden(false, animated: false)
         } else {
@@ -360,7 +285,9 @@ open class FormController: UITableViewController, CustomTransitionable {
                 }
             }
         }
+        
     }
+    
     
     
     public func loadingMode(message:String) {
@@ -514,6 +441,7 @@ extension FormController {
         return .init()
     }
     
+    
     override open func tableView(_ tableView: UITableView, shouldHighlightRowAt indexPath: IndexPath) -> Bool {
         
         if let formItem = dataSource.itemAt(indexPath) {
@@ -524,6 +452,7 @@ extension FormController {
         
         return true
     }
+    
     
     override open func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         selectedIndexPath = indexPath
@@ -545,6 +474,7 @@ extension FormController {
         return nil
     }
     
+    
     override open func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return dataSource.sections[section].title.isEmpty ? 0 : UITableView.automaticDimension
     }
@@ -559,9 +489,9 @@ extension FormController {
 
 
 
-
+// MARK: - Update FormSection -
 extension FormController {
-    // MARK: - Update FormSection -
+    
     
     public func updateSection(_ newSection:FormSection, at path:IndexPath,_ activateInputs:Bool = true) {
         self.update(newSection, path: path, activateInputs: activateInputs, preservingTitle: false)
@@ -859,7 +789,6 @@ extension FormController: UpdateFormValueDelegate {
                     if let timeInputValue = formValue as? TimeInputValue {
                         if timeInputValue != time {
                             dataSource.updateWith(formValue: timeInputValue, at: path)
-                            //tableView.reloadRows(at: [path], with: .none)
                         }
                     }
                 case .switchValue(let switchValue):
@@ -921,10 +850,10 @@ extension FormController: UpdateFormValueDelegate {
             }
         }
         
-        
-        //FormConstant.makeSelectionFeedback()
+
     }
 }
+
 
 
 // MARK: - ButtonActionDelegate -
