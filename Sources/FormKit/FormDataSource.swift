@@ -324,11 +324,6 @@ extension FormDataSource {
         if qualifiedSections {
             let rowCount = sections[path.section].rows.count
             if path.row >= 0 && path.row <= rowCount - 1 {
-                //print("[FormKit] Update FormValue at \(path)")
-                let existingValue = sections[path.section].rows[path.row]
-                print(" existingValue -> \(existingValue) ")
-                print(" newValue -> \(formValue) ")
-                
                 sections[path.section].rows[path.row] = formValue.formItem
             } else {
                 print("[FormKit Error]: (Row Error) Unable to update FormValue at IndexPath: \(path)")
@@ -532,7 +527,6 @@ extension FormDataSource {
         
         let inserts = sectionChanges.filter({ $0.operation == .adding }).map({$0.section})
         let deletes = sectionChanges.filter({ $0.operation == .deleting }).map({$0.section})
-        //let reloads = sectionChanges.filter({ $0.operation == .reloading })
         
         var sectionReloads:[Int] = []
         var actualInserts:[Int] = []
