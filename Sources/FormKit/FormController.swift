@@ -310,7 +310,9 @@ open class FormController: UITableViewController, CustomTransitionable {
             self.tableView.reloadSections(eval.sets.reload, with: .automatic)
             eval.reloads.forEach({
                 if let sectionHeader = self.tableView.headerView(forSection: $0.section) as? FormHeaderCell {
-                    sectionHeader.titleLabel.text = self.dataSource.sections[$0.section].title
+                    if let headerTitle = self.dataSource.sectionTitle(at: $0.section) {
+                        sectionHeader.titleLabel.text = headerTitle
+                    }
                 }
                 if let changes = $0.changes {
                     self.tableView.reload(
