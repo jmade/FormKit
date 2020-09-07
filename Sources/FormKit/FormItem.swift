@@ -29,6 +29,7 @@ public enum FormItem {
     case slider(SliderValue)
     case map(MapValue)
     case mapAction(MapActionValue)
+    case custom(CustomValue)
 }
 
 // MARK: - CellDescriptable -
@@ -70,6 +71,8 @@ extension FormItem: FormCellDescriptable {
             return mapValue.cellDescriptor
         case .mapAction(let mapActionValue):
             return mapActionValue.cellDescriptor
+        case .custom(let customValue):
+            return customValue.cellDescriptor
         }
     }
 }
@@ -117,6 +120,8 @@ extension FormItem: Hashable, Equatable {
             return mapValue.hashValue
         case .mapAction(let mapActionValue):
             return mapActionValue.hashValue
+        case .custom(let custom):
+            return custom.hashValue
         }
     }
     
@@ -162,7 +167,10 @@ extension FormItem {
             return mapValue.encodedValue()
         case .mapAction(let mapActionValue):
             return mapActionValue.encodedValue()
+        case .custom(let custom):
+            return custom.encodedValue()
         }
+        
     }
     
 }
@@ -196,52 +204,8 @@ extension FormItem {
 
 
 
-extension FormItem {
-    
-    public func matches<T>(type:T) -> Bool {
-        switch self {
-        case .stepper(_):
-            return true
-        case .text(_):
-            return true
-        case .time(_):
-            return type is TimeValue
-        case .button(_):
-            return type is ButtonValue
-        case .note(_):
-            return type is NoteValue
-        case .segment(_):
-            return type is SegmentValue
-        case .numerical(_):
-            return type is NumericalValue
-        case .readOnly(_):
-            return type is ReadOnlyValue
-        case .picker(_):
-            return type is PickerValue
-        case .pickerSelection(_):
-            return type is PickerSelectionValue
-        case .action(_):
-            return type is ActionValue
-        case .listSelection(_):
-            return type is ListSelectionValue
-        case .timeInput(_):
-            return type is TimeInputValue
-        case .switchValue(_):
-            return type is SwitchValue
-        case .slider(_):
-            return type is SliderValue
-        case .map(_):
-            return type is MapValue
-        case .mapAction(_):
-            return type is MapActionValue
-        }
-    }
-    
-}
 
-
-
-
+// MARK: - SectionChange -
 struct SectionChange {
     enum Operation {
         case adding,deleting,reloading

@@ -737,7 +737,7 @@ extension FormController: UpdateFormValueDelegate {
                             tableView.reloadRows(at: [path], with: .none)
                         }
                     }
-                case .button(_):
+                case .button(_),.custom(_):
                     break
                 case .note(let note):
                     if let noteValue = formValue as? NoteValue {

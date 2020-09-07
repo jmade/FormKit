@@ -476,23 +476,6 @@ extension FormDataSource {
         return self.section(for: sectionIndex)?.row(for: row)
     }
     
-    
-    public func first<T>() -> T? {
-        for section in sections {
-            for item in section.rows {
-                if item.matches(type: T.self) {
-                    return item as? T
-                }
-            }
-        }
-        
-        return nil
-    }
-    
-    
-    
-    
-    
 }
 
 

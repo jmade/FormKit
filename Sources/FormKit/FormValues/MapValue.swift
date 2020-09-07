@@ -8,7 +8,7 @@ import MapKit
 
 // MARK: - MapValue -
 public struct MapValue: Codable {
-    let identifier: UUID = UUID()
+    var identifier: UUID = UUID()
     public var customKey:String? = "MapValue"
     var lat: Double? = nil
     var lng: Double? = nil

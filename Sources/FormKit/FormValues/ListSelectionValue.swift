@@ -127,48 +127,8 @@ extension ListSelectionValue: Equatable, Hashable {
 extension ListSelectionValue {
 
     
-    /*
-    public var listItems:[ListSelectViewController.ListItem] {
-        
-        
-        
-        var items:[ListSelectViewController.ListItem] = []
-        
-        for (i,value) in values.enumerated() {
-            
-            var id:String? = nil
-            if let identifiers = valueIdentifiers {
-                if i <= (identifiers.count - 1) {
-                    id = identifiers[i]
-                }
-            }
-            
-            items.append(
-                ListSelectViewController.ListItem(
-                    value,
-                    id,
-                    selectedIndicies.contains(i)
-                )
-            )
-        }
-        
-        return items
-        
-    }
-    */
-    
-    
-    
     public var selectionRows:[ListSelectViewController.SelectionRow] {
         return listItems
-        /*
-        return listItems.map({
-            ListSelectViewController.SelectionRow(title: $0.title,
-                                                  selected: $0.selected,
-                                                  valueIdentifier: $0.identifier
-            )
-        })
-        */
     }
 
 }
