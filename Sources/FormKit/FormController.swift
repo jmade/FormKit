@@ -653,10 +653,15 @@ extension FormController {
 // MARK: - HapticFeedback -
 extension FormController {
     
-    private enum FeedbackType {
+    public func feedback(_ feedbackType:FeedbackType) {
+           generateHapticFeedback(feedbackType)
+       }
+    
+    public enum FeedbackType {
         case lightImpact, heavyImpact, impact, selection, error, warning, success, failure
     }
     
+   
     
     private func generateHapticFeedback(_ feedbackType:FeedbackType) {
         switch feedbackType {
