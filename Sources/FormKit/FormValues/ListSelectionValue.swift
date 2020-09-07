@@ -398,8 +398,16 @@ extension ListSelectionValue {
         }
     }
     
+    
     var selectedValues: [String] {
-        return selectedIndicies.map({ values[$0] })
+        var vals:[String] = []
+        for sel in selectedIndicies {
+            if values.count >= (sel+1) {
+                vals.append(values[sel])
+            }
+        }
+        
+        return vals
     }
     
 }
