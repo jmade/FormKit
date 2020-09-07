@@ -248,16 +248,16 @@ extension FormDataSource {
     
     public func logParams() {
         var report = "\n"
-        report += "-------------"
-        report += "Form: \(title)"
-        report += "-------------"
+        report += "-------------\n"
+        report += "Form: \(title)\n"
+        report += "-------------\n"
         
         for (i,section) in sections.enumerated() {
             //report += "-------------"
-            report += "[ Section \(i): \(section.title) ]\n"
+            report += "-- Section [\(i)]: \(section.title) --\n"
             
-            for row in section.rows {
-                report += "- \(row.encodedValues)\n"
+            for (i,row) in section.rows.enumerated() {
+                report += "  [\(i)] \(row.encodedValues)\n"
             }
         }
      
