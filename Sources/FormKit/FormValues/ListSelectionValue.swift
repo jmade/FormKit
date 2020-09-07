@@ -414,16 +414,60 @@ extension ListSelectionValue {
 extension ListSelectionValue: FormValue {
     
     public var formItem: FormItem {
-        FormItem.listSelection(self)
+        .listSelection(self)
     }
     
-    public func encodedValue() -> [String : String] {
-        
-        if let identifiers = valueIdentifiers {
-            let selectedidentifiers = identifiers.joined(separator: ",")
-            return [ (customKey ?? "\(title)") : selectedidentifiers ]
+    
+    private var selectedValue:String? {
+        listItems.filter({ $0.selected }).first?.title
+    }
+    
+    private var selectedIdentifier:String? {
+        listItems.filter({ $0.selected }).first?.identifier
+    }
+    
+    private var encodedSelectedValue:String? {
+        if let id = selectedIdentifier {
+            return id
         }
-        return [ (customKey ?? "\(title)") : "\(selectedValues)" ]
+        
+        if let val = selectedValue {
+            return val
+        }
+        
+        return nil
+    }
+    
+    
+    private var encodedSelectedValues:String? {
+        let identifiers = listItems.filter({ $0.selected }).compactMap({ $0.identifier })
+        if identifiers.isEmpty {
+            let titles = listItems.filter({ $0.selected }).map({ $0.title })
+            if titles.isEmpty {
+                return nil
+            } else {
+                return titles.joined(separator: ",")
+            }
+        } else {
+            return identifiers.joined(separator: ",")
+        }
+    }
+    
+    
+    public func encodedValue() -> [String : String] {
+        switch selectionType {
+            
+        case .single:
+            return [ (customKey ?? title ) : ( encodedSelectedValue ?? "-" ) ]
+        case .multiple:
+            return [ (customKey ?? title ) : ( encodedSelectedValues ?? "-" ) ]
+        }
+        
+//        if let identifiers = valueIdentifiers {
+//            let selectedidentifiers = identifiers.joined(separator: ",")
+//            return [ (customKey ?? "\(title)") : selectedidentifiers ]
+//        }
+//        return [ (customKey ?? "\(title)") : "\(selectedValues)" ]
     }
 }
 
