@@ -4,7 +4,7 @@ import MapKit
 
 // MARK: - MapActionValue -
 public struct MapActionValue: Codable {
-    let identifier: UUID = UUID()
+    var identifier: UUID = UUID()
     
     public var customKey:String? = "MapActionValue"
     

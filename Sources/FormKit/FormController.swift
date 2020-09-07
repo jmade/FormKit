@@ -737,7 +737,7 @@ extension FormController: UpdateFormValueDelegate {
                             tableView.reloadRows(at: [path], with: .none)
                         }
                     }
-                case .button(_),.custom(_):
+                case .button(_):
                     break
                 case .note(let note):
                     if let noteValue = formValue as? NoteValue {
@@ -820,6 +820,13 @@ extension FormController: UpdateFormValueDelegate {
                         if mapActionInputValue != mapAction {
                             dataSource.updateWith(formValue: mapActionInputValue, at: path)
                             tableView.reloadRows(at: [path], with: .automatic)
+                        }
+                    }
+                case .custom(let customValue):
+                    if let customInputValue = formValue as? CustomValue {
+                        if customInputValue != customValue {
+                            dataSource.updateWith(formValue: customInputValue, at: path)
+                            tableView.reloadRows(at: [path], with: .fade)
                         }
                     }
                 }

@@ -9,7 +9,7 @@ public struct CustomValue {
     public typealias CellConfigurationClosure = (CustomValueCell) -> Void
     public var cellConfigurationClosure:CellConfigurationClosure? = nil
     
-    public typealias CellDidTapClosure = (CustomValueCell) -> Void
+    public typealias CellDidTapClosure = (CustomValueCell) -> Bool
     public var cellDidTapClosure:CellDidTapClosure? = nil
     
 }
@@ -107,13 +107,28 @@ public final class CustomValueCell: UITableViewCell {
     
     override public func prepareForReuse() {
         super.prepareForReuse()
+        for subView in contentView.subviews {
+            subView.removeFromSuperview()
+        }
         formValue = nil
     }
+    
     
     public override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
         if selected {
-            formValue?.cellDidTapClosure?(self)
+            
+            if let customValue = formValue {
+                if let closure = customValue.cellDidTapClosure {
+                    let closureResult = closure(self)
+                    if closureResult {
+                        if let path = indexPath {
+                            updateFormValueDelegate?.updatedFormValue(customValue, path)
+                        }
+                    }
+                }
+            }
+            //formValue?.cellDidTapClosure?(self)
         }
     }
     
