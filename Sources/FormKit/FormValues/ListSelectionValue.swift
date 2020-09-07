@@ -456,18 +456,11 @@ extension ListSelectionValue: FormValue {
     
     public func encodedValue() -> [String : String] {
         switch selectionType {
-            
         case .single:
             return [ (customKey ?? title ) : ( encodedSelectedValue ?? "-" ) ]
         case .multiple:
             return [ (customKey ?? title ) : ( encodedSelectedValues ?? "-" ) ]
         }
-        
-//        if let identifiers = valueIdentifiers {
-//            let selectedidentifiers = identifiers.joined(separator: ",")
-//            return [ (customKey ?? "\(title)") : selectedidentifiers ]
-//        }
-//        return [ (customKey ?? "\(title)") : "\(selectedValues)" ]
     }
 }
 

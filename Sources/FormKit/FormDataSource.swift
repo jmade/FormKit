@@ -486,7 +486,7 @@ extension FormDataSource {
 
 extension FormDataSource {
     
-    struct Evaluation {
+   public struct Evaluation {
         struct Sets {
             let insert: IndexSet
             let delete: IndexSet
@@ -503,7 +503,7 @@ extension FormDataSource {
 extension FormDataSource {
 
     
-    class func evaluate(_ old:FormDataSource, new:FormDataSource) -> Evaluation {
+    public class func evaluate(_ old:FormDataSource, new:FormDataSource) -> Evaluation {
 
         var sectionChanges:[SectionChange] = []
         

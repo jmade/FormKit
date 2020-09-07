@@ -95,6 +95,12 @@ public protocol ListSelectRepresentable {
 }
 
 
+public protocol ListItemProvidable {
+    var listItem:ListItem { get }
+}
+
+
+
 
 //: MARK: - ListSelectViewController -
 public final class ListSelectViewController: UITableViewController {
@@ -122,6 +128,18 @@ public final class ListSelectViewController: UITableViewController {
             }
         }
         
+        
+        public var encodedValue: String? {
+            if let id = identifier {
+                return id
+            }
+            
+            if let det = detail {
+                return det
+            }
+            
+            return nil
+        }
         
         public var valueIdentifier: String? {
             get {
