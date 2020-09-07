@@ -70,7 +70,7 @@ extension SegmentValue {
     
     
     public init(from:SegmentValue,_ selectedIndex:Int) {
-        self.uuid = from.uuid
+        self.uuid = UUID().uuidString
         self.selectedValue = selectedIndex
         self.values = from.values
         self.customKey = from.customKey

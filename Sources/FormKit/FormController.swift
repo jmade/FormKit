@@ -189,7 +189,7 @@ open class FormController: UITableViewController, CustomTransitionable {
     }
     
     
-    private var defaultContentInsets = UIEdgeInsets(top: 4.0, left: 0, bottom: 0, right: 0)
+    private var defaultContentInsets = UIEdgeInsets(top: 8.0, left: 0, bottom: 0, right: 0)
     
     
     
@@ -318,9 +318,9 @@ open class FormController: UITableViewController, CustomTransitionable {
                     self.tableView.reload(
                         changes: changes,
                         section: $0.section,
-                        insertionAnimation: .automatic,
-                        deletionAnimation:  .automatic,
-                        replacementAnimation:  .automatic,
+                        insertionAnimation: .top,
+                        deletionAnimation:  .top,
+                        replacementAnimation:  .fade,
                         completion: nil
                     )
                 }
