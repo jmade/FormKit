@@ -247,7 +247,23 @@ extension FormDataSource {
     
     
     public func logParams() {
+        var report = "\n"
+        report += "-------------"
+        report += "Form: \(title)"
+        report += "-------------"
         
+        for (i,section) in sections.enumerated() {
+            //report += "-------------"
+            report += "[ Section \(i): \(section.title) ]\n"
+            
+            for row in section.rows {
+                report += "- \(row.encodedValues)\n"
+            }
+        }
+     
+        report += "-------------\n"
+        print(report)
+
     }
     
     
@@ -388,18 +404,14 @@ extension FormDataSource {
     
     func previousIndexPath(_ from: IndexPath) -> IndexPath? {
         if let currentIndex = inputIndexPaths.indexOf(from) {
-            print("")
             var previousIndex = currentIndex - 1
             
             if previousIndex < 0 {
-                print("resetting counter, backwards")
                 previousIndex = inputIndexPaths.count - 1
             }
-            print("CurrentIndex: \(currentIndex) PreviousIndex: \(previousIndex)")
             
             
             if previousIndex > (inputIndexPaths.count - 1) {
-                print("uh oh")
                 previousIndex = 0
                 return inputIndexPaths[0]
             } else {
