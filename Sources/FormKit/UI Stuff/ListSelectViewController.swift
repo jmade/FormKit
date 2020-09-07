@@ -340,17 +340,36 @@ public final class ListSelectViewController: UITableViewController {
     }
     
     private func setup() {
+        
           if let listSelectValue = _formValue {
-              guard
-                  let loading = listSelectValue.loading,
-                  let loadingClosure = loading.loadingClosure
-                  else {
-                      dataSource = listSelectValue.listItems
-                      return
-              }
-              prepareTableForLoading()
-              loadingClosure(self)
-          }
+            
+            if let loading = listSelectValue.loading {
+                if let loadingClosure = loading.loadingClosure {
+                    prepareTableForLoading()
+                    loadingClosure(self)
+                }
+            } else {
+                if let loadingClosure = listSelectValue.loadingClosure {
+                    prepareTableForLoading()
+                    loadingClosure(self)
+                } else {
+                    dataSource = listSelectValue.listItems
+                }
+            }
+        }
+            
+            
+//              guard
+//                let loadingClosure = listSelectValue.loadingClosure
+//                  let loading = listSelectValue.loading
+//                  let loadingClosure = loading.loadingClosure
+//                  else {
+//                      dataSource = listSelectValue.listItems
+//                      return
+//              }
+//              prepareTableForLoading()
+//              loadingClosure(self)
+//          }
           addBackbutton(title: " ")
           setupSearch()
     }

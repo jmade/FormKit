@@ -58,16 +58,12 @@ public struct ListSelectionValue {
             }
             
             self.loadingClosure = loadingClosure
-            self.matchingStringValues = nil
-            
         }
         
         
         public init(loadingClosure: @escaping ListSelectLoadingClosure) {
             self.itemKey = ""
             self.loadingClosure = loadingClosure
-            self.matchingStringValues = nil
-            
         }
         
         
@@ -181,9 +177,9 @@ extension ListSelectionValue {
 
 extension ListSelectionValue {
     
-    public init(title:String,values:[String],_ color:UIColor = .black,_ selectedIndex:Int = 0,_ selectionMessage:String = "Select a Value"){
+    public init(title:String,values:[String],_ color:UIColor = .black,_ selectedIndex:Int?,_ selectionMessage:String = "Select a Value"){
         self.values = values
-        self.selectedIndicies = [selectedIndex]
+        self.selectedIndicies = (selectedIndex != nil) ? [selectedIndex!] : []
         self.title = title
         self.selectionType = .single
         self.selectionMessage = selectionMessage
@@ -380,10 +376,8 @@ extension ListSelectionValue {
     }
     
     var selectionTitle: String {
-       
         switch selectionType {
         case .single:
-            
             if let idx = selectedIndicies.first {
                 if values.count > idx {
                     return values[idx]
