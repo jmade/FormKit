@@ -114,18 +114,10 @@ open class FormController: UITableViewController, CustomTransitionable {
                 })
             } else {
                 
+                /*
                 let old = oldValue
                 let new = dataSource
-                
-                struct SectionChange {
-                    enum Operation {
-                        case adding,deleting,reloading
-                    }
-                    let operation:Operation
-                    let section: Int
-                    var changes:[Change<FormItem>]?
-                    var indexSet:IndexSet?
-                }
+
                 
                 var sectionChanges:[SectionChange] = []
                 
@@ -160,14 +152,18 @@ open class FormController: UITableViewController, CustomTransitionable {
                         actualInserts.append(i)
                     }
                 }
+                */
                 
+                let eval = FormDataSource.evaluate(oldValue, new: dataSource)
+                handleDataEvaluation(eval)
+                /*
                 DispatchQueue.main.async(execute: { [weak self] in
                     guard let self = self else { return }
                     self.tableView.beginUpdates()
-                    self.tableView.insertSections(IndexSet(actualInserts), with: .automatic)
-                    self.tableView.deleteSections(IndexSet(deletes), with: .automatic)
-                    self.tableView.reloadSections(IndexSet(sectionReloads), with: .automatic)
-                    reloads.forEach({
+                    self.tableView.insertSections(eval.sets.insert, with: .automatic)
+                    self.tableView.deleteSections(eval.sets.delete, with: .automatic)
+                    self.tableView.reloadSections(eval.sets.reload, with: .automatic)
+                    eval.reloads.forEach({
                         if let sectionHeader = self.tableView.headerView(forSection: $0.section) as? FormHeaderCell {
                             sectionHeader.titleLabel.text = self.dataSource.sections[$0.section].title
                         }
@@ -184,6 +180,8 @@ open class FormController: UITableViewController, CustomTransitionable {
                     })
                     self.tableView.endUpdates()
                 })
+                */
+                
             }
             
 
@@ -300,6 +298,33 @@ open class FormController: UITableViewController, CustomTransitionable {
                 tableView.tableFooterView = ItemsLoadingView(message: loadingMessage, textStyle: .body, color: .black)
             }
         }
+    }
+    
+    
+    private func handleDataEvaluation(_ eval:FormDataSource.Evaluation) {
+        DispatchQueue.main.async(execute: { [weak self] in
+            guard let self = self else { return }
+            self.tableView.beginUpdates()
+            self.tableView.insertSections(eval.sets.insert, with: .automatic)
+            self.tableView.deleteSections(eval.sets.delete, with: .automatic)
+            self.tableView.reloadSections(eval.sets.reload, with: .automatic)
+            eval.reloads.forEach({
+                if let sectionHeader = self.tableView.headerView(forSection: $0.section) as? FormHeaderCell {
+                    sectionHeader.titleLabel.text = self.dataSource.sections[$0.section].title
+                }
+                if let changes = $0.changes {
+                    self.tableView.reload(
+                        changes: changes,
+                        section: $0.section,
+                        insertionAnimation: .automatic,
+                        deletionAnimation:  .automatic,
+                        replacementAnimation:  .automatic,
+                        completion: nil
+                    )
+                }
+            })
+            self.tableView.endUpdates()
+        })
     }
     
 

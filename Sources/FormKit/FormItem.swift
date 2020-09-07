@@ -240,3 +240,16 @@ extension FormItem {
 }
 
 
+
+
+struct SectionChange {
+    enum Operation {
+        case adding,deleting,reloading
+    }
+    let operation:Operation
+    let section: Int
+    var changes:[Change<FormItem>]?
+    var indexSet:IndexSet?
+}
+
+

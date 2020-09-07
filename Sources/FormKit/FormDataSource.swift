@@ -478,5 +478,76 @@ extension FormDataSource {
 }
 
 
+extension FormDataSource {
+    
+    struct Evaluation {
+        struct Sets {
+            let insert: IndexSet
+            let delete: IndexSet
+            let reload: IndexSet
+        }
+        let sets:Sets
+        let reloads: [SectionChange]
+    }
+    
+}
+
+
+
+extension FormDataSource {
+
+    
+    class func evaluate(_ old:FormDataSource, new:FormDataSource) -> Evaluation {
+
+        var sectionChanges:[SectionChange] = []
+        
+        for i in 0..<max(old.sections.count, new.sections.count) {
+            let isOldSectionEmpty = old.rowsForSection(i).isEmpty
+            let isNewSectionEmpty = new.rowsForSection(i).isEmpty
+            let changingSection = (isOldSectionEmpty == false) && (isNewSectionEmpty == false)
+            let addingSection = (isOldSectionEmpty == true) && (isNewSectionEmpty == false)
+            let removingSection = (isOldSectionEmpty == false) && (isNewSectionEmpty == true)
+            if changingSection {
+                let changes = diff(old: old.rowsForSection(i), new: new.rowsForSection(i))
+                sectionChanges.append(SectionChange(operation: .reloading, section: i, changes: changes, indexSet: nil))
+            }
+            if addingSection {
+                sectionChanges.append(SectionChange(operation: .adding, section: i, changes: nil, indexSet: IndexSet(arrayLiteral: i)))
+            }
+            if removingSection {
+                sectionChanges.append(SectionChange(operation: .deleting, section: i, changes: nil, indexSet: IndexSet(arrayLiteral: i)))
+            }
+        }
+        
+        let inserts = sectionChanges.filter({ $0.operation == .adding }).map({$0.section})
+        let deletes = sectionChanges.filter({ $0.operation == .deleting }).map({$0.section})
+        let reloads = sectionChanges.filter({ $0.operation == .reloading })
+        
+        var sectionReloads:[Int] = []
+        var actualInserts:[Int] = []
+        for i in inserts {
+            if Array(0..<old.sections.count).contains(i) {
+                sectionReloads.append(i)
+            } else {
+                actualInserts.append(i)
+            }
+        }
+        
+        return Evaluation(
+            sets:  Evaluation.Sets(
+                insert: IndexSet(actualInserts),
+                delete: IndexSet(deletes),
+                reload: IndexSet(sectionReloads)
+            ),
+            reloads: sectionChanges
+        )
+        
+        
+    }
+    
+}
+
+
+
 
 
