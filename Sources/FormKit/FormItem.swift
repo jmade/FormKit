@@ -184,8 +184,7 @@ extension FormItem {
         let randomValues: [FormValue] = [
             StepperValue.Random(),
             TextValue.Random(),
-            TimeValue.Random(),
-            ButtonValue.Random(),
+            TimeInputValue.Random(),
             NoteValue.Random(),
             SegmentValue.Random(),
             NumericalValue.Random(),
@@ -193,6 +192,7 @@ extension FormItem {
             PickerSelectionValue.Random(),
             SwitchValue.Random(),
             SliderValue.Random(),
+            ListSelectionValue.DemoSingle()
         ]
         
         return randomValues

@@ -83,9 +83,12 @@ extension CustomValue: Hashable, Equatable {
 
 
 
+public class CustomView: UIView {
+    
+}
+
 
 //: MARK: CustomValueCell
-
 public final class CustomValueCell: UITableViewCell {
     
     static let ReuseID = "com.jmade.FormKit.CustomValueCell.identifier"
@@ -96,6 +99,8 @@ public final class CustomValueCell: UITableViewCell {
             customValue.cellConfigurationClosure?(self)
         }
     }
+    
+    public var customView:CustomView? = nil
     
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
     var indexPath:IndexPath?
@@ -111,6 +116,7 @@ public final class CustomValueCell: UITableViewCell {
             subView.removeFromSuperview()
         }
         formValue = nil
+        customView = nil
     }
     
     
