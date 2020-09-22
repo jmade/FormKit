@@ -14,6 +14,8 @@ public protocol FormDataSourceUpdateDelegate: class {
 
 public class FormDataSource {
     
+    public var additionalParameters:[String:String]?
+    
     public weak var delegate:FormDataSourceUpdateDelegate?
     
     public var title:String = ""
@@ -231,7 +233,6 @@ extension FormDataSource {
 
 
 extension FormDataSource {
-    
     
     public var params:[String:String] {
         var value:[ [String:String] ] = []
