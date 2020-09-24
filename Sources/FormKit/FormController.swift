@@ -132,6 +132,9 @@ open class FormController: UITableViewController, CustomTransitionable {
     public var shouldRefresh:Bool = false
     // MARK: - DoneButton -
     public var showsDoneButton:Bool = false
+    // MARK: - Cancel Button -
+    public var showsCancelButton:Bool = false
+    
     // MARK: - Activates Input On Appear -
     public var activatesInputOnAppear: Bool = false
     
@@ -188,12 +191,12 @@ open class FormController: UITableViewController, CustomTransitionable {
         tableView.keyboardDismissMode = .interactive
         tableView.estimatedRowHeight = 44.0
         tableView.rowHeight = UITableView.automaticDimension
-        //tableView.tableFooterView = ItemsLoadingView()
         tableView.contentInset = defaultContentInsets
         
-        /*
-         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Reload", style: .plain, target: self, action: #selector(cancelPressed))
-         */
+        
+        if showsCancelButton {
+            navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(cancelPressed))
+        }
         
         if showsDoneButton {
             navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(barButtonItemPressed(_:)))
