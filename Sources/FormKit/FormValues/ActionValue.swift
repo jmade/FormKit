@@ -284,7 +284,8 @@ extension ActionValue: Hashable {
     }
     
     public var hash: Int {
-        return "\(title)+\(color)+\(uuid)+\(state)".hashValue
+        //return "\(title)+\(color)+\(uuid)+\(state)".hashValue
+        return "\(title)+\(color)+\(uuid)".hashValue
     }
     
     public static func == (lhs: ActionValue, rhs: ActionValue) -> Bool {
