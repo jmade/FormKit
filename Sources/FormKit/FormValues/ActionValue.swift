@@ -190,7 +190,7 @@ public extension ActionValue {
             formClosure: self.formClosure,
             title: newTitle,
             color: (newColor ?? self.color),
-            uuid: self.uuid,
+            uuid: UUID().uuidString,
             readOnlyValue: self.readOnlyValue
         )
     }
@@ -200,38 +200,40 @@ public extension ActionValue {
         ActionValue(
             state: .ready,
             customOperatingTitle: self.customOperatingTitle,
-            style: .disclosure,
+            style: self.style,
             customKey: self.customKey,
             action: self.action,
             dataAction: self.dataAction,
             formClosure: self.formClosure,
             title: self.title,
             color: self.color,
-            uuid: self.uuid,
+            uuid: UUID().uuidString,
             readOnlyValue: self.readOnlyValue
         )
     }
     
     
     func disabled() -> ActionValue {
+        
         var newValue = ActionValue(
             state: .disabled,
             customOperatingTitle: self.customOperatingTitle,
-            style: .disclosure,
+            style: self.style,
             customKey: self.customKey,
             action: self.action,
             dataAction: self.dataAction,
             formClosure: self.formClosure,
             title: self.title,
             color: self.color,
-            uuid: self.uuid,
+            uuid: UUID().uuidString,
             readOnlyValue: self.readOnlyValue
         )
         
         newValue.lastState = self.state
         return newValue
-        
     }
+    
+    
     
     func enabled() -> ActionValue {
         if let lastState = self.lastState {
@@ -245,7 +247,7 @@ public extension ActionValue {
                 formClosure: self.formClosure,
                 title: self.title,
                 color: self.color,
-                uuid: self.uuid,
+                uuid: UUID().uuidString,
                 readOnlyValue: self.readOnlyValue
             )
         } else {
@@ -259,7 +261,7 @@ public extension ActionValue {
                 formClosure: self.formClosure,
                 title: self.title,
                 color: self.color,
-                uuid: self.uuid,
+                uuid: UUID().uuidString,
                 readOnlyValue: self.readOnlyValue
             )
         }
