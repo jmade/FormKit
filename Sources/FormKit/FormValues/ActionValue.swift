@@ -107,6 +107,7 @@ extension ActionValue {
     }
 
     
+    
     /// ReadOnly init
     public init(_ readOnlyValue:ReadOnlyValue, formClosure: @escaping ActionValueFormClosure) {
         self.formClosure = formClosure
@@ -120,11 +121,6 @@ extension ActionValue {
 
 
 extension ActionValue {
-    
-    
-    
-    
-    
     
     public init(saveValue formClosure: @escaping ActionValueFormClosure) {
         self.title = "Save"
@@ -249,26 +245,6 @@ public extension ActionValue {
             uuid: UUID().uuidString,
             readOnlyValue: self.readOnlyValue
         )
-        
-        /*
-        if let lastState = self.state {
-           return ActionValue(
-                state: lastState,
-                customOperatingTitle: self.customOperatingTitle,
-                style: self.style,
-                customKey: self.customKey,
-                action: self.action,
-                dataAction: self.dataAction,
-                formClosure: self.formClosure,
-                title: self.title,
-                color: self.color,
-                uuid: UUID().uuidString,
-                readOnlyValue: self.readOnlyValue
-            )
-        } else {
-            
-        }
-        */
     }
     
     

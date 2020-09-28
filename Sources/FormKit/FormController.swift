@@ -110,7 +110,6 @@ open class FormController: UITableViewController, CustomTransitionable {
                         )
                     }
                 })
-                print("Running Validation Closure!")
                 validationClosure?(dataSource,self)
             } else {
                 handleDataEvaluation(
