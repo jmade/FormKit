@@ -1,6 +1,8 @@
 import UIKit
 
 
+public typealias FormValidationClosure = ( (FormDataSource,FormController) -> Void )
+
 
 extension UITableView {
     
@@ -75,6 +77,8 @@ open class FormController: UITableViewController, CustomTransitionable {
 
     var selectedIndexPath: IndexPath? = nil
     private var reuseIdentifiers: Set<String> = []
+    
+    public var validationClosure:FormValidationClosure?
     
     
     public var dataSource = FormDataSource(sections: []) {
@@ -724,19 +728,19 @@ extension FormController: UpdateFormValueDelegate {
                 case .stepper(let stepper):
                     if let stepperValue = formValue as? StepperValue {
                         if stepperValue != stepper {
-                            dataSource.updateWith(formValue: stepperValue, at: path)
+                            handleUpdatedFormValue(stepperValue, at: path)
                         }
                     }
                 case .text(let text):
                     if let textValue = formValue as? TextValue {
                         if textValue != text {
-                            dataSource.updateWith(formValue: textValue, at: path)
+                            handleUpdatedFormValue(textValue, at: path)
                         }
                     }
                 case .time(let time):
                     if let timeValue = formValue as? TimeValue {
                         if timeValue != time {
-                            dataSource.updateWith(formValue: timeValue, at: path)
+                            handleUpdatedFormValue(timeValue , at: path)
                             tableView.reloadRows(at: [path], with: .none)
                         }
                     }
@@ -745,90 +749,90 @@ extension FormController: UpdateFormValueDelegate {
                 case .note(let note):
                     if let noteValue = formValue as? NoteValue {
                         if noteValue != note {
-                            dataSource.updateWith(formValue: noteValue, at: path)
+                            handleUpdatedFormValue(noteValue, at: path)
                         }
                     }
                 case .segment(let segment):
                     if let segmentValue = formValue as? SegmentValue {
                         if segmentValue.selectedValue != segment.selectedValue {
-                            dataSource.updateWith(formValue: segmentValue, at: path)
+                            handleUpdatedFormValue(segmentValue , at: path)
                             segmentValue.valueChangeClosure?(segmentValue,self,path)
                         }
                     }
                 case .numerical(let numerical):
                     if let numericalValue = formValue as? NumericalValue {
                         if numericalValue != numerical {
-                            dataSource.updateWith(formValue: numericalValue, at: path)
+                            handleUpdatedFormValue(numericalValue, at: path)
                         }
                     }
                 case .readOnly(let readOnly):
                     if let readOnlyValue = formValue as? ReadOnlyValue {
                         if readOnlyValue != readOnly {
-                            dataSource.updateWith(formValue: readOnlyValue, at: path)
+                            handleUpdatedFormValue(readOnlyValue, at: path)
                         }
                     }
                 case .picker(let picker):
                     if let pickerValue = formValue as? PickerValue {
                         if pickerValue != picker {
-                            dataSource.updateWith(formValue: pickerValue, at: path)
+                            handleUpdatedFormValue(pickerValue , at: path)
                         }
                     }
                 case .pickerSelection(let pickerSelection):
                     if let pickerSelectionValue = formValue as? PickerSelectionValue {
                         if pickerSelectionValue != pickerSelection {
-                            dataSource.updateWith(formValue: pickerSelectionValue, at: path)
+                            handleUpdatedFormValue(pickerSelectionValue , at: path)
                             tableView.reloadRows(at: [path], with: .automatic)
                         }
                     }
                 case .action(let actionValue):
                     if let localActionValue = formValue as? ActionValue {
                         if localActionValue != actionValue {
-                            dataSource.updateWith(formValue: localActionValue, at: path)
+                            handleUpdatedFormValue(localActionValue , at: path)
                             tableView.reloadRows(at: [path], with: .automatic)
                         }
                     }
                 case .listSelection(let list):
                     if let listSelectionValue = formValue as? ListSelectionValue {
                         if listSelectionValue != list {
-                            dataSource.updateWith(formValue: listSelectionValue, at: path)
+                            handleUpdatedFormValue(listSelectionValue , at: path)
                             tableView.reloadRows(at: [path], with: .automatic)
                         }
                     }
                 case .timeInput(let time):
                     if let timeInputValue = formValue as? TimeInputValue {
                         if timeInputValue != time {
-                            dataSource.updateWith(formValue: timeInputValue, at: path)
+                            handleUpdatedFormValue(timeInputValue , at: path)
                         }
                     }
                 case .switchValue(let switchValue):
                     if let switchInputValue = formValue as? SwitchValue {
                         if switchInputValue != switchValue {
-                            dataSource.updateWith(formValue: switchInputValue, at: path)
+                            handleUpdatedFormValue(switchInputValue , at: path)
                         }
                     }
                 case .slider(let sliderValue):
                     if let sliderInputValue = formValue as? SliderValue {
                         if sliderInputValue != sliderValue {
-                            dataSource.updateWith(formValue: sliderInputValue, at: path)
+                            handleUpdatedFormValue(sliderInputValue , at: path)
                         }
                     }
                 case .map(let mapValue):
                     if let mapInputValue = formValue as? MapValue {
                         if mapInputValue != mapValue {
-                            dataSource.updateWith(formValue: mapInputValue, at: path)
+                            handleUpdatedFormValue(mapInputValue , at: path)
                         }
                     }
                 case .mapAction(let mapAction):
                     if let mapActionInputValue = formValue as? MapActionValue {
                         if mapActionInputValue != mapAction {
-                            dataSource.updateWith(formValue: mapActionInputValue, at: path)
+                            handleUpdatedFormValue(mapActionInputValue , at: path)
                             tableView.reloadRows(at: [path], with: .automatic)
                         }
                     }
                 case .custom(let customValue):
                     if let customInputValue = formValue as? CustomValue {
                         if customInputValue != customValue {
-                            dataSource.updateWith(formValue: customInputValue, at: path)
+                            handleUpdatedFormValue(customInputValue, at: path)
                             tableView.reloadRows(at: [path], with: .fade)
                         }
                     }
@@ -836,7 +840,6 @@ extension FormController: UpdateFormValueDelegate {
             }
         }
     }
-    
 
     public func toggleTo(_ direction: Direction, _ from: IndexPath) {
         
@@ -869,6 +872,17 @@ extension FormController: UpdateFormValueDelegate {
 
     }
 }
+
+
+extension FormController {
+    
+    private func handleUpdatedFormValue(_ formValue: FormValue, at path: IndexPath) {
+        dataSource.updateWith(formValue: formValue, at: path)
+        validationClosure?(dataSource,self)
+    }
+    
+}
+
 
 
 
