@@ -236,7 +236,22 @@ public extension ActionValue {
     
     
     func enabled() -> ActionValue {
-        if let lastState = self.lastState {
+        return ActionValue(
+            state: .ready,
+            customOperatingTitle: self.customOperatingTitle,
+            style: self.style,
+            customKey: self.customKey,
+            action: self.action,
+            dataAction: self.dataAction,
+            formClosure: self.formClosure,
+            title: self.title,
+            color: self.color,
+            uuid: UUID().uuidString,
+            readOnlyValue: self.readOnlyValue
+        )
+        
+        /*
+        if let lastState = self.state {
            return ActionValue(
                 state: lastState,
                 customOperatingTitle: self.customOperatingTitle,
@@ -251,21 +266,9 @@ public extension ActionValue {
                 readOnlyValue: self.readOnlyValue
             )
         } else {
-            return ActionValue(
-                state: .ready,
-                customOperatingTitle: self.customOperatingTitle,
-                style: self.style,
-                customKey: self.customKey,
-                action: self.action,
-                dataAction: self.dataAction,
-                formClosure: self.formClosure,
-                title: self.title,
-                color: self.color,
-                uuid: UUID().uuidString,
-                readOnlyValue: self.readOnlyValue
-            )
+            
         }
-        
+        */
     }
     
     

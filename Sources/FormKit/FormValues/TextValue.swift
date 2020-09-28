@@ -21,6 +21,7 @@ public struct TextValue {
     
     public var textConfigurationClosure: TextFieldConfigurationClosure = { _ in }
     
+    public var placeholder:String? = nil
     public let title:String
     public let value:String
     public var style:Style = .horizontalDiscrete
@@ -63,6 +64,22 @@ extension TextValue {
         self.value = ""
         self.customKey = title.lowercased()
         self.textConfigurationClosure = configClosure
+    }
+    
+    
+    
+    
+    public init(_ title: String,_ customKey: String?) {
+        self.title = title
+        self.value = ""
+        self.customKey = customKey
+    }
+    
+    public init(_ title: String,_ customKey: String?,_ placeholder:String) {
+        self.title = title
+        self.value = ""
+        self.customKey = customKey
+        self.placeholder = placeholder
     }
 
     
@@ -205,6 +222,7 @@ public final class TextCell: UITableViewCell, Activatable {
                 titleLabel.text = textValue.title
                 textValue.textConfigurationClosure(textField)
                 textField.text = textValue.value
+                textField.placeholder = textValue.placeholder
                 
                 if textValue.isSelectable == false {
                     self.selectionStyle = .none
