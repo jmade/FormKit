@@ -9,6 +9,8 @@ public struct ActionValue: Equatable {
     
     var state:ActionState = .ready
     
+    private var lastState:ActionState?
+    
     var operatingTitle: String {
         
         if let customOperatingTitle = customOperatingTitle {
@@ -29,7 +31,8 @@ public struct ActionValue: Equatable {
     public enum ActionStyle {
        case none, disclosure, moderate, readOnly
     }
-    var style:ActionStyle = .disclosure
+    
+    public var style:ActionStyle = .disclosure
     
     public var customKey:String? = "ActionValue"
     
@@ -211,7 +214,7 @@ public extension ActionValue {
     
     
     func disabled() -> ActionValue {
-        ActionValue(
+        var newValue = ActionValue(
             state: .disabled,
             customOperatingTitle: self.customOperatingTitle,
             style: .disclosure,
@@ -224,7 +227,45 @@ public extension ActionValue {
             uuid: self.uuid,
             readOnlyValue: self.readOnlyValue
         )
+        
+        newValue.lastState = self.state
+        return newValue
+        
     }
+    
+    func enabled() -> ActionValue {
+        if let lastState = self.lastState {
+           return ActionValue(
+                state: lastState,
+                customOperatingTitle: self.customOperatingTitle,
+                style: self.style,
+                customKey: self.customKey,
+                action: self.action,
+                dataAction: self.dataAction,
+                formClosure: self.formClosure,
+                title: self.title,
+                color: self.color,
+                uuid: self.uuid,
+                readOnlyValue: self.readOnlyValue
+            )
+        } else {
+            return ActionValue(
+                state: .ready,
+                customOperatingTitle: self.customOperatingTitle,
+                style: self.style,
+                customKey: self.customKey,
+                action: self.action,
+                dataAction: self.dataAction,
+                formClosure: self.formClosure,
+                title: self.title,
+                color: self.color,
+                uuid: self.uuid,
+                readOnlyValue: self.readOnlyValue
+            )
+        }
+        
+    }
+    
     
     
     func isValid() -> Bool {

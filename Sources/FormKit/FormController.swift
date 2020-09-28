@@ -295,6 +295,8 @@ open class FormController: UITableViewController, CustomTransitionable {
             }
         }
         
+        validationClosure?(dataSource,self)
+        
     }
     
     
@@ -525,7 +527,7 @@ extension FormController {
         if let actionValue = actionValueAt(path) {
             switch status {
             case .enabled:
-                let newValue = actionValue.readyVersion()
+                let newValue = actionValue.enabled()
                 updateActionValue(newValue, at: path)
                 success = true
             case .disabled:

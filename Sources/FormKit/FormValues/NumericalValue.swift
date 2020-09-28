@@ -11,6 +11,9 @@ public struct NumericalValue: Equatable, Hashable {
         case int,float
     }
     
+    /// TableSelectable
+    public var isSelectable: Bool = false
+    
     public var customKey:String? = nil
     
     public let title:String
