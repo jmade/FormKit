@@ -553,7 +553,8 @@ extension FormController {
     
     
     public func updateActionValue(_ value:ActionValue, at path:IndexPath) {
-        dataSource.sections[path.section].rows[path.row] = value.formItem
+        dataSource.sections[path.section] = FormSection([value])
+        //dataSource.sections[path.section].rows[path.row] = value.formItem
         tableView.reloadRows(at: [path], with: .none)
     }
     
@@ -935,7 +936,6 @@ extension FormController: UpdateFormValueDelegate {
 extension FormController {
     
     private func handleUpdatedFormValue(_ formValue: FormValue, at path: IndexPath) {
-        
         dataSource.updateWith(formValue: formValue, at: path)
         validationClosure?(dataSource,self)
     }
