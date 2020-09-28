@@ -4,7 +4,7 @@ import UIKit
 public struct ActionValue: Equatable {
     
     public enum ActionState {
-        case ready, operating, complete
+        case ready, operating, complete, disabled
     }
     
     var state:ActionState = .ready
@@ -209,6 +209,24 @@ public extension ActionValue {
         )
     }
     
+    
+    func disabled() -> ActionValue {
+        ActionValue(
+            state: .disabled,
+            customOperatingTitle: self.customOperatingTitle,
+            style: .disclosure,
+            customKey: self.customKey,
+            action: self.action,
+            dataAction: self.dataAction,
+            formClosure: self.formClosure,
+            title: self.title,
+            color: self.color,
+            uuid: self.uuid,
+            readOnlyValue: self.readOnlyValue
+        )
+    }
+    
+    
 }
 
 
@@ -243,9 +261,7 @@ extension ActionValue: FormValue, TableViewSelectable {
         switch state {
         case .ready:
             return true
-        case .operating:
-            return false
-        case .complete:
+        case .operating, .complete, .disabled:
             return false
         }
     }
@@ -394,12 +410,16 @@ public final class ActionCell: UITableViewCell {
         guard let formValue = formValue else { return }
         switch formValue.state {
         case .ready:
+            textLabel?.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
             loadFromValue()
         case .operating:
             setupCellForOperating(formValue.operatingTitle,formValue.color)
         case .complete:
             textLabel?.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
             loadFromValue()
+        case .disabled:
+            textLabel?.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+            loadFromValue(.disabled)
         }
     }
     
@@ -451,13 +471,13 @@ public final class ActionCell: UITableViewCell {
     
     
     
-    func loadFromValue(){
+    func loadFromValue(_ textColor:UIColor? = nil){
         guard let actionValue = formValue else { return }
         textLabel?.text = actionValue.title
         switch actionValue.style {
         case .disclosure:
             textLabel?.textAlignment = .center
-            textLabel?.textColor = actionValue.color
+            textLabel?.textColor = (textColor == nil) ? actionValue.color : textColor
             accessoryType = .disclosureIndicator
             titleLabel.isHidden = true
             valueLabel.isHidden = true
@@ -468,7 +488,7 @@ public final class ActionCell: UITableViewCell {
             valueLabel.isHidden = true
         case .moderate:
             textLabel?.textAlignment = .center
-            textLabel?.textColor = actionValue.color
+            textLabel?.textColor = (textColor == nil) ? actionValue.color : textColor
             accessoryType = .none
             titleLabel.isHidden = true
             valueLabel.isHidden = true
