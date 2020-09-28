@@ -80,7 +80,6 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     public var validationClosure:FormValidationClosure?
     
-    
     public var dataSource = FormDataSource(sections: []) {
         didSet {
             
@@ -111,6 +110,8 @@ open class FormController: UITableViewController, CustomTransitionable {
                         )
                     }
                 })
+                print("Running Validation Closure!")
+                validationClosure?(dataSource,self)
             } else {
                 handleDataEvaluation(
                     FormDataSource.evaluate(oldValue, new: dataSource)
@@ -499,6 +500,61 @@ extension FormController {
 
 // MARK: - Update FormSection -
 extension FormController {
+    
+    private func actionValueAt(_ path:IndexPath) -> ActionValue? {
+        if let section = dataSource.section(for: path.section) {
+            if let formValue = section.itemForRowAt(path.row) {
+                switch formValue {
+                case .action(let actionValue):
+                    return actionValue
+                default:
+                    break
+                }
+            }
+        }
+        return nil
+    }
+    
+    public enum ValidationStatus {
+        case enabled, disabled
+    }
+    
+    
+    public func setValidationStatus(_ status:ValidationStatus, at path:IndexPath) -> Bool {
+        var success = false
+        if let actionValue = actionValueAt(path) {
+            switch status {
+            case .enabled:
+                let newValue = actionValue.readyVersion()
+                updateActionValue(newValue, at: path)
+                success = true
+            case .disabled:
+                let newValue = actionValue.disabled()
+                updateActionValue(newValue, at: path)
+                success = true
+            }
+        }
+        return success
+    }
+    
+    
+    public func validationStatus(for path:IndexPath) -> ValidationStatus? {
+        if let actionValue = actionValueAt(path) {
+            if actionValue.isValid() {
+                return .enabled
+            } else {
+                return .disabled
+            }
+        }
+        return nil
+    }
+    
+    
+    public func updateActionValue(_ value:ActionValue, at path:IndexPath) {
+        dataSource.sections[path.section].rows[path.row] = value.formItem
+        tableView.reloadRows(at: [path], with: .none)
+    }
+    
     
     
     public func updateSection(_ newSection:FormSection, at path:IndexPath,_ activateInputs:Bool = true) {

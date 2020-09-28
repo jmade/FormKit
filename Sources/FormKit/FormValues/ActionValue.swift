@@ -227,6 +227,11 @@ public extension ActionValue {
     }
     
     
+    func isValid() -> Bool {
+        return state != .disabled
+    }
+    
+    
 }
 
 
@@ -238,7 +243,7 @@ extension ActionValue: Hashable {
     }
     
     public var hash: Int {
-        return "\(title)+\(color)+\(uuid)".hashValue
+        return "\(title)+\(color)+\(uuid)+\(state)".hashValue
     }
     
     public static func == (lhs: ActionValue, rhs: ActionValue) -> Bool {
