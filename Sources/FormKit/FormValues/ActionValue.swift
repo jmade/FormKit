@@ -173,13 +173,13 @@ public extension ActionValue {
             formClosure: self.formClosure,
             title: self.title,
             color: (newColor ?? self.color),
-            uuid: self.uuid,
+            uuid: UUID().uuidString,
             readOnlyValue: self.readOnlyValue
         )
     }
     
     
-    func completedVersion(_ newTitle:String = "",_ newColor:UIColor? = .systemGreen) -> ActionValue {
+    func completedVersion(_ newTitle:String = "",_ newColor:UIColor? = .success) -> ActionValue {
         ActionValue(
             state: .complete,
             customOperatingTitle: self.customOperatingTitle,
