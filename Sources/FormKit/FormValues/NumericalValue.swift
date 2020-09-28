@@ -21,6 +21,7 @@ public struct NumericalValue: Equatable, Hashable {
     public var style:Style = .hoizontalDiscrete
     public var numberType: NumberType = .float
     public var useDirectionButtons:Bool = true
+    public var placeholder:String? = nil
     
 }
 
@@ -51,6 +52,15 @@ public extension NumericalValue {
         self.customKey = customKey
         self.numberType = .float
     }
+    
+    init(floatTitle: String, customKey:String? = nil,_ placeholder:String) {
+        self.title = floatTitle
+        self.value = ""
+        self.customKey = customKey
+        self.numberType = .float
+        self.placeholder = placeholder
+    }
+    
     
     /// Int
     init(intTitle: String, customKey:String? = nil) {
@@ -192,6 +202,7 @@ public final class NumericalCell: UITableViewCell, Activatable {
             if let numericalValue = formValue {
                 titleLabel.text = numericalValue.title
                 textField.text = numericalValue.value
+                textField.placeholder = numericalValue.placeholder
                 layout()
             }
         }
