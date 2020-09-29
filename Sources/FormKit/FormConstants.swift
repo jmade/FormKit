@@ -134,7 +134,7 @@ public extension UIColor {
 
     static var disabled:UIColor {
         if #available(iOS 13.0, *) {
-            return .tertiarySystemBackground
+            return .secondaryLabel
         } else {
             return .darkGray
         }

@@ -129,7 +129,8 @@ extension TextValue: FormValue, TableViewSelectable {
 extension TextValue {
     
     func newWith(_ newValue:String) -> TextValue {
-        return TextValue(characterSet: self.characterSet,
+        
+        var newValue = TextValue(characterSet: self.characterSet,
                          isSelectable: self.isSelectable,
                          customKey: self.customKey,
                          title: self.title,
@@ -137,6 +138,9 @@ extension TextValue {
                          style: self.style,
                          useDirectionButtons: self.useDirectionButtons
         )
+        newValue.placeholder = self.placeholder
+        return newValue
+        
     }
     
 }
@@ -246,7 +250,6 @@ public final class TextCell: UITableViewCell, Activatable {
         
         textField.delegate = self
         textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
-        //textField.addTarget(self, action: #selector(textFieldTextChanged), for: .allEditingEvents)
     }
     
     override public func prepareForReuse() {
@@ -346,7 +349,6 @@ public final class TextCell: UITableViewCell, Activatable {
     }
     
     public func activate(){
-        //FormConstant.makeSelectionFeedback()
         textField.becomeFirstResponder()
     }
     
