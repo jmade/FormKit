@@ -124,7 +124,7 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     
     /// Loading
-    public typealias FormDataLoadingClosure = ( () -> (FormDataSource) )
+    public typealias FormDataLoadingClosure = (FormController) -> Void
     public var loadingClosure: FormDataLoadingClosure? = nil
     
     private var loadingMessage: String? = nil
@@ -229,8 +229,7 @@ open class FormController: UITableViewController, CustomTransitionable {
         
         
         if let closure = loadingClosure {
-            let data = closure()
-            self.dataSource = data
+            closure(self)
         }
         
     }
