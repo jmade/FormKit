@@ -159,11 +159,13 @@ open class FormController: UITableViewController, CustomTransitionable {
     // MARK: - init -
     required public init?(coder aDecoder: NSCoder) {fatalError()}
     
+    /*
     public override init(style: UITableView.Style) {
         super.init(style: style)
         controllerInitialize()
     }
-    
+    */
+ 
     public init(formData: FormDataSource) {
         if #available(iOS 13.0, *) {
             super.init(style: .insetGrouped)
@@ -176,15 +178,18 @@ open class FormController: UITableViewController, CustomTransitionable {
         }
     }
     
-    public init(checkInMessage:String) {
+    
+    public init(loadingMessage:String?,loadingClosure: @escaping FormDataLoadingClosure) {
         if #available(iOS 13.0, *) {
             super.init(style: .insetGrouped)
         } else {
             super.init(style: .grouped)
         }
-        self.checkInMessage = checkInMessage
-        controllerInitialize()
+        self.loadingMessage = loadingMessage
+        self.loadingClosure = loadingClosure
     }
+    
+   
 
     // MARK: - Controller Base Initialize -
     private func controllerInitialize() { }
@@ -214,26 +219,22 @@ open class FormController: UITableViewController, CustomTransitionable {
         
         setupToolBar()
         
-        
-        if let loadingMessage = checkInMessage {
-            print("[FormController] we got `checkInMessage`")
+        if let message = loadingMessage {
             if #available(iOS 13.0, *) {
-                tableView.tableFooterView = ItemsLoadingView(message: loadingMessage, textStyle: .body, color: .label)
+                tableView.tableFooterView = ItemsLoadingView(message: message, textStyle: .body, color: .label)
             } else {
-                tableView.tableFooterView = ItemsLoadingView(message: loadingMessage, textStyle: .body, color: .black)
+                tableView.tableFooterView = ItemsLoadingView(message: message, textStyle: .body, color: .black)
             }
         }
-            
+        
+        
+        if let closure = loadingClosure {
+            let data = closure()
+            self.dataSource = data
+        }
         
     }
-    
 
-    open override func viewDidLoad() {
-        super.viewDidLoad()
-    }
-    
-
-    
     
     private func handleDataEvaluation(_ eval:FormDataSource.Evaluation) {
         DispatchQueue.main.async(execute: { [weak self] in
@@ -266,12 +267,12 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     override open func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        setupUI()
         if toolbarItems != nil {
             self.navigationController?.setToolbarHidden(false, animated: false)
         } else {
             self.navigationController?.setToolbarHidden(true, animated: false)
         }
+        setupUI()
     }
     
     
@@ -954,13 +955,9 @@ extension FormController: ButtonActionDelegate {
     
     func pushNewRandomForm(){
         if #available(iOS 13.0, *) {
-            let newFormController = FormController(style: .insetGrouped)
-            newFormController.dataSource = FormDataSource.Random()
-            navigationController?.pushViewController(newFormController, animated: true)
+            navigationController?.pushViewController(FormController(formData: .Random()), animated: true)
         } else {
-            let newFormController = FormController(style: .grouped)
-            newFormController.dataSource = FormDataSource.Random()
-            navigationController?.pushViewController(newFormController, animated: true)
+            navigationController?.pushViewController(FormController(formData: .Random()), animated: true)
         }
     }
     
