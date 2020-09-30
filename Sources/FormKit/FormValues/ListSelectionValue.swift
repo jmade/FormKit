@@ -322,6 +322,20 @@ extension ListSelectionValue {
         
         self.listItems = items
     }
+    
+    
+    
+    public init(_ title:String,_ listItems:[ListSelectViewController.ListItem],_ selectionType: SelectionType = .multiple) {
+        self.values = []
+        self.selectedIndicies = []
+        self.title = title
+        self.selectionMessage = "Select a Value"
+        self.selectionType = selectionType
+        self.loadingClosure = nil
+        self.color = nil
+        self.loading = nil
+        self.listItems = listItems
+    }
          
     
     

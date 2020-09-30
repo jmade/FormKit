@@ -2,10 +2,12 @@ import UIKit
 
 // MARK: - PickerValue -
 public struct PickerSelectionValue: Equatable, Hashable {
+    
     public var title:String
     public var values:[String]
     public var selectedIndex: Int = 0
     public var selectionMessage:String = "Select a value"
+    public var ids:[Int]?
     
     public enum Mode {
         case display,selection
@@ -34,6 +36,16 @@ extension PickerSelectionValue {
         self.title = title
     }
     
+    
+    public init(_ title:String,_ customKey:String,_ values:[String],_ ids:[Int]) {
+        self.values = values
+        self.customKey = customKey
+        self.selectedIndex = 0
+        self.title = title
+        self.ids = ids
+    }
+    
+    
 }
 
 
@@ -41,7 +53,7 @@ extension PickerSelectionValue {
 extension PickerSelectionValue {
     
     public func newWith(_ newSelectedIndex:Int) -> PickerSelectionValue {
-        PickerSelectionValue(
+        var new = PickerSelectionValue(
             title: self.title,
             values: self.values,
             selectedIndex: newSelectedIndex,
@@ -49,11 +61,14 @@ extension PickerSelectionValue {
             mode: .display,
             customKey: self.customKey
         )
+        
+        new.ids = self.ids
+        return new
     }
     
     
     public func newToggled() -> PickerSelectionValue {
-        PickerSelectionValue(
+        var new = PickerSelectionValue(
             title: self.title,
             values: self.values,
             selectedIndex: self.selectedIndex,
@@ -61,6 +76,9 @@ extension PickerSelectionValue {
             mode: (self.mode == .selection) ? .display : .selection,
             customKey: self.customKey
         )
+        
+        new.ids = self.ids
+        return new
     }
     
 }
@@ -86,11 +104,24 @@ extension PickerSelectionValue {
         }
     }
     
+    
+    var selectedId:Int? {
+        guard let identifiers = ids, identifiers.count > selectedIndex else {
+            return nil
+        }
+        return identifiers[selectedIndex]
+    }
+    
+    
     public func selectedValue() -> String? {
         var result:String? = nil
+        if let selectedId = selectedId {
+            return "\(selectedId)"
+        }
         result = values[selectedIndex]
         return result
     }
+    
     
     public var selectedValueDefinitive: String {
         get {

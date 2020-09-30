@@ -30,6 +30,8 @@ public enum FormItem {
     case map(MapValue)
     case mapAction(MapActionValue)
     case custom(CustomValue)
+    case input(InputValue)
+    
 }
 
 // MARK: - CellDescriptable -
@@ -73,6 +75,8 @@ extension FormItem: FormCellDescriptable {
             return mapActionValue.cellDescriptor
         case .custom(let customValue):
             return customValue.cellDescriptor
+        case .input(let inputValue):
+            return inputValue.cellDescriptor
         }
     }
 }
@@ -122,6 +126,8 @@ extension FormItem: Hashable, Equatable {
             return mapActionValue.hashValue
         case .custom(let custom):
             return custom.hashValue
+        case .input(let input):
+            return input.hashValue
         }
     }
     
@@ -169,6 +175,8 @@ extension FormItem {
             return mapActionValue.encodedValue()
         case .custom(let custom):
             return custom.encodedValue()
+        case .input(let input):
+            return input.encodedValue()
         }
         
     }
@@ -192,7 +200,8 @@ extension FormItem {
             PickerSelectionValue.Random(),
             SwitchValue.Random(),
             SliderValue.Random(),
-            ListSelectionValue.DemoSingle()
+            ListSelectionValue.DemoSingle(),
+            InputValue.Random()
         ]
         
         return randomValues

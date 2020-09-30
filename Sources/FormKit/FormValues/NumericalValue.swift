@@ -93,7 +93,7 @@ extension NumericalValue {
 
 
 
-extension NumericalValue: FormValueDisplayable {
+extension NumericalValue: FormValueDisplayable, TableViewSelectable {
     
     public typealias Cell = NumericalCell
     public typealias Controller = FormController
@@ -291,6 +291,7 @@ public final class NumericalCell: UITableViewCell, Activatable {
     }
     
     override public func setSelected(_ selected: Bool, animated: Bool) {
+        super.setSelected(selected, animated: false)
         if selected {
             textField.becomeFirstResponder()
         }

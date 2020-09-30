@@ -918,6 +918,12 @@ extension FormController: UpdateFormValueDelegate {
                             tableView.reloadRows(at: [path], with: .fade)
                         }
                     }
+                case .input(let input):
+                    if let inputValue = formValue as? InputValue {
+                        if inputValue != input {
+                            handleUpdatedFormValue(inputValue, at: path)
+                        }
+                    }
                 }
             }
         }
