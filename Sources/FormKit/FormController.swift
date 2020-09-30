@@ -83,15 +83,10 @@ open class FormController: UITableViewController, CustomTransitionable {
     public var dataSource = FormDataSource(sections: []) {
         didSet {
             
-            
             guard !dataSource.isEmpty else {
                 print("[FromController] Empty `FormDataSource` loaded")
                 return
             }
-            
-            UIViewPropertyAnimator(duration: 0.5, curve: .easeInOut) {
-                self.title = self.dataSource.title
-            }.startAnimation()
             
            tableView.tableFooterView = nil
             
@@ -121,17 +116,22 @@ open class FormController: UITableViewController, CustomTransitionable {
                 )
             }
             
+            UIViewPropertyAnimator(duration: 0.5, curve: .linear) {
+                self.title = self.dataSource.title
+            }.startAnimation()
+            
             checkForActiveInput()
         }
     }
     
     
-    private var defaultContentInsets = UIEdgeInsets(top: 12.0, left: 0, bottom: 0, right: 0)
+    private var defaultContentInsets = UIEdgeInsets(top: 20, left: 0, bottom: 0, right: 0)
     
     
     /// Loading
     public typealias FormDataLoadingClosure = (FormController) -> Void
     public var loadingClosure: FormDataLoadingClosure? = nil
+    private var didLoad = false
     
     private var loadingMessage: String? = nil
     
@@ -156,8 +156,6 @@ open class FormController: UITableViewController, CustomTransitionable {
             }
         }
     }
-
-    
     
     private var alertTextFieldInput: String? = nil
     
@@ -195,6 +193,19 @@ open class FormController: UITableViewController, CustomTransitionable {
         self.loadingClosure = loadingClosure
     }
     
+    
+    
+    public func setNewData(_ newData:FormDataSource) {
+        DispatchQueue.main.async(execute: { [weak self] in
+            guard let self = self else { return }
+            UIViewPropertyAnimator(duration: 0.5, curve: .linear) { [weak self] in
+                guard let self = self else { return }
+                self.dataSource = newData
+                self.title = newData.title
+            }.startAnimation()
+        })
+    }
+    
    
 
     // MARK: - Controller Base Initialize -
@@ -207,7 +218,6 @@ open class FormController: UITableViewController, CustomTransitionable {
         tableView.estimatedRowHeight = 44.0
         tableView.rowHeight = UITableView.automaticDimension
         tableView.contentInset = defaultContentInsets
-        
         
         if showsCancelButton {
             navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(cancelPressed))
@@ -237,6 +247,8 @@ open class FormController: UITableViewController, CustomTransitionable {
         if let closure = loadingClosure {
             closure(self)
         }
+        
+        didLoad = true
         
     }
 
@@ -277,7 +289,10 @@ open class FormController: UITableViewController, CustomTransitionable {
         } else {
             self.navigationController?.setToolbarHidden(true, animated: false)
         }
-        setupUI()
+        if didLoad == false {
+            setupUI()
+        }
+        
     }
     
     
@@ -295,6 +310,7 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     
     private func checkForActiveInput() {
+        print("checkForActiveInput")
         if activatesInputOnAppear {
             if let firstInputPath = dataSource.firstInputIndexPath {
                 if let nextCell = tableView.cellForRow(at: firstInputPath) {
