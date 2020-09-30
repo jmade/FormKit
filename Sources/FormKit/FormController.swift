@@ -83,6 +83,7 @@ open class FormController: UITableViewController, CustomTransitionable {
     public var dataSource = FormDataSource(sections: []) {
         didSet {
             
+            
             guard !dataSource.isEmpty else {
                 print("[FromController] Empty `FormDataSource` loaded")
                 return
@@ -116,11 +117,13 @@ open class FormController: UITableViewController, CustomTransitionable {
                     FormDataSource.evaluate(oldValue, new: dataSource)
                 )
             }
+            
+            checkForActiveInput()
         }
     }
     
     
-    private var defaultContentInsets = UIEdgeInsets(top: 8.0, left: 0, bottom: 0, right: 0)
+    private var defaultContentInsets = UIEdgeInsets(top: 12.0, left: 0, bottom: 0, right: 0)
     
     
     /// Loading
@@ -283,7 +286,12 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     open override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
+        checkForActiveInput()
+        validationClosure?(dataSource,self)
+    }
+    
+    
+    private func checkForActiveInput() {
         if activatesInputOnAppear {
             if let firstInputPath = dataSource.firstInputIndexPath {
                 if let nextCell = tableView.cellForRow(at: firstInputPath) {
@@ -293,9 +301,6 @@ open class FormController: UITableViewController, CustomTransitionable {
                 }
             }
         }
-        
-        validationClosure?(dataSource,self)
-        
     }
     
     
