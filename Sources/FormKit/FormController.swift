@@ -89,8 +89,11 @@ open class FormController: UITableViewController, CustomTransitionable {
                 return
             }
             
-            title = dataSource.title
-            tableView.tableFooterView = nil
+            UIViewPropertyAnimator(duration: 0.5, curve: .easeInOut) {
+                self.title = self.dataSource.title
+            }.startAnimation()
+            
+           tableView.tableFooterView = nil
             
             guard tableView.window != nil else {
                 return
