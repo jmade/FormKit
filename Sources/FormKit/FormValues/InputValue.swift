@@ -31,13 +31,14 @@ extension InputValue {
     public init(type: InputType,customKey:String?,value:Int?) {
         self.type = type
         self.customKey = customKey
-        self.value = "\(value)"
+        if let value = value {
+            self.value = "\(value)"
+        }
     }
     
     public init(_ type: InputType,_ customKey:String?,_ placeholder: String? = nil) {
         self.type = type
         self.customKey = customKey
-        self.value = nil
         self.placeholder = placeholder
     }
     
@@ -72,7 +73,7 @@ extension InputValue {
         switch type {
         case .phoneNumber:
             if let val = value {
-                return "+ \(val)"
+                return "\(val)"
             }
         case .zipcode:
             if let val = value {
@@ -346,6 +347,7 @@ extension InputValueCell: UITextFieldDelegate {
         switch inputValue.type {
         case .phoneNumber:
             guard CharacterSet.decimalDigits.isSuperset(of: CharacterSet(charactersIn: string)) else {
+                print(" Early Return \(string) ")
                 return false
             }
         case .zipcode:

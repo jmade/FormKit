@@ -166,7 +166,11 @@ public final class NoteCell: UITableViewCell, Activatable {
         }
     }
     
+    
     private func sendTextToDelegate() {
+        
+        switchToMode(.input)
+        
         if let newText = textView.text {
             if let existingNoteValue = formValue {
                 updateFormValueDelegate?.updatedFormValue(
@@ -177,9 +181,16 @@ public final class NoteCell: UITableViewCell, Activatable {
         }
     }
     
+    
+    
     public func activate(){
+        
         textView.becomeFirstResponder()
         let mode = derivedMode()
+        
+        print(" mode -> \(mode) ")
+        
+        
         if mode == .placeholder {
             let newPosition = textView.beginningOfDocument
             textView.selectedTextRange = textView.textRange(from: newPosition, to: newPosition)
