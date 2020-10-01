@@ -364,26 +364,12 @@ extension InputValueCell: UITextFieldDelegate {
         textField.text = result.formattedText
         textField.setCursorLocation(result.caretBeginOffset)
         
-        return false
-        
-        /*
-        switch inputValue.type {
-        case .phoneNumber:
-            if CharacterSet.decimalDigits.isSuperset(of: CharacterSet(charactersIn: string)) {
-                return true
-            } else {
-                return false
-            }
-        case .zipcode:
-            if CharacterSet.decimalDigits.isSuperset(of: CharacterSet(charactersIn: string)) {
-                return true
-            } else {
-                return false
-            }
+        if let text = textField.text {
+            guard let inputValue = formValue else { return }
+            updateFormValueDelegate?.updatedFormValue(inputValue.newWith(text), indexPath)
         }
-        */
         
-        
+        return false
         
     }
     
