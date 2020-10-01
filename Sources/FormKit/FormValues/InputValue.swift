@@ -89,14 +89,8 @@ extension InputValue {
 
 extension InputValue {
     
-    
     func newWith(_ newValue:String) -> InputValue {
-        InputValue(type: self.type,
-                   identifier: UUID(),
-                   value: newValue,
-                   isSelectable: self.isSelectable, customKey: self.customKey,
-                   placeholder: self.placeholder
-        )
+        InputValue(type: self.type, identifier: UUID(), value: newValue, isSelectable: self.isSelectable, customKey: self.customKey, placeholder: self.placeholder, useDirectionButtons: self.useDirectionButtons, textPattern: self.textPattern)
     }
     
 }
@@ -360,12 +354,16 @@ extension InputValueCell: UITextFieldDelegate {
             }
         }
         
+        
         let result = formatter.formatInput(currentText: textField.text ?? "", range: range, replacementString: string)
         textField.text = result.formattedText
         textField.setCursorLocation(result.caretBeginOffset)
         
         let newValue = result.formattedText
         print(" newValue -> \(newValue) ")
+        if let unformatted = formatter.unformat(newValue) {
+            print(" unformatted -> \(unformatted) ")
+        }
         let newInputValue = inputValue.newWith(newValue)
         print(" newInputValue -> \(newInputValue) ")
         
