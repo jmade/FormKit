@@ -15,7 +15,7 @@ public struct InputValue {
     }
     var type: InputType = .zipcode
     var identifier: UUID = UUID()
-    public var value: Int? = nil
+    public var value: String? = nil
     /// TableSelectable
     public var isSelectable: Bool = false
     /// CustomKeyProviable
@@ -31,7 +31,7 @@ extension InputValue {
     public init(type: InputType,customKey:String?,value:Int?) {
         self.type = type
         self.customKey = customKey
-        self.value = value
+        self.value = "\(value)"
     }
     
     public init(_ type: InputType,_ customKey:String?,_ placeholder: String? = nil) {
@@ -93,7 +93,7 @@ extension InputValue {
     func newWith(_ newValue:String) -> InputValue {
         InputValue(type: self.type,
                    identifier: UUID(),
-                   value: Int(newValue),
+                   value: newValue,
                    isSelectable: self.isSelectable, customKey: self.customKey,
                    placeholder: self.placeholder
         )
@@ -363,7 +363,13 @@ extension InputValueCell: UITextFieldDelegate {
         let result = formatter.formatInput(currentText: textField.text ?? "", range: range, replacementString: string)
         textField.text = result.formattedText
         textField.setCursorLocation(result.caretBeginOffset)
-        updateFormValueDelegate?.updatedFormValue(inputValue.newWith(result.formattedText), indexPath)
+        
+        let newValue = result.formattedText
+        print(" newValue -> \(newValue) ")
+        let newInputValue = inputValue.newWith(newValue)
+        print(" newInputValue -> \(newInputValue) ")
+        
+        updateFormValueDelegate?.updatedFormValue(newInputValue, indexPath)
         
         return false
         

@@ -179,8 +179,14 @@ public final class NoteCell: UITableViewCell, Activatable {
     
     public func activate(){
         textView.becomeFirstResponder()
-        let newPosition = textView.endOfDocument
-        textView.selectedTextRange = textView.textRange(from: newPosition, to: newPosition)
+        let mode = derivedMode()
+        if mode == .placeholder {
+            let newPosition = textView.beginningOfDocument
+            textView.selectedTextRange = textView.textRange(from: newPosition, to: newPosition)
+        } else {
+            let newPosition = textView.endOfDocument
+            textView.selectedTextRange = textView.textRange(from: newPosition, to: newPosition)
+        }
     }
 }
 
@@ -207,6 +213,23 @@ extension NoteCell {
     
     private enum NoteMode {
         case empty, placeholder, input
+    }
+    
+    
+    private func derivedMode() -> NoteMode {
+        guard let noteValue = formValue else {
+            return .empty
+        }
+        
+        if noteValue.value.isEmpty {
+            if noteValue.placeholderValue.isEmpty {
+                return .empty
+            } else {
+                return .placeholder
+            }
+        } else {
+            return .input
+        }
     }
     
     
