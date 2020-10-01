@@ -23,7 +23,7 @@ public struct InputValue {
     public var placeholder:String? = nil
     public var useDirectionButtons:Bool = true
 }
-
+    
 
 extension InputValue {
     
@@ -174,6 +174,7 @@ extension InputValue {
 public final class InputValueCell: UITableViewCell, Activatable {
     
     static let identifier = "inputCell"
+    let formatter = DefaultTextInputFormatter(textPattern: "(###) ###-##-##")
     
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
     var indexPath: IndexPath?
@@ -184,7 +185,6 @@ public final class InputValueCell: UITableViewCell, Activatable {
         label.textAlignment = .left
         return label
     }()
-    
     
     
     private lazy var textField: UITextField = {
@@ -320,6 +320,8 @@ public final class InputValueCell: UITableViewCell, Activatable {
     
 }
 
+
+
 extension InputValueCell: UITextFieldDelegate {
     
     public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -328,13 +330,33 @@ extension InputValueCell: UITextFieldDelegate {
     }
     
     
+    
+    
     public func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         
         guard let inputValue = formValue else { return false }
         
         print("-INPUT-\n Range: \(range) | Replacement String: \(string)")
         
+        switch inputValue.type {
+        case .phoneNumber:
+            guard CharacterSet.decimalDigits.isSuperset(of: CharacterSet(charactersIn: string)) else {
+                return false
+            }
+        case .zipcode:
+            guard CharacterSet.decimalDigits.isSuperset(of: CharacterSet(charactersIn: string)) else {
+                return false
+            }
+        }
         
+        
+        let result = formatter.formatInput(currentText: textField.text ?? "", range: range, replacementString: string)
+        textField.text = result.formattedText
+        textField.setCursorLocation(result.caretBeginOffset)
+        
+        return false
+        
+        /*
         switch inputValue.type {
         case .phoneNumber:
             if CharacterSet.decimalDigits.isSuperset(of: CharacterSet(charactersIn: string)) {
@@ -349,6 +371,10 @@ extension InputValueCell: UITextFieldDelegate {
                 return false
             }
         }
+        */
+        
+        
+        
     }
     
     
