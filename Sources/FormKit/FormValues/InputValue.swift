@@ -363,11 +363,7 @@ extension InputValueCell: UITextFieldDelegate {
         let result = formatter.formatInput(currentText: textField.text ?? "", range: range, replacementString: string)
         textField.text = result.formattedText
         textField.setCursorLocation(result.caretBeginOffset)
-        
-        if let text = textField.text {
-            guard let inputValue = formValue else { return }
-            updateFormValueDelegate?.updatedFormValue(inputValue.newWith(text), indexPath)
-        }
+        updateFormValueDelegate?.updatedFormValue(inputValue.newWith(result.formattedText), indexPath)
         
         return false
         

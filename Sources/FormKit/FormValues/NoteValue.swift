@@ -12,9 +12,7 @@ extension UIBarButtonItem {
 public struct NoteValue: FormValue, TextNumericalInput, Equatable, Hashable {
     
     public var formItem: FormItem {
-        get {
-            return FormItem.note(self)
-        }
+        .note(self)
     }
     
     var value:String
@@ -93,10 +91,17 @@ public final class NoteCell: UITableViewCell, Activatable {
     var formValue : NoteValue? {
         didSet {
             if let noteValue = formValue {
-                textView.text = noteValue.value
+                if noteValue.value.isEmpty {
+                    if noteValue.placeholderValue.isEmpty {
+                        switchToMode(.empty)
+                    } else {
+                        switchToMode(.placeholder)
+                    }
+                } else {
+                    switchToMode(.input)
+                }
                 evaluateButtonsBar()
             }
-            
         }
     }
     
@@ -177,7 +182,6 @@ public final class NoteCell: UITableViewCell, Activatable {
         let newPosition = textView.endOfDocument
         textView.selectedTextRange = textView.textRange(from: newPosition, to: newPosition)
     }
-    
 }
 
 extension NoteCell: UITextViewDelegate {
@@ -194,6 +198,53 @@ extension NoteCell: UITextViewDelegate {
     
     public func textViewDidChange(_ textView: UITextView) {
         sendTextToDelegate()
+    }
+    
+}
+
+
+extension NoteCell {
+    
+    private enum NoteMode {
+        case empty, placeholder, input
+    }
+    
+    
+    private func switchToMode(_ mode:NoteMode) {
+        guard let input = formValue else {
+            return
+        }
+        
+        var animator = UIViewPropertyAnimator(duration: 0.3, curve: .linear, animations: nil)
+        
+        switch mode {
+        case .input:
+            animator.addAnimations {
+                self.textView.text = input.value
+                self.textView.font = UIFont.preferredFont(forTextStyle: .body)
+                if #available(iOS 13.0, *) {
+                    self.textView.textColor = .label
+                }
+            }
+        case .placeholder:
+            animator.addAnimations {
+                self.textView.text = input.placeholderValue
+                self.textView.font = UIFont.preferredFont(forTextStyle: .body)
+                if #available(iOS 13.0, *) {
+                    self.textView.textColor = .placeholderText
+                }
+            }
+        case .empty:
+            animator.addAnimations {
+                self.textView.text = nil
+                if #available(iOS 13.0, *) {
+                    self.textView.textColor = .label
+                }
+            }
+        }
+        
+        animator.startAnimation()
+        
     }
     
 }
