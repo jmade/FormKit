@@ -22,6 +22,7 @@ public struct InputValue {
     public var customKey: String? = nil
     public var placeholder:String? = nil
     public var useDirectionButtons:Bool = true
+    public var textPattern:String? = nil
 }
     
 
@@ -53,6 +54,19 @@ extension InputValue {
             return "Zip Code"
         }
     }
+    
+    var formatedTextPattern: String {
+        guard let pattern = textPattern else {
+            switch type {
+            case .phoneNumber:
+                return "(###) ###-####"
+            case .zipcode:
+                return "#####"
+            }
+        }
+        return pattern
+    }
+    
     
     var displayValue:String {
         switch type {
@@ -174,7 +188,8 @@ extension InputValue {
 public final class InputValueCell: UITableViewCell, Activatable {
     
     static let identifier = "inputCell"
-    let formatter = DefaultTextInputFormatter(textPattern: "(###) ###-##-##")
+    
+    var formatter:DefaultTextInputFormatter? = nil
     
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
     var indexPath: IndexPath?
@@ -199,6 +214,7 @@ public final class InputValueCell: UITableViewCell, Activatable {
     var formValue : InputValue? {
         didSet {
             if let inputValue = formValue {
+                formatter = DefaultTextInputFormatter(textPattern: inputValue.formatedTextPattern)
                 titleLabel.text = inputValue.title
                 textField.text = inputValue.displayValue
                 textField.placeholder = inputValue.placeholder
@@ -230,7 +246,7 @@ public final class InputValueCell: UITableViewCell, Activatable {
     }
     
     func layout(){
-        guard let inputValue = formValue, didLayout == false else { return }
+        guard let _ = formValue, didLayout == false else { return }
         
         evaluateButtonBar()
         let margin = contentView.layoutMarginsGuide
@@ -307,7 +323,6 @@ public final class InputValueCell: UITableViewCell, Activatable {
     
     @objc
     func textFieldTextChanged() {
-        print("-INPUT- text changed")
         if let text = textField.text {
             guard let inputValue = formValue else { return }
             updateFormValueDelegate?.updatedFormValue(inputValue.newWith(text), indexPath)
@@ -330,13 +345,9 @@ extension InputValueCell: UITextFieldDelegate {
     }
     
     
-    
-    
     public func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         
-        guard let inputValue = formValue else { return false }
-        
-        print("-INPUT-\n Range: \(range) | Replacement String: \(string)")
+        guard let inputValue = formValue,let formatter = formatter else { return false }
         
         switch inputValue.type {
         case .phoneNumber:
@@ -348,7 +359,6 @@ extension InputValueCell: UITextFieldDelegate {
                 return false
             }
         }
-        
         
         let result = formatter.formatInput(currentText: textField.text ?? "", range: range, replacementString: string)
         textField.text = result.formattedText
