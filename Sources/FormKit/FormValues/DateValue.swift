@@ -19,6 +19,16 @@ public struct DateValue {
 }
 
 
+extension DateValue {
+    public init(_ title:String?,_ customKey:String,_ dateFormat:String? = nil,_ date:Date? = Date()) {
+        self.title = title
+        self.customKey = customKey
+        self.dateFormat = dateFormat
+        self.date = date
+    }
+}
+
+
 
 extension DateValue {
     
