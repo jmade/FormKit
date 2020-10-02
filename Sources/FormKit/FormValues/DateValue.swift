@@ -187,7 +187,7 @@ extension DateValueCell {
         
         dateContainer.translatesAutoresizingMaskIntoConstraints = false
         if #available(iOS 13.0, *) {
-            dateContainer.backgroundColor = .systemBackground
+            dateContainer.backgroundColor = .tertiarySystemBackground
         } else {
             dateContainer.backgroundColor = .white
         }
@@ -221,7 +221,7 @@ extension DateValueCell {
         dateContainer.addSubview(collectionView)
         
         NSLayoutConstraint.activate([
-            dateContainer.heightAnchor.constraint(equalToConstant: 92.0),
+            //dateContainer.heightAnchor.constraint(equalToConstant: 92.0),
             dateContainer.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor, constant: 0),
             dateContainer.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor, constant: 0),
             dateContainer.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor, constant: 0),
@@ -229,20 +229,22 @@ extension DateValueCell {
             collectionView.leadingAnchor.constraint(equalTo: dateContainer.leadingAnchor, constant: 0),
             collectionView.trailingAnchor.constraint(equalTo: dateContainer.trailingAnchor, constant: 0),
             collectionView.topAnchor.constraint(equalTo: dateContainer.topAnchor, constant: 0),
-            collectionView.heightAnchor.constraint(equalToConstant: 88.0),
+            //collectionView.heightAnchor.constraint(equalToConstant: 88.0),
+            collectionView.heightAnchor.constraint(greaterThanOrEqualToConstant: 52.0),
             
             infoLabel.leadingAnchor.constraint(equalTo: dateContainer.leadingAnchor, constant: 0),
             infoLabel.trailingAnchor.constraint(equalTo: dateContainer.trailingAnchor, constant: 0),
             infoLabel.bottomAnchor.constraint(equalTo: dateContainer.bottomAnchor, constant: -2.0),
             infoLabel.centerXAnchor.constraint(equalTo: dateContainer.centerXAnchor),
-            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: dateContainer.bottomAnchor, constant: 0)
+            
+            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: infoLabel.bottomAnchor, constant: 0)
         ])
         
         
 
         dateContainer.layer.maskedCorners = [.layerMaxXMaxYCorner,.layerMaxXMinYCorner,.layerMinXMaxYCorner,.layerMinXMinYCorner]
         dateContainer.layer.masksToBounds = true
-        dateContainer.layer.cornerRadius = 12.0
+        dateContainer.layer.cornerRadius = 8.0
         
     }
     

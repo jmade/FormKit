@@ -147,7 +147,7 @@ class WeekDayCell: UICollectionViewCell {
         label.numberOfLines = 1
         label.textAlignment = .center
         label.lineBreakMode = .byWordWrapping
-        label.font = .preferredFont(forTextStyle: .body)
+        label.font = .preferredFont(forTextStyle: .headline)
         return label
     }()
     
@@ -197,7 +197,7 @@ class WeekDayCell: UICollectionViewCell {
                 UIViewPropertyAnimator(duration: 0.1, curve: .easeIn) {
                     [weak self] in
                    if #available(iOS 13.0, *) {
-                        self?.contentView.backgroundColor = .systemBackground
+                        self?.contentView.backgroundColor = .secondarySystemBackground
                     
                         self?.weekDayLabel.textColor = .label
                         self?.dayOfMonthLabel.textColor = .label
@@ -249,6 +249,7 @@ class WeekDayCell: UICollectionViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
+        contentView.backgroundColor = nil
         weekDayCellData = nil
         weekDayLabel.text = nil
         dayOfMonthLabel.text = nil
