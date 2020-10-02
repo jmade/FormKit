@@ -137,6 +137,12 @@ public final class DateValueCell: UITableViewCell {
             self.collectionView.selectItem(at: IndexPath(row: 0, section: 0), animated: true, scrollPosition: .top)
 
             self.infoLabel.text = dataSource[0].info
+            if let flowLayout = self.collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
+                flowLayout.itemSize = CGSize(
+                    width: collectionView.bounds.width/7,
+                    height: collectionView.bounds.height
+                )
+            }
             
             self.selectionStyle = .none
         }
@@ -148,7 +154,8 @@ public final class DateValueCell: UITableViewCell {
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        activateDefaultHeightAnchorConstraint(220)
+        //activateDefaultHeightAnchorConstraint(220)
+        setupCollectionView()
     }
 
     
