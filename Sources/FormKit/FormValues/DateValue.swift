@@ -200,7 +200,10 @@ public final class DateValueCell: UITableViewCell {
             infoLabel.trailingAnchor.constraint(equalTo: dateContainer.trailingAnchor),
             
             dateContainer.bottomAnchor.constraint(equalTo: infoLabel.bottomAnchor),
-            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: dateContainer.bottomAnchor)
+            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: dateContainer.bottomAnchor),
+            
+            //dateContainer.heightAnchor.constraint(greaterThanOrEqualToConstant 92.0),
+            collectionView.heightAnchor.constraint(greaterThanOrEqualToConstant: 88.0),
         ])
         
         //dateContainer.heightAnchor.constraint(equalToConstant: 92.0),
