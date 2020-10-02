@@ -124,6 +124,19 @@ open class FormController: UITableViewController, CustomTransitionable {
     }
     
     
+    private var headers:[HeaderValue] {
+        var values:[HeaderValue] = []
+        for (i,section) in dataSource.sections.enumerated() {
+            values.append(
+                HeaderValue(section: i,
+                            title: section.title
+                )
+            )
+        }
+        return values
+    }
+    
+    
     private var defaultContentInsets = UIEdgeInsets(top: 20, left: 0, bottom: 0, right: 0)
     
     
@@ -264,7 +277,7 @@ open class FormController: UITableViewController, CustomTransitionable {
             eval.reloads.forEach({
                 if let sectionHeader = self.tableView.headerView(forSection: $0.section) as? FormHeaderCell {
                     if let headerTitle = self.dataSource.sectionTitle(at: $0.section) {
-                        sectionHeader.titleLabel.text = headerTitle
+                        sectionHeader.configureView(HeaderValue(section: $0.section, title: headerTitle))
                     }
                 }
                 if let changes = $0.changes {
@@ -504,10 +517,13 @@ extension FormController {
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
+    
+    
     override open func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         if !dataSource.sections[section].title.isEmpty {
             if let headerCell = tableView.dequeueReusableHeaderFooterView(withIdentifier: FormHeaderCell.identifier) as? FormHeaderCell {
-                headerCell.titleLabel.text = dataSource.sections[section].title
+                headerCell.configureView(headers[section])
+                headerCell.delegate = self
                 return headerCell
             }
         }
@@ -524,6 +540,17 @@ extension FormController {
     }
     
 }
+
+
+
+extension FormController {
+        
+    @objc private func sectionHeaderTapped() {
+        
+    }
+    
+}
+
 
 
 
@@ -677,6 +704,8 @@ extension FormAlertAction {
 
 
 
+
+// MARK: - Alert -
 extension FormController {
     
     private func makeAlertController(_ title: String,_ message: String?) -> UIAlertController {
@@ -1006,22 +1035,76 @@ extension FormController: ButtonActionDelegate {
 
 
 
+// MARK: - SectionTapDelegate -
+extension FormController: SectionTapDelegate {
+    public func sectionWasTapped(header: HeaderValue) {
+        print("Was Tapped! \(header)")
+    }
+}
+
+
+
+// MARK: - HeaderValue -
+public struct HeaderValue {
+    var section:Int
+    var title:String
+}
+
+extension HeaderValue {
+    var indexPath:IndexPath {
+        IndexPath(row: 0, section: section)
+    }
+}
+
+
+// MARK: - SectionTapDelegate -
+public protocol SectionTapDelegate: class  {
+    func sectionWasTapped(header:HeaderValue)
+}
+
+
+
 // MARK: - FormHeaderCell -
 public final class FormHeaderCell: UITableViewHeaderFooterView {
-    static let identifier = "FormKit.FormHeaderCell"
-    let titleLabel = UILabel()
+    static let identifier = "com.jmade.FormKit.FormHeaderCell"
+    
+    public weak var delegate:SectionTapDelegate?
+    
+    var headerValue:HeaderValue? {
+        didSet {
+            if let header = headerValue {
+                titleLabel.text = header.title
+            }
+        }
+    }
+    
+    private lazy var titleLabel:UILabel = {
+        let label = UILabel()
+        label.textAlignment = .left
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .headline).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(label)
+        label.isUserInteractionEnabled = true
+        label.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(self.didTap)))
+        return label
+    }()
+    
+    
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(reuseIdentifier: String?) {
         super.init(reuseIdentifier: reuseIdentifier)
         
-        titleLabel.textAlignment = .left
-        titleLabel.numberOfLines = 0
-        titleLabel.lineBreakMode = .byWordWrapping
-        titleLabel.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .headline).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(titleLabel)
+        NSLayoutConstraint.activate([
+            titleLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            titleLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            titleLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: titleLabel.bottomAnchor)
+        ])
         
-        titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8.0).isActive = true
+        /*
+        titleLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor).isActive = true
         titleLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor).isActive = true
         
         let trailingConstraint = contentView.layoutMarginsGuide.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor)
@@ -1032,12 +1115,32 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
         bottomConstraint.priority = UILayoutPriority(rawValue: 999)
         bottomConstraint.isActive = true
         
+        
         let heightAnchorConstraint = contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 44.0)
         heightAnchorConstraint.priority = UILayoutPriority(rawValue: 499)
         heightAnchorConstraint.isActive = true
+        */
+        
     }
+    
     public override func prepareForReuse() {
         super.prepareForReuse()
+        headerValue = nil
         titleLabel.text = nil
     }
+    
+    
+    public func configureView(_ header:HeaderValue) {
+        self.headerValue = header
+    }
+    
+    
+    
+    
+    @objc private func didTap() {
+        if let value = headerValue {
+            delegate?.sectionWasTapped(header: value)
+        }
+    }
+    
 }

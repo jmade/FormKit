@@ -432,10 +432,15 @@ class TimeInputKeyboard: UIInputView {
     }()
     
     
-    override func systemLayoutSizeFitting(_ targetSize: CGSize) -> CGSize {
-        print("[Input] TargetSize: \(targetSize)")
-        return CGSize(UIScreen.main.bounds.width, 240)
+    override var intrinsicContentSize: CGSize {
+        return CGSize(width: UIView.noIntrinsicMetric, height: 0)
     }
+    
+    
+//    override func systemLayoutSizeFitting(_ targetSize: CGSize) -> CGSize {
+//        print("[Input] TargetSize: \(targetSize)")
+//        return CGSize(UIScreen.main.bounds.width, 240)
+//    }
     
     
     required init?(coder: NSCoder) {
@@ -443,14 +448,20 @@ class TimeInputKeyboard: UIInputView {
     }
     
     init() {
-        super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 275), inputViewStyle: .keyboard)
+        super.init(frame: .zero, inputViewStyle: .keyboard)
+        
+        
+        
+        //super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 275), inputViewStyle: .keyboard)
+        
         setTime()
         self.allowsSelfSizing = true
     }
     
     
     init(timeString:String) {
-        super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 280), inputViewStyle: .keyboard)
+        
+        super.init(frame: .zero, inputViewStyle: .keyboard)
         dataSource = generateDataSource()
         self.allowsSelfSizing = true
         defer {
@@ -458,6 +469,9 @@ class TimeInputKeyboard: UIInputView {
         }
     }
 
+    
+    
+    
     
     override func willMove(toSuperview newSuperview: UIView?) {
         super.willMove(toSuperview: newSuperview)
@@ -467,6 +481,10 @@ class TimeInputKeyboard: UIInputView {
         super.didMoveToSuperview()
         setTime()
     }
+    
+//    override func systemLayoutSizeFitting(_ targetSize: CGSize, withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority, verticalFittingPriority: UILayoutPriority) -> CGSize {
+//
+//    }
     
 }
 

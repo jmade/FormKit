@@ -113,11 +113,10 @@ public final class NoteCell: UITableViewCell, Activatable {
     
     var formValue : NoteValue? {
         didSet {
-            if let noteValue = formValue {
+            if let _ = formValue {
                 
-                derivedMode()
-                
-                
+                let mode = derivedMode()
+                switchToMode(mode)
                
                 evaluateButtonsBar()
             }

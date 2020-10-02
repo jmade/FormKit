@@ -6,7 +6,6 @@ public struct TimeValue: Equatable, Hashable {
     let title:String
     let time:String
     public var customKey:String? = "Time"
-  
 }
 
 
@@ -43,9 +42,6 @@ extension TimeValue: FormValue {
         }
         return ["\(title)":"\(time)"]
     }
-    
-    /// CustomKeyProvidable
-    
     
 }
 
