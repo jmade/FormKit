@@ -128,7 +128,7 @@ public final class DateValueCell: UITableViewCell {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
         
         if #available(iOS 13.0, *) {
-            collectionView.backgroundColor = .systemBackground
+            collectionView.backgroundColor = .systemGray4
         } else {
             collectionView.backgroundColor = .white
         }
@@ -157,7 +157,7 @@ public final class DateValueCell: UITableViewCell {
     private lazy var dateContainer:UIView = {
         let view = UIView()
         if #available(iOS 13.0, *) {
-            view.backgroundColor = .tertiarySystemBackground
+            view.backgroundColor = .systemGray4
         } else {
             view.backgroundColor = .white
         }
@@ -201,14 +201,8 @@ public final class DateValueCell: UITableViewCell {
             
             dateContainer.bottomAnchor.constraint(equalTo: infoLabel.bottomAnchor),
             contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: dateContainer.bottomAnchor),
-            
-            //dateContainer.heightAnchor.constraint(greaterThanOrEqualToConstant 92.0),
             collectionView.heightAnchor.constraint(greaterThanOrEqualToConstant: 88.0),
         ])
-        
-        //dateContainer.heightAnchor.constraint(equalToConstant: 92.0),
-        //collectionView.heightAnchor.constraint(equalToConstant: 88.0),
-        //collectionView.heightAnchor.constraint(greaterThanOrEqualToConstant: 52.0),
     }
     
     

@@ -181,7 +181,7 @@ class WeekDayCell: UICollectionViewCell {
                     [weak self] in
                     
                     if #available(iOS 13.0, *) {
-                        self?.contentView.backgroundColor = .systemBlue
+                        self?.contentView.backgroundColor = .systemGray
                         
                         self?.weekDayLabel.textColor = .white
                         self?.dayOfMonthLabel.textColor = .white
@@ -197,7 +197,7 @@ class WeekDayCell: UICollectionViewCell {
                 UIViewPropertyAnimator(duration: 0.1, curve: .easeIn) {
                     [weak self] in
                    if #available(iOS 13.0, *) {
-                        self?.contentView.backgroundColor = .secondarySystemBackground
+                        self?.contentView.backgroundColor = nil
                     
                         self?.weekDayLabel.textColor = .label
                         self?.dayOfMonthLabel.textColor = .label
