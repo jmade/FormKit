@@ -31,6 +31,7 @@ public enum FormItem {
     case mapAction(MapActionValue)
     case custom(CustomValue)
     case input(InputValue)
+    case date(DateValue)
     
 }
 
@@ -77,6 +78,8 @@ extension FormItem: FormCellDescriptable {
             return customValue.cellDescriptor
         case .input(let inputValue):
             return inputValue.cellDescriptor
+        case .date(let dateValue):
+            return dateValue.cellDescriptor
         }
     }
 }
@@ -128,6 +131,8 @@ extension FormItem: Hashable, Equatable {
             return custom.hashValue
         case .input(let input):
             return input.hashValue
+        case .date(let date):
+            return date.hashValue
         }
     }
     
@@ -177,6 +182,8 @@ extension FormItem {
             return custom.encodedValue()
         case .input(let input):
             return input.encodedValue()
+        case .date(let date):
+            return date.encodedValue()
         }
         
     }
@@ -201,7 +208,8 @@ extension FormItem {
             SwitchValue.Random(),
             SliderValue.Random(),
             ListSelectionValue.DemoSingle(),
-            InputValue.Random()
+            InputValue.Random(),
+            DateValue(),
         ]
         
         return randomValues

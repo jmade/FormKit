@@ -47,6 +47,14 @@ extension StepperValue {
     }
     
     
+    public init(_ title:String,_ customKey:String,_ value:Double) {
+        self.title = title
+        self.value = value
+        self.customKey = customKey
+    }
+    
+
+    
     public init(_ title:String,_ customKey:String? = nil) {
         self.title = title
         self.value = 0.0
@@ -135,8 +143,8 @@ public final class StepperCell: UITableViewCell {
     
     private lazy var stepper: UIStepper = {
         let stepper = UIStepper()
-        stepper.maximumValue = 99
-        stepper.minimumValue = 0
+        stepper.maximumValue = 500
+        stepper.minimumValue = -500
         stepper.wraps = false
         stepper.addTarget(self, action: #selector(stepperStepped(_:)), for: .valueChanged)
         stepper.translatesAutoresizingMaskIntoConstraints = false

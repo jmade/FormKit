@@ -260,6 +260,16 @@ extension String {
     public func split(_ s: String) -> [String]{
         return self.components(separatedBy: s)
     }
+    
+    
+    public func safe(_ count:Int) -> String {
+        guard self.count > count else {
+            return self
+        }
+        let usableIndex = self.index(self.startIndex, offsetBy: String.IndexDistance(clamping: count))
+        return String(self.prefix(upTo: usableIndex))
+    }
+    
 }
 
 
@@ -419,5 +429,192 @@ public extension UIDevice {
         default:                                        return identifier
         }
     }
+    
+}
+
+
+//: MARK: - DATE -
+extension Date{
+    
+    /*
+    func ceiling() -> Date {
+        let calendar = Calendar.current
+        let components = (calendar as NSCalendar).components([.hour, .minute, .second], from: self)
+        return (calendar as NSCalendar).date(bySettingHour: components.minute! > 0 ? components.hour! + 1 : components.hour!, minute: 0, second: 0, of: self, options: .matchFirst)!
+    }
+    
+    func floor() -> Date {
+        let calendar = Calendar.current
+        let hour = (calendar as NSCalendar).components(.hour, from: self)
+        return (calendar as NSCalendar).date(bySettingHour: hour.hour!, minute: 0, second: 0, of: self, options: .matchFirst)!
+    }
+    */
+ 
+    func earliest() -> Date {
+        return Calendar.current.date(bySettingHour: 0, minute: 0, second: 0, of: self)!
+    }
+    
+    func latest() -> Date {
+        return Calendar.current.date(bySettingHour: 23, minute: 59, second: 59, of: self)!
+    }
+    
+    
+    public func daysBefore(_ numberOfdays:Int) -> Date {
+        return Calendar.current.date(byAdding: .day, value: -numberOfdays, to: self)!
+    }
+    
+    public func daysAfter(_ numberOfdays:Int) -> Date {
+        return Calendar.current.date(byAdding: .day, value: numberOfdays, to: self)!
+    }
+    
+    public func oneHourBefore() -> Date {
+        return Calendar.current.date(byAdding: Calendar.Component.hour, value: -1, to: self, wrappingComponents: false)!
+    }
+    
+    public func oneHourAfter() -> Date {
+        return Calendar.current.date(byAdding: Calendar.Component.hour, value: 1, to: self, wrappingComponents: false)!
+    }
+    
+    public func getHour() -> Int {
+        return Calendar.current.component(Calendar.Component.hour, from: self)
+    }
+    
+    public func getMins() -> Int {
+        return Calendar.current.component(Calendar.Component.minute, from: self)
+    }
+    
+    public func addingMins(_ mins:Int) -> Date {
+        if let additiveDate = Calendar.current.date(byAdding: Calendar.Component.minute, value: mins, to: self, wrappingComponents: false) {
+            return additiveDate
+        } else {
+            return self
+        }
+        
+    }
+    
+    public func addingHours(_ hours:Int) -> Date {
+        if let additiveDate = Calendar.current.date(byAdding: Calendar.Component.hour, value: hours, to: self, wrappingComponents: true) {
+            return additiveDate
+        } else {
+            return self
+        }
+    }
+    
+    public func nearestHour() -> Date? {
+        var components = Calendar.current.dateComponents([.minute], from: self)
+        let minute = components.minute ?? 0
+        components.minute = minute >= 30 ? 60 - minute : -minute
+        return Calendar.current.date(byAdding: components, to: self)
+    }
+    
+    public func topOfTheNextHour() -> Date {
+        if let date = Calendar.current.date(bySettingHour: Calendar.current.component(Calendar.Component.hour, from: self) + 1, minute: 0, second: 0, of: self) {
+            return date
+        } else {
+            return self
+        }
+        
+    }
+    
+    public func topOfThePreviousHour() -> Date {
+        if let date = Calendar.current.date(bySettingHour: Calendar.current.component(Calendar.Component.hour, from: self) - 1, minute: 0, second: 0, of: self) {
+            return date
+        } else {
+            return self
+        }
+    }
+    
+    public func hourString(_ showTimePeriod:Bool = true) -> String {
+        let formatter = DateFormatter()
+        formatter.timeZone = TimeZone(abbreviation: "UTC")
+        if showTimePeriod {
+             formatter.dateFormat = "h:mm a"
+        } else {
+             formatter.dateFormat = "h:mm"
+        }
+        return formatter.string(from: self)
+    }
+    
+    public func dateString() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM/dd/y"
+        return formatter.string(from: self)
+    }
+    
+    public func nextDay() -> Date {
+        return Calendar.current.date(byAdding: .day, value: 1, to: self)!
+    }
+    
+    public func previousDay() -> Date {
+        return Calendar.current.date(byAdding: .day, value: -1, to: self)!
+    }
+    
+    
+    public
+    func isToday() -> Bool {
+        return Calendar.current.isDateInToday(self)
+    }
+    
+    public
+    func isTomorrow() -> Bool {
+        return Calendar.current.isDateInTomorrow(self)
+    }
+    
+    public
+    func isWeekend() -> Bool {
+        return Calendar.current.isDateInWeekend(self)
+    }
+    
+    public
+    func isYesterday() -> Bool {
+        return Calendar.current.isDateInYesterday(self)
+    }
+    
+    public static func StartOfTheDay() -> Date {
+        var calendar = Calendar.current
+        calendar.timeZone = .current
+       return calendar.date(bySettingHour: 0, minute: 0, second: 0, of: Date())!
+    }
+    
+    public static func EndOfTheDay() -> Date {
+        var calendar = Calendar.current
+        calendar.timeZone = .current
+        return calendar.date(bySettingHour: 12, minute: 59, second: 59, of: Date())!
+    }
+    
+    public
+    func isBeforeToday() -> Bool {
+        return self < Date.StartOfTheDay()
+    }
+    
+    public
+    func isAfterToday() -> Bool {
+        return self > Date.EndOfTheDay()
+    }
+    
+    public
+    func interval(ofComponent comp: Calendar.Component, fromDate date: Date) -> Int {
+        
+        var calendar = Calendar.current
+        calendar.timeZone = .current
+        
+        guard let start = calendar.ordinality(of: comp, in: .era, for: date) else { return 0 }
+        guard let end = calendar.ordinality(of: comp, in: .era, for: self) else { return 0 }
+        
+        return end - start
+    }
+    
+    
+    public func daysApart(_ date:Date) -> Int? {
+        var calendar = Calendar.current
+        calendar.timeZone = .current
+        
+        if let diffInDays = calendar.dateComponents([.day], from: date, to: self).day {
+            return diffInDays
+        }
+        return nil
+    }
+    
+
     
 }

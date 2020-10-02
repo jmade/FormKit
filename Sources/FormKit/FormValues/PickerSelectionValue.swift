@@ -36,7 +36,6 @@ extension PickerSelectionValue {
         self.title = title
     }
     
-    
     public init(_ title:String,_ customKey:String,_ values:[String],_ ids:[Int]) {
         self.values = values
         self.customKey = customKey
@@ -45,6 +44,15 @@ extension PickerSelectionValue {
         self.ids = ids
     }
     
+    
+    public init(_ title:String,_ customKey:String,_ values:[String],_ ids:[Int],_ selectionMessage:String = "Select a Value") {
+        self.values = values
+        self.customKey = customKey
+        self.selectedIndex = 0
+        self.title = title
+        self.ids = ids
+        self.selectionMessage = selectionMessage
+    }
     
 }
 
@@ -166,6 +174,7 @@ extension PickerSelectionValue: FormValueDisplayable {
     
     public func didSelect(_ formController: Controller, _ path: IndexPath) {
         formController.dataSource.sections[path.section].rows[path.row] = self.newToggled().formItem
+        /// TODO: Adjust contentInset here
         formController.tableView.reloadRows(at: [path], with: .automatic)
     }
     
@@ -317,7 +326,7 @@ public final class PickerSelectionCell: UITableViewCell {
     }
     
     func renderForDisplay() {
-        UIView.animate(withDuration: 0.3) { [weak self] in
+        UIViewPropertyAnimator(duration: 1/3, curve: .easeOut) { [weak self] in
             guard let self = self else { return }
             self.selectionLabel.isHidden = true
             self.title.isHidden = false
@@ -326,11 +335,11 @@ public final class PickerSelectionCell: UITableViewCell {
             self.pickerView.isHidden = true
             self.standardHeightConstraint.isActive = true
             self.pickerBottomConstriant.isActive = false
-        }
+        }.startAnimation()
     }
     
     func renderForSelection(){
-        UIView.animate(withDuration: 0.3) { [weak self] in
+        UIViewPropertyAnimator(duration: 1/3, curve: .easeIn) { [weak self] in
             guard let self = self else { return }
             self.title.isHidden = true
             self.selectedValue.isHidden = true
@@ -340,7 +349,7 @@ public final class PickerSelectionCell: UITableViewCell {
             self.standardHeightConstraint.isActive = false
             self.pickerBottomConstriant.isActive = true
             self.pickerView.selectRow(self.formValue.selectedIndex, inComponent: 0, animated: true)
-        }
+        }.startAnimation()
     }
     
 }

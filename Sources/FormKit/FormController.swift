@@ -120,7 +120,6 @@ open class FormController: UITableViewController, CustomTransitionable {
                 self.title = self.dataSource.title
             }.startAnimation()
             
-            checkForActiveInput()
         }
     }
     
@@ -156,6 +155,8 @@ open class FormController: UITableViewController, CustomTransitionable {
             }
         }
     }
+    
+    private var hasActivated = false
     
     private var alertTextFieldInput: String? = nil
     
@@ -311,11 +312,16 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     private func checkForActiveInput() {
         print("checkForActiveInput")
+        guard hasActivated == false else {
+            print("bailing active input")
+            return
+        }
         if activatesInputOnAppear {
             if let firstInputPath = dataSource.firstInputIndexPath {
                 if let nextCell = tableView.cellForRow(at: firstInputPath) {
                     if let activatabelCell = nextCell as? Activatable {
                         activatabelCell.activate()
+                        hasActivated = true
                     }
                 }
             }
@@ -922,6 +928,12 @@ extension FormController: UpdateFormValueDelegate {
                     if let inputValue = formValue as? InputValue {
                         if inputValue != input {
                             handleUpdatedFormValue(inputValue, at: path)
+                        }
+                    }
+                case .date(let date):
+                    if let dateValue = formValue as? DateValue {
+                        if dateValue != date {
+                            handleUpdatedFormValue(dateValue, at: path)
                         }
                     }
                 }

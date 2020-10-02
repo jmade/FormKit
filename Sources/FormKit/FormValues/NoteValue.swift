@@ -8,23 +8,41 @@ extension UIBarButtonItem {
     
 }
 
+
+
+
 // MARK: - NoteValue -
 public struct NoteValue: FormValue, TextNumericalInput, Equatable, Hashable {
-    
-    public var formItem: FormItem {
-        .note(self)
-    }
-    
-    var value:String
-    var placeholderValue:String
+    var identifier: UUID = UUID()
+    public var value:String?
+    public var placeholderValue:String?
     public var customKey: String?
-    var useDirectionButtons:Bool
+    public var useDirectionButtons:Bool
+}
+
+
+extension NoteValue {
     
     public init(value: String,placeholderValue:String = "Type Note here...",_ useDirectionButtons:Bool = true) {
         self.value = value
         self.placeholderValue = placeholderValue
         self.useDirectionButtons = useDirectionButtons
         self.customKey = nil
+    }
+    
+    public init(placeholderValue:String,_ customKey:String?) {
+        self.value = ""
+        self.placeholderValue = placeholderValue
+        self.useDirectionButtons = true
+        self.customKey = customKey
+    }
+    
+}
+
+
+extension NoteValue {
+    public var formItem: FormItem {
+        .note(self)
     }
 }
 
@@ -55,9 +73,9 @@ extension NoteValue {
     
     public func encodedValue() -> [String : String] {
         if let key = customKey {
-            return [key:value]
+            return [key:value ?? ""]
         } else {
-            return ["NoteVale":"\(value)"]
+            return ["Note":value ?? ""]
         }
     }
     
@@ -68,6 +86,11 @@ extension NoteValue {
 extension NoteValue {
     public static func Random() -> NoteValue {
         return NoteValue(value: "", placeholderValue: "Text here...", true)
+    }
+    
+    
+    public func newWith(_ text:String) -> NoteValue {
+      return  NoteValue(identifier: UUID(), value: text, placeholderValue: self.placeholderValue, customKey: self.customKey, useDirectionButtons: self.useDirectionButtons)
     }
 }
 
@@ -91,15 +114,11 @@ public final class NoteCell: UITableViewCell, Activatable {
     var formValue : NoteValue? {
         didSet {
             if let noteValue = formValue {
-                if noteValue.value.isEmpty {
-                    if noteValue.placeholderValue.isEmpty {
-                        switchToMode(.empty)
-                    } else {
-                        switchToMode(.placeholder)
-                    }
-                } else {
-                    switchToMode(.input)
-                }
+                
+                derivedMode()
+                
+                
+               
                 evaluateButtonsBar()
             }
         }
@@ -168,8 +187,11 @@ public final class NoteCell: UITableViewCell, Activatable {
     
     
     private func sendTextToDelegate() {
+        let mode = derivedMode()
+        if mode != .input {
+            switchToMode(.input)
+        }
         
-        switchToMode(.input)
         
         if let newText = textView.text {
             if let existingNoteValue = formValue {
@@ -217,6 +239,14 @@ extension NoteCell: UITextViewDelegate {
         sendTextToDelegate()
     }
     
+    public func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        print("Incoming Text: \(text)")
+        
+        
+        return true
+        
+    }
+    
 }
 
 
@@ -232,29 +262,31 @@ extension NoteCell {
             return .empty
         }
         
-        if noteValue.value.isEmpty {
-            if noteValue.placeholderValue.isEmpty {
-                return .empty
+        
+        if let _ = noteValue.placeholderValue {
+            if let _ = noteValue.value {
+                return .input
             } else {
                 return .placeholder
             }
-        } else {
-            return .input
         }
+        
+        return .input
+        
     }
     
     
     private func switchToMode(_ mode:NoteMode) {
-        guard let input = formValue else {
+        guard let note = formValue else {
             return
         }
         
-        var animator = UIViewPropertyAnimator(duration: 0.3, curve: .linear, animations: nil)
+        let animator = UIViewPropertyAnimator(duration: 0.3, curve: .linear, animations: nil)
         
         switch mode {
         case .input:
             animator.addAnimations {
-                self.textView.text = input.value
+                self.textView.text = note.value
                 self.textView.font = UIFont.preferredFont(forTextStyle: .body)
                 if #available(iOS 13.0, *) {
                     self.textView.textColor = .label
@@ -262,7 +294,7 @@ extension NoteCell {
             }
         case .placeholder:
             animator.addAnimations {
-                self.textView.text = input.placeholderValue
+                self.textView.text = note.placeholderValue
                 self.textView.font = UIFont.preferredFont(forTextStyle: .body)
                 if #available(iOS 13.0, *) {
                     self.textView.textColor = .placeholderText
