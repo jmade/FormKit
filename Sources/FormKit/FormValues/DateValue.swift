@@ -10,7 +10,7 @@ import UIKit
 
 public struct DateValue {
     var identifier: UUID = UUID()
-    public var customKey:String? = "MapValue"
+    public var customKey:String? = nil
     public var title:String?
     public var date:Date? = Date()
     public var dateFormat:String?
@@ -25,6 +25,11 @@ extension DateValue {
         self.customKey = customKey
         self.dateFormat = dateFormat
         self.date = date
+    }
+    
+    
+    public func newWith(_ date:Date) -> DateValue {
+        DateValue(identifier: UUID(), customKey: self.customKey, title: self.title, date: date, dateFormat: self.dateFormat, isSelectable: self.isSelectable)
     }
 }
 
@@ -44,12 +49,10 @@ extension DateValue {
     
     
     var selectedValue:String {
-        guard date != nil else {
-            return ""
+        if let date = date {
+            return "\(date)"
         }
-        
         return ""
-        
     }
     
 }
@@ -118,37 +121,62 @@ public final class DateValueCell: UITableViewCell {
     
     static let identifier = "com.jmade.FormKit.DateValueCell.identifier"
     
-    lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewLayout())
-       lazy var tableView = UITableView()
-       
-       lazy var infoLabel = UILabel()
-       lazy var dateContainer = UIView()
-    
-    private var dataSource:[WeekDayCellData] = [] {
-        didSet {
-            collectionView.reloadData()
+    private lazy var collectionView: UICollectionView = {
+        let flowLayout = UICollectionViewFlowLayout()
+        flowLayout.scrollDirection = .horizontal
+        
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
+        
+        if #available(iOS 13.0, *) {
+            collectionView.backgroundColor = .systemBackground
+        } else {
+            collectionView.backgroundColor = .white
         }
-    }
+        collectionView.isPagingEnabled = true
+        collectionView.showsHorizontalScrollIndicator = false
+        collectionView.showsVerticalScrollIndicator = false
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.register(WeekDayCell.self, forCellWithReuseIdentifier: WeekDayCell.ReuseID)
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        dateContainer.addSubview(collectionView)
+        return collectionView
+    }()
+    
+    
+    private lazy var infoLabel:UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .preferredFont(forTextStyle: .body)
+        label.textAlignment = .center
+        dateContainer.addSubview(label)
+        return label
+    }()
+    
+    
+    private lazy var dateContainer:UIView = {
+        let view = UIView()
+        if #available(iOS 13.0, *) {
+            view.backgroundColor = .tertiarySystemBackground
+        } else {
+            view.backgroundColor = .white
+        }
+        view.layer.maskedCorners = [.layerMaxXMaxYCorner,.layerMaxXMinYCorner,.layerMinXMaxYCorner,.layerMinXMinYCorner]
+        view.layer.masksToBounds = true
+        view.layer.cornerRadius = 8.0
+        view.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(view)
+        return view
+    }()
+    
+    
+    private var dataSource:[WeekDayCellData] = WeekDayCellData.Data(60)
+    
     
     var formValue : DateValue? {
         didSet {
             guard formValue != nil else { return }
-            self.dataSource =  WeekDayCellData.Data(60)
-            
-
-            self.infoLabel.text = dataSource[0].info
-            if let flowLayout = self.collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
-                flowLayout.itemSize = CGSize(
-                    width: collectionView.bounds.width/7,
-                    height: collectionView.bounds.height
-                )
-            }
-            
-            
-            self.collectionView.selectItem(at: IndexPath(row: 0, section: 0), animated: true, scrollPosition: .top)
-            
-            
-            self.selectionStyle = .none
+            prepareCollectionView()
         }
     }
     
@@ -158,8 +186,32 @@ public final class DateValueCell: UITableViewCell {
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        //activateDefaultHeightAnchorConstraint(220)
-        setupCollectionView()
+        NSLayoutConstraint.activate([
+            dateContainer.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            dateContainer.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            dateContainer.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            
+            collectionView.topAnchor.constraint(equalTo: dateContainer.topAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: dateContainer.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: dateContainer.trailingAnchor),
+            
+            infoLabel.topAnchor.constraint(equalTo: collectionView.bottomAnchor, constant: 4.0),
+            infoLabel.leadingAnchor.constraint(equalTo: dateContainer.leadingAnchor),
+            infoLabel.trailingAnchor.constraint(equalTo: dateContainer.trailingAnchor),
+            
+            dateContainer.bottomAnchor.constraint(equalTo: infoLabel.bottomAnchor),
+            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: dateContainer.bottomAnchor)
+        ])
+        
+        //dateContainer.heightAnchor.constraint(equalToConstant: 92.0),
+        //collectionView.heightAnchor.constraint(equalToConstant: 88.0),
+        //collectionView.heightAnchor.constraint(greaterThanOrEqualToConstant: 52.0),
+    }
+    
+    
+    
+    public override func setSelected(_ selected: Bool, animated: Bool) {
+        super.setSelected(false, animated: false)
     }
 
     
@@ -172,80 +224,28 @@ public final class DateValueCell: UITableViewCell {
 
 
 extension DateValueCell {
+
     
-    private func getSelectDayIndex() -> Int? {
-        if let selectedCollectionviewPaths = collectionView.indexPathsForSelectedItems {
-            if let dayIndex = selectedCollectionviewPaths.first {
-                return dayIndex.row
+    private func prepareCollectionView() {
+        
+        let animator = UIViewPropertyAnimator(duration: 1/3, curve: .linear) { [weak self] in
+            guard let self = self else { return }
+            self.infoLabel.text = self.dataSource[0].info
+            if let flowLayout = self.collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
+                flowLayout.itemSize = CGSize(
+                    width: self.collectionView.bounds.width/7,
+                    height: self.collectionView.bounds.height
+                )
             }
         }
-        return nil
-    }
-    
-    
-    private func setupCollectionView() {
         
-        dateContainer.translatesAutoresizingMaskIntoConstraints = false
-        if #available(iOS 13.0, *) {
-            dateContainer.backgroundColor = .tertiarySystemBackground
-        } else {
-            dateContainer.backgroundColor = .white
-        }
-        contentView.addSubview(dateContainer)
-        
-        infoLabel.translatesAutoresizingMaskIntoConstraints = false
-        infoLabel.font = .preferredFont(forTextStyle: .body)
-        infoLabel.textAlignment = .center
-        dateContainer.addSubview(infoLabel)
-        
-        let flowLayout = UICollectionViewFlowLayout()
-        flowLayout.scrollDirection = .horizontal
-        
-    
-        if #available(iOS 13.0, *) {
-            collectionView.backgroundColor = .systemBackground
-        } else {
-            collectionView.backgroundColor = .white
+        animator.addCompletion { (position) in
+            if position == .end {
+                self.collectionView.selectItem(at: IndexPath(row: 0, section: 0), animated: true, scrollPosition: .top)
+            }
         }
         
-        collectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-        collectionView.isPagingEnabled = true
-        collectionView.showsHorizontalScrollIndicator = false
-        collectionView.showsVerticalScrollIndicator = false
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        collectionView.register(WeekDayCell.self, forCellWithReuseIdentifier: WeekDayCell.ReuseID)
-        
-        
-        dateContainer.addSubview(collectionView)
-        
-        NSLayoutConstraint.activate([
-            //dateContainer.heightAnchor.constraint(equalToConstant: 92.0),
-            dateContainer.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor, constant: 0),
-            dateContainer.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor, constant: 0),
-            dateContainer.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor, constant: 0),
-            
-            collectionView.leadingAnchor.constraint(equalTo: dateContainer.leadingAnchor, constant: 0),
-            collectionView.trailingAnchor.constraint(equalTo: dateContainer.trailingAnchor, constant: 0),
-            collectionView.topAnchor.constraint(equalTo: dateContainer.topAnchor, constant: 0),
-            //collectionView.heightAnchor.constraint(equalToConstant: 88.0),
-            collectionView.heightAnchor.constraint(greaterThanOrEqualToConstant: 52.0),
-            
-            infoLabel.leadingAnchor.constraint(equalTo: dateContainer.leadingAnchor, constant: 0),
-            infoLabel.trailingAnchor.constraint(equalTo: dateContainer.trailingAnchor, constant: 0),
-            infoLabel.bottomAnchor.constraint(equalTo: dateContainer.bottomAnchor, constant: -2.0),
-            infoLabel.centerXAnchor.constraint(equalTo: dateContainer.centerXAnchor),
-            
-            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: infoLabel.bottomAnchor, constant: 0)
-        ])
-        
-        
-
-        dateContainer.layer.maskedCorners = [.layerMaxXMaxYCorner,.layerMaxXMinYCorner,.layerMinXMaxYCorner,.layerMinXMinYCorner]
-        dateContainer.layer.masksToBounds = true
-        dateContainer.layer.cornerRadius = 8.0
-        
+        animator.startAnimation()
     }
     
 }
@@ -274,14 +274,17 @@ extension DateValueCell: UICollectionViewDataSource {
     }
 }
 
+
 extension DateValueCell: UICollectionViewDelegate {
 
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         infoLabel.text = dataSource[indexPath.row].info
-        
-        
-        
-        /// informdelegate here... dataSource[indexPath.row].date
+        guard let dateValue = formValue else { return }
+        let newValue = dateValue.newWith(dataSource[indexPath.row].date)
+        updateFormValueDelegate?.updatedFormValue(
+            newValue,
+            indexPath
+        )
     }
 }
 
