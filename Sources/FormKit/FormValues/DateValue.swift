@@ -133,8 +133,8 @@ public final class DateValueCell: UITableViewCell {
     var formValue : DateValue? {
         didSet {
             guard formValue != nil else { return }
-            self.dataSource = WeekDayCellData.Data(60)
-            self.collectionView.selectItem(at: IndexPath(row: 0, section: 0), animated: true, scrollPosition: .top)
+            self.dataSource =  WeekDayCellData.Data(60)
+            
 
             self.infoLabel.text = dataSource[0].info
             if let flowLayout = self.collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
@@ -143,6 +143,10 @@ public final class DateValueCell: UITableViewCell {
                     height: collectionView.bounds.height
                 )
             }
+            
+            
+            self.collectionView.selectItem(at: IndexPath(row: 0, section: 0), animated: true, scrollPosition: .top)
+            
             
             self.selectionStyle = .none
         }
@@ -163,25 +167,6 @@ public final class DateValueCell: UITableViewCell {
         super.prepareForReuse()
         formValue = nil
     }
-    
-    /*
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        
-        guard collectionView.bounds.width.isZero == false else {
-            return
-        }
-        
-        if let flowLayout = self.collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
-            flowLayout.itemSize = CGSize(
-                width: collectionView.bounds.width/7,
-                height: collectionView.bounds.height
-            )
-        }
-        
-    }
-    */
-    
     
 }
 
@@ -208,7 +193,6 @@ extension DateValueCell {
         }
         contentView.addSubview(dateContainer)
         
-        
         infoLabel.translatesAutoresizingMaskIntoConstraints = false
         infoLabel.font = .preferredFont(forTextStyle: .body)
         infoLabel.textAlignment = .center
@@ -217,24 +201,30 @@ extension DateValueCell {
         let flowLayout = UICollectionViewFlowLayout()
         flowLayout.scrollDirection = .horizontal
         
-        collectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-        
+    
         if #available(iOS 13.0, *) {
             collectionView.backgroundColor = .systemBackground
         } else {
             collectionView.backgroundColor = .white
         }
         
+        collectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.isPagingEnabled = true
+        collectionView.showsHorizontalScrollIndicator = false
+        collectionView.showsVerticalScrollIndicator = false
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.register(WeekDayCell.self, forCellWithReuseIdentifier: WeekDayCell.ReuseID)
+        
         
         dateContainer.addSubview(collectionView)
         
         NSLayoutConstraint.activate([
-            dateContainer.heightAnchor.constraint(equalToConstant: 110.0),
+            dateContainer.heightAnchor.constraint(equalToConstant: 92.0),
             dateContainer.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor, constant: 0),
-            dateContainer.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 0),
-            dateContainer.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: 0),
-            
+            dateContainer.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor, constant: 0),
+            dateContainer.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor, constant: 0),
             
             collectionView.leadingAnchor.constraint(equalTo: dateContainer.leadingAnchor, constant: 0),
             collectionView.trailingAnchor.constraint(equalTo: dateContainer.trailingAnchor, constant: 0),
@@ -244,15 +234,15 @@ extension DateValueCell {
             infoLabel.leadingAnchor.constraint(equalTo: dateContainer.leadingAnchor, constant: 0),
             infoLabel.trailingAnchor.constraint(equalTo: dateContainer.trailingAnchor, constant: 0),
             infoLabel.bottomAnchor.constraint(equalTo: dateContainer.bottomAnchor, constant: -2.0),
-            infoLabel.centerXAnchor.constraint(equalTo: dateContainer.centerXAnchor)
+            infoLabel.centerXAnchor.constraint(equalTo: dateContainer.centerXAnchor),
+            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: dateContainer.bottomAnchor, constant: 0)
         ])
         
-        collectionView.isPagingEnabled = true
-        collectionView.showsHorizontalScrollIndicator = false
-        collectionView.showsVerticalScrollIndicator = false
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        collectionView.register(WeekDayCell.self, forCellWithReuseIdentifier: WeekDayCell.ReuseID)
+        
+
+        dateContainer.layer.maskedCorners = [.layerMaxXMaxYCorner,.layerMaxXMinYCorner,.layerMinXMaxYCorner,.layerMinXMinYCorner]
+        dateContainer.layer.masksToBounds = true
+        dateContainer.layer.cornerRadius = 12.0
         
     }
     
