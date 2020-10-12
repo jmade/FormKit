@@ -67,10 +67,12 @@ extension StepperValue {
 extension StepperValue {
     
     public func newWith(_ newTitle:String) -> StepperValue {
-        var copy = self
-        copy.title = newTitle
-        return copy
+        StepperValue(customKey: self.customKey, title: newTitle, info: self.info, value: self.value)
     }
+    
+    public func newWith(_ newValue:Double) -> StepperValue {
+        StepperValue(customKey: self.customKey, title: self.title, info: self.info, value: newValue)
+       }
     
 }
 
@@ -105,13 +107,13 @@ extension StepperValue {
 
     
     public func encodedValue() -> [String : String] {
-        return [(customKey ?? title):"\(value)"]
+        return [(customKey ?? title) : "\(value)" ]
     }
     
     
     public var formItem: FormItem {
-           return FormItem.stepper(self)
-       }
+        .stepper(self)
+    }
 }
 
 
@@ -246,7 +248,8 @@ public final class StepperCell: UITableViewCell {
         FormConstant.makeSelectionFeedback()
         stepperLabel.text = String(Int(sender.value))
         if let stepperValue = formValue {
-            updateFormValueDelegate?.updatedFormValue(StepperValue(title: stepperValue.title, value: sender.value), indexPath)
+            let newValue = stepperValue.newWith(sender.value)
+            updateFormValueDelegate?.updatedFormValue(newValue, indexPath)
         }
     }
 }

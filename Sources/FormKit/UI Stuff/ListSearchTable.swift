@@ -93,14 +93,6 @@ extension ListSearchTable : UISearchResultsUpdating {
     public func updateSearchResults(for searchController: UISearchController) {
         guard let searchBarText = searchController.searchBar.text else { return }
         handleSearchText(searchBarText)
-//        print("Search Text: \(searchBarText)")
-//        
-//        
-//        
-//        let matchedItems = searchItems.filter({ $0.primary!.contains(searchBarText) })
-//        print("Matched cnt: \(matchedItems.count)")
-//        
-//        dataSource = matchedItems
     }
     
     

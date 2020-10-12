@@ -3,7 +3,7 @@ import UIKit
 
 
 //: MARK: - CircleView -
-public class CircleView: UIView {
+class CircleView: UIView {
     required public init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(frame: CGRect) {
         super.init(frame: frame)
@@ -161,6 +161,7 @@ class WeekDayCell: UICollectionViewCell {
         return view
     }()
     
+    
     var weekDayCellData: WeekDayCellData? = nil {
         didSet {
             guard let weekDayCellData = weekDayCellData else { return }
@@ -177,11 +178,13 @@ class WeekDayCell: UICollectionViewCell {
     override var isSelected: Bool {
         didSet {
             if isSelected {
-                UIViewPropertyAnimator(duration: 0.1, curve: .easeIn) {
+                UIViewPropertyAnimator(duration: 0.35, curve: .easeIn) {
                     [weak self] in
                     
                     if #available(iOS 13.0, *) {
-                        self?.contentView.backgroundColor = .systemGray
+                        self?.contentView.backgroundColor = .dateValueSelection
+                        
+                        //self?.selectedBackgroundView
                         
                         self?.weekDayLabel.textColor = .white
                         self?.dayOfMonthLabel.textColor = .white
@@ -194,7 +197,7 @@ class WeekDayCell: UICollectionViewCell {
                     }
                 }.startAnimation()
             } else {
-                UIViewPropertyAnimator(duration: 0.1, curve: .easeIn) {
+                UIViewPropertyAnimator(duration: 0.35, curve: .easeOut) {
                     [weak self] in
                    if #available(iOS 13.0, *) {
                         self?.contentView.backgroundColor = nil
@@ -224,16 +227,28 @@ class WeekDayCell: UICollectionViewCell {
             })
     
         NSLayoutConstraint.activate([
-            weekDayLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor, constant: 0),
+            
+            weekDayLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            weekDayLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            
+            //weekDayLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor, constant: 0),
             weekDayLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4.0),
             
-            dayOfMonthLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: 0),
-            dayOfMonthLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor, constant: 0),
+            
+            dayOfMonthLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            dayOfMonthLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            dayOfMonthLabel.topAnchor.constraint(equalTo: weekDayLabel.bottomAnchor, constant: 4.0),
+            
+//            dayOfMonthLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: 0),
+//            dayOfMonthLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor, constant: 0),
             
             indictorView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor, constant: 0),
             indictorView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.08),
             indictorView.heightAnchor.constraint(equalTo: indictorView.widthAnchor, multiplier: 1.0),
             indictorView.topAnchor.constraint(equalTo: dayOfMonthLabel.bottomAnchor, constant: 2.0),
+            
+            contentView.bottomAnchor.constraint(equalTo: indictorView.bottomAnchor, constant: 4.0),
+            
         ])
         
         

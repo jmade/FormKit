@@ -4,8 +4,6 @@ import MapKit
 // needs section inits too
 
 
-
-
 // MARK: - MapValue -
 public struct MapValue: Codable {
     var identifier: UUID = UUID()

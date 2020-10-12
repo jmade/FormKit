@@ -23,6 +23,28 @@ extension UITableView {
         
     }
     
+    
+    public func firstResponderIndexPaths() -> [IndexPath] {
+        var responderPaths: [IndexPath] = []
+        
+        for section in Array(0...numberOfSections) {
+            for row in Array(0...numberOfRows(inSection: section)) {
+                if let cell = cellForRow(at: IndexPath(row: row, section: section)) {
+                    for view in cell.contentView.subviews {
+                        if view.isFirstResponder {
+                            responderPaths.append(
+                                IndexPath(row: row, section: section)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        return responderPaths
+        
+    }
+    
+    
 }
 
 
@@ -69,6 +91,8 @@ extension BottomBarActionItem {
 // MARK: - FormTableViewController -
 open class FormController: UITableViewController, CustomTransitionable {
     
+    private var contentSizeObserver : NSKeyValueObservation?
+    
     var customTransitioningDelegate = PresentationTransitioningDelegate()
     
     var bottomBarItems:[BottomBarActionItem] = []
@@ -84,15 +108,17 @@ open class FormController: UITableViewController, CustomTransitionable {
         didSet {
             
             guard !dataSource.isEmpty else {
-                print("[FromController] Empty `FormDataSource` loaded")
                 return
             }
             
-           tableView.tableFooterView = nil
+            tableView.tableFooterView = nil
             
             guard tableView.window != nil else {
                 return
             }
+            print("Setting Title: \(self.dataSource.title)")
+            self.title = self.dataSource.title
+            
             
             if oldValue.isEmpty {
                 DispatchQueue.main.async(execute: { [weak self] in
@@ -115,27 +141,16 @@ open class FormController: UITableViewController, CustomTransitionable {
                     FormDataSource.evaluate(oldValue, new: dataSource)
                 )
             }
-            
-            UIViewPropertyAnimator(duration: 0.5, curve: .linear) {
-                self.title = self.dataSource.title
-            }.startAnimation()
+
+           
             
         }
     }
     
     
     private var headers:[HeaderValue] {
-        var values:[HeaderValue] = []
-        for (i,section) in dataSource.sections.enumerated() {
-            values.append(
-                HeaderValue(section: i,
-                            title: section.title
-                )
-            )
-        }
-        return values
+        return dataSource.headerValues()
     }
-    
     
     private var defaultContentInsets = UIEdgeInsets(top: 20, left: 0, bottom: 0, right: 0)
     
@@ -176,13 +191,6 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     // MARK: - init -
     required public init?(coder aDecoder: NSCoder) {fatalError()}
-    
-    /*
-    public override init(style: UITableView.Style) {
-        super.init(style: style)
-        controllerInitialize()
-    }
-    */
  
     public init(formData: FormDataSource) {
         if #available(iOS 13.0, *) {
@@ -271,21 +279,21 @@ open class FormController: UITableViewController, CustomTransitionable {
         DispatchQueue.main.async(execute: { [weak self] in
             guard let self = self else { return }
             self.tableView.beginUpdates()
-            self.tableView.insertSections(eval.sets.insert, with: .automatic)
-            self.tableView.deleteSections(eval.sets.delete, with: .automatic)
-            self.tableView.reloadSections(eval.sets.reload, with: .automatic)
+            self.tableView.insertSections(eval.sets.insert, with: .fade)
+            self.tableView.deleteSections(eval.sets.delete, with: .fade)
+            self.tableView.reloadSections(eval.sets.reload, with: .fade)
             eval.reloads.forEach({
                 if let sectionHeader = self.tableView.headerView(forSection: $0.section) as? FormHeaderCell {
-                    if let headerTitle = self.dataSource.sectionTitle(at: $0.section) {
-                        sectionHeader.configureView(HeaderValue(section: $0.section, title: headerTitle))
+                    if let formSection = self.dataSource.section(for: $0.section) {
+                        sectionHeader.configureView(formSection.headerValue)
                     }
                 }
                 if let changes = $0.changes {
                     self.tableView.reload(
                         changes: changes,
                         section: $0.section,
-                        insertionAnimation: .top,
-                        deletionAnimation:  .top,
+                        insertionAnimation: .fade,
+                        deletionAnimation:  .fade,
                         replacementAnimation:  .fade,
                         completion: nil
                     )
@@ -295,6 +303,11 @@ open class FormController: UITableViewController, CustomTransitionable {
         })
     }
     
+
+    
+    override open func viewDidLoad() {
+        super.viewDidLoad()
+    }
     
     override open func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -324,9 +337,9 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     
     private func checkForActiveInput() {
-        print("checkForActiveInput")
+        //print("checkForActiveInput")
         guard hasActivated == false else {
-            print("bailing active input")
+            //print("bailing active input")
             return
         }
         if activatesInputOnAppear {
@@ -367,6 +380,8 @@ open class FormController: UITableViewController, CustomTransitionable {
     }
     
 }
+
+
 
 
 // MARK: - Toolbar Setup -
@@ -465,6 +480,13 @@ extension FormController {
         }
     }
     
+    
+    public func reloadRefresh() {
+        if let closure = loadingClosure {
+            closure(self)
+        }
+    }
+    
 }
 
 
@@ -477,7 +499,8 @@ extension FormController {
     }
     
     override open func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return dataSource.sections[section].rows.count
+        let formSection = dataSource.sections[section]
+        return (formSection.headerValue.state == .collapsed) ? 0 : formSection.rows.count
     }
     
     override open func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -497,13 +520,15 @@ extension FormController {
     
     override open func tableView(_ tableView: UITableView, shouldHighlightRowAt indexPath: IndexPath) -> Bool {
         
+        var shouldHighlight = true
+        
         if let formItem = dataSource.itemAt(indexPath) {
             if let selectableFormItem = formItem as? TableViewSelectable {
-                return selectableFormItem.isSelectable
+                shouldHighlight = selectableFormItem.isSelectable
             }
         }
         
-        return true
+        return shouldHighlight
     }
     
     
@@ -543,15 +568,6 @@ extension FormController {
 
 
 
-extension FormController {
-        
-    @objc private func sectionHeaderTapped() {
-        
-    }
-    
-}
-
-
 
 
 
@@ -572,6 +588,7 @@ extension FormController {
         }
         return nil
     }
+    
     
     public enum ValidationStatus {
         case enabled, disabled
@@ -609,9 +626,25 @@ extension FormController {
     
     
     public func updateActionValue(_ value:ActionValue, at path:IndexPath) {
-        dataSource.sections[path.section] = FormSection([value])
-        //dataSource.sections[path.section].rows[path.row] = value.formItem
-        tableView.reloadRows(at: [path], with: .none)
+        
+        if let section = dataSource.section(for: path.section) {
+            if let formItem = section.itemForRowAt(path.row) {
+                switch formItem {
+                case .action(let actionValue):
+                    if value.state != actionValue.state {
+                        print("They Are different!")
+                        dataSource.sections[path.section] = FormSection([value])
+                        if tableView.numberOfSections-1 >= path.section {
+                            tableView.reloadRows(at: [path], with: .none)
+                        }
+                    }
+                default:
+                    dataSource.sections[path.section] = FormSection([value])
+                    break
+                }
+            }
+        }
+
     }
     
     
@@ -633,12 +666,22 @@ extension FormController {
     private func update(_ newSection:FormSection, path:IndexPath, activateInputs:Bool = true, preservingTitle:Bool) {
         // Title
         var section = newSection
+        
         if preservingTitle {
             section = FormSection(dataSource.sections[path.section].title, newSection.rows)
+            section.setHeaderValue(newSection.headerValue)
+            section.updateClosure = newSection.updateClosure
         }
         
         dataSource.sections[path.section] = section
-        tableView.reloadSections(IndexSet(integer: path.section), with: .automatic)
+        
+        if preservingTitle {
+            tableView.reloadSections(IndexSet(integer: path.section), with: .automatic)
+        } else {
+            tableView.reloadSections(IndexSet(integer: path.section), with: .automatic)
+        }
+        
+        
         
         guard activateInputs else {
             return
@@ -898,21 +941,21 @@ extension FormController: UpdateFormValueDelegate {
                     if let pickerSelectionValue = formValue as? PickerSelectionValue {
                         if pickerSelectionValue != pickerSelection {
                             handleUpdatedFormValue(pickerSelectionValue , at: path)
-                            tableView.reloadRows(at: [path], with: .automatic)
+                            tableView.reloadRows(at: [path], with: .fade)
                         }
                     }
                 case .action(let actionValue):
                     if let localActionValue = formValue as? ActionValue {
                         if localActionValue != actionValue {
                             handleUpdatedFormValue(localActionValue , at: path)
-                            tableView.reloadRows(at: [path], with: .automatic)
+                            tableView.reloadRows(at: [path], with: .fade)
                         }
                     }
                 case .listSelection(let list):
                     if let listSelectionValue = formValue as? ListSelectionValue {
                         if listSelectionValue != list {
                             handleUpdatedFormValue(listSelectionValue , at: path)
-                            tableView.reloadRows(at: [path], with: .automatic)
+                            tableView.reloadRows(at: [path], with: .none)
                         }
                     }
                 case .timeInput(let time):
@@ -965,6 +1008,12 @@ extension FormController: UpdateFormValueDelegate {
                             handleUpdatedFormValue(dateValue, at: path)
                         }
                     }
+                case .datePicker(let datePickerValue):
+                    if let pickerValue = formValue as? DatePickerValue {
+                        if pickerValue != datePickerValue {
+                            handleUpdatedFormValue(pickerValue, at: path)
+                        }
+                    }
                 }
             }
         }
@@ -975,7 +1024,6 @@ extension FormController: UpdateFormValueDelegate {
         if let currentCell = tableView.cellForRow(at: from) {
             currentCell.resignFirstResponder()
         }
-        
         
         switch direction {
         case .previous:
@@ -1035,32 +1083,44 @@ extension FormController: ButtonActionDelegate {
 
 
 
-// MARK: - SectionTapDelegate -
-extension FormController: SectionTapDelegate {
-    public func sectionWasTapped(header: HeaderValue) {
-        print("Was Tapped! \(header)")
-    }
-}
 
-
-
-// MARK: - HeaderValue -
-public struct HeaderValue {
-    var section:Int
-    var title:String
-}
-
-extension HeaderValue {
-    var indexPath:IndexPath {
-        IndexPath(row: 0, section: section)
-    }
-}
 
 
 // MARK: - SectionTapDelegate -
-public protocol SectionTapDelegate: class  {
-    func sectionWasTapped(header:HeaderValue)
+extension FormController: SectionTapDelegate {
+    
+    public func didSelectHeaderAt(_ section:Int) {
+        
+        guard
+            let formSection = dataSource.section(for: section),
+            formSection.headerValue.isInteractable
+        else { return }
+        
+        let sectionRect = tableView.rect(forSection: section)
+        dataSource.sections[section].toggleState(Double(sectionRect.height))
+    
+        if let sectionHeader = self.tableView.headerView(forSection: section) as? FormHeaderCell {
+            var headerValue = dataSource.sections[section].headerValue
+            headerValue.updateSection(section,formSection.title)
+            sectionHeader.configureView(headerValue)
+        }
+        
+        switch self.dataSource.sections[section].headerValue.state {
+        case .collapsed:
+            tableView.deleteRows(at: formSection.indexPaths(section), with: .fade)
+        case .expanded:
+            tableView.insertRows(at: formSection.indexPaths(section), with: .fade)
+            if let last = formSection.indexPaths(section).last {
+                tableView.scrollToRow(at: last, at: .bottom, animated: true)
+            }
+            
+        }
+    }
+    
 }
+
+
+
 
 
 
@@ -1073,60 +1133,145 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
     var headerValue:HeaderValue? {
         didSet {
             if let header = headerValue {
-                titleLabel.text = header.title
+                applyHeader(header)
             }
         }
     }
+
+    public var textStyle:UIFont.TextStyle = .title2
     
     private lazy var titleLabel:UILabel = {
         let label = UILabel()
         label.textAlignment = .left
         label.numberOfLines = 0
         label.lineBreakMode = .byWordWrapping
-        label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .headline).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+        label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: textStyle).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
         label.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(label)
-        label.isUserInteractionEnabled = true
-        label.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(self.didTap)))
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        labelContainer.addSubview(label)
+        label.leadingAnchor.constraint(equalTo: labelContainer.leadingAnchor).isActive = true
+        label.trailingAnchor.constraint(equalTo: labelContainer.trailingAnchor).isActive = true
+        label.topAnchor.constraint(equalTo: labelContainer.topAnchor).isActive = true
+        labelContainer.bottomAnchor.constraint(equalTo: label.bottomAnchor).isActive = true
         return label
+    }()
+    
+    
+    private lazy var labelContainer:UIView = {
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        return container
+    }()
+    
+    private lazy var imageContainer:UIView = {
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        return container
+    }()
+    
+    
+    private lazy var indicatorView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentMode = .scaleAspectFit
+        imageView.tintColor = UIColor.FormKit.text
+        if #available(iOS 13.0, *) {
+            imageView.preferredSymbolConfiguration = .init(textStyle: textStyle, scale: .medium)
+        } else {
+            imageView.heightAnchor.constraint(lessThanOrEqualToConstant: 36.0).isActive = true
+        }
+        imageView.setContentHuggingPriority(.required, for: .horizontal)
+        imageView.setContentHuggingPriority(.required, for: .vertical)
+        imageContainer.addSubview(imageView)
+        imageView.leadingAnchor.constraint(equalTo: imageContainer.leadingAnchor).isActive = true
+        imageView.trailingAnchor.constraint(equalTo: imageContainer.trailingAnchor).isActive = true
+        imageView.topAnchor.constraint(equalTo: imageContainer.topAnchor).isActive = true
+        imageView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor).isActive = true
+        return imageView
+    }()
+    
+    
+    private lazy var stackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.alignment = .leading
+        stackView.distribution = .fill
+        stackView.axis = .horizontal
+        stackView.spacing = 8.0
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(stackView)
+        stackView.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor).isActive = true
+        stackView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor).isActive = true
+        stackView.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor).isActive = true
+        contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: stackView.bottomAnchor).isActive = true
+        stackView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(self.didTap)))
+        return stackView
     }()
     
     
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(reuseIdentifier: String?) {
         super.init(reuseIdentifier: reuseIdentifier)
-        
-        NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-            titleLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-            titleLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: titleLabel.bottomAnchor)
-        ])
-        
-        /*
-        titleLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor).isActive = true
-        titleLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor).isActive = true
-        
-        let trailingConstraint = contentView.layoutMarginsGuide.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor)
-        trailingConstraint.priority = UILayoutPriority(rawValue: 999)
-        trailingConstraint.isActive = true
-        
-        let bottomConstraint = contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8.0)
-        bottomConstraint.priority = UILayoutPriority(rawValue: 999)
-        bottomConstraint.isActive = true
-        
-        
-        let heightAnchorConstraint = contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 44.0)
-        heightAnchorConstraint.priority = UILayoutPriority(rawValue: 499)
-        heightAnchorConstraint.isActive = true
-        */
-        
     }
     
+    
+    private func applyHeader(_ header:HeaderValue) {
+        
+        let data:(image:UIImage?,color:UIColor?) = getImage(header)
+        self.titleLabel.text = header.title
+        if let color = data.color {
+            indicatorView.tintColor = color
+        } else {
+            indicatorView.tintColor = UIColor.FormKit.text
+        }
+        
+        
+        let views = stackView.arrangedSubviews
+        
+        if let image = data.image {
+
+            indicatorView.image = image
+            
+            switch header.iconStyle {
+            case .none:
+                if views.contains(imageContainer) {
+                    stackView.removeArrangedSubview(imageContainer)
+                }
+                
+                if !views.containsItem(labelContainer) {
+                    stackView.addArrangedSubview(labelContainer)
+                }
+            case .trailing:
+                for view in views {
+                    stackView.removeArrangedSubview(view)
+                }
+                stackView.addArrangedSubview(labelContainer)
+                stackView.addArrangedSubview(imageContainer)
+            case .leading:
+                for view in views {
+                    stackView.removeArrangedSubview(view)
+                }
+                stackView.addArrangedSubview(imageContainer)
+                stackView.addArrangedSubview(labelContainer)
+            }
+        } else {
+            indicatorView.image = nil
+            if !views.containsItem(labelContainer) {
+                stackView.addArrangedSubview(labelContainer)
+            }
+            
+            if views.contains(imageContainer) {
+                stackView.removeArrangedSubview(imageContainer)
+            }
+        }
+    }
+    
+   
+    
     public override func prepareForReuse() {
-        super.prepareForReuse()
         headerValue = nil
         titleLabel.text = nil
+        indicatorView.image = nil
+        super.prepareForReuse()
     }
     
     
@@ -1135,12 +1280,89 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
     }
     
     
-    
-    
     @objc private func didTap() {
-        if let value = headerValue {
-            delegate?.sectionWasTapped(header: value)
+        if let header = headerValue {
+            delegate?.didSelectHeaderAt(header.section)
         }
     }
     
 }
+
+
+
+
+
+
+
+extension FormHeaderCell {
+    
+    private func getImage(_ header:HeaderValue) -> (UIImage?,UIColor?) {
+        switch header.imageType {
+        case .addPerson:
+            switch header.state {
+            case .collapsed:
+               return (nil,nil)
+            case .expanded:
+                return (nil,nil)
+            }
+        case .addPhone:
+            switch header.state {
+            case .collapsed:
+               return (nil,nil)
+            case .expanded:
+                return (nil,nil)
+            }
+        case .chevron:
+            switch header.state {
+            case .collapsed:
+                return (HeaderValue.Image.chevronCollapsed,UIColor.FormKit.text)
+            case .expanded:
+                return (HeaderValue.Image.chevronExpanded,UIColor.FormKit.text)
+            }
+        case .none:
+            return (nil,nil)
+        case .plus:
+            switch header.state {
+            case .collapsed:
+                return (HeaderValue.Image.plusFilled,UIColor.FormKit.text)
+            case .expanded:
+                return (nil,nil)
+            }
+        case .plusMinus:
+            switch header.state {
+            case .collapsed:
+                return (HeaderValue.Image.plusFilled,.success)
+            case .expanded:
+                return (HeaderValue.Image.minusFilled,.delete)
+            }
+        case .expand:
+            switch header.state {
+            case .collapsed:
+                return (HeaderValue.Image.plusFilled,UIColor.FormKit.text)
+            case .expanded:
+                return (HeaderValue.Image.minusFilled,UIColor.FormKit.text)
+            }
+        case .custom(let customValue):
+            switch header.state {
+            case .collapsed:
+                if #available(iOS 13.0, *) {
+                    return (UIImage(systemName: customValue),nil)
+                }
+                return (nil,nil)
+            case .expanded:
+               if #available(iOS 13.0, *) {
+                   return (UIImage(systemName: customValue),nil)
+               }
+               return (nil,nil)
+            }
+        }
+    }
+    
+}
+
+
+
+
+
+
+

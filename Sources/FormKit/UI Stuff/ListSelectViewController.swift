@@ -391,7 +391,7 @@ public final class ListSelectViewController: UITableViewController {
         
         let searchBar = resultSearchController!.searchBar
         searchBar.sizeToFit()
-        searchBar.placeholder = "Search Items"
+        searchBar.placeholder = "Search"
         navigationItem.titleView = resultSearchController?.searchBar
         
         resultSearchController?.hidesNavigationBarDuringPresentation = false
@@ -555,17 +555,43 @@ public final class ListSelectViewController: UITableViewController {
     
     
     private func crawlDelegate(_ new:ListSelectionValue) {
-           if let nav = navigationController {
-               for vc in nav.viewControllers {
-                   if let form = vc as? FormController {
-                       if let path = formIndexPath {
-                           form.dataSource.updateWith(formValue: new, at: path)
-                           form.tableView.reloadRows(at: [path], with: .none)
-                       }
-                   }
-               }
-           }
-       }
+        
+        if let nav = navigationController {
+            
+            var formControllers:[FormController] = []
+            for vc in nav.viewControllers {
+                if let form = vc as? FormController {
+                    formControllers.append(form)
+                }
+            }
+            
+            for form in formControllers.reversed() {
+                if let path = formIndexPath {
+                    if let section = form.dataSource.section(for: path.section) {
+                        if let row = section.row(for: path.row) {
+                            switch row {
+                            case .listSelection(let value):
+                                if new.title == value.title {
+                                    form.dataSource.updateWith(formValue: new, at: path)
+                                    form.tableView.reloadRows(at: [path], with: .none)
+                                    /*
+                                    guard !allowsMultipleSelection else { return }
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                                        nav.popViewController(animated: true)
+                                    }
+                                    */
+                                }
+                            default:
+                                break
+                            }
+                        }
+                    }
+                }
+            }
+
+            
+        }
+    }
     
     
     

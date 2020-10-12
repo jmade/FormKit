@@ -32,6 +32,7 @@ public enum FormItem {
     case custom(CustomValue)
     case input(InputValue)
     case date(DateValue)
+    case datePicker(DatePickerValue)
     
 }
 
@@ -80,6 +81,8 @@ extension FormItem: FormCellDescriptable {
             return inputValue.cellDescriptor
         case .date(let dateValue):
             return dateValue.cellDescriptor
+        case .datePicker(let datePicker):
+            return datePicker.cellDescriptor
         }
     }
 }
@@ -133,6 +136,8 @@ extension FormItem: Hashable, Equatable {
             return input.hashValue
         case .date(let date):
             return date.hashValue
+        case .datePicker(let datePicker):
+            return datePicker.hashValue
         }
     }
     
@@ -184,6 +189,8 @@ extension FormItem {
             return input.encodedValue()
         case .date(let date):
             return date.encodedValue()
+        case .datePicker(let datePicker):
+            return datePicker.encodedValue()
         }
         
     }
@@ -209,7 +216,8 @@ extension FormItem {
             SliderValue.Random(),
             ListSelectionValue.DemoSingle(),
             InputValue.Random(),
-            DateValue(),
+            DateValue.Random(),
+            DatePickerValue.Random()
         ]
         
         return randomValues

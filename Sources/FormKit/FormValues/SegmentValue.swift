@@ -13,7 +13,7 @@ public struct SegmentValue: FormValue, TableViewSelectable {
         }
     }
     
-    public var customKey:String? = "SegmentValue"
+    public var customKey:String? = nil
     public let selectedValue:Int
     public var values:[String]
     public let uuid:String
@@ -53,6 +53,15 @@ extension SegmentValue {
     }
     
     
+    public init(_ values: [String],_ customKey:String? = nil,_ selectedValue:Int = 0) {
+        self.uuid = UUID().uuidString
+        self.values = values
+        self.selectedValue = selectedValue
+        self.customKey = customKey
+    }
+    
+    
+    
     public init(_ values: [String],_ selectedValue:Int = 0, valueChangeClosure: @escaping SegmentValueChangeClosure) {
         self.uuid = UUID().uuidString
         self.values = values
@@ -71,7 +80,7 @@ extension SegmentValue {
     
     public init(from:SegmentValue,_ selectedIndex:Int) {
         self.uuid = UUID().uuidString
-        self.selectedValue = selectedIndex
+        self.selectedValue = selectedIndex 
         self.values = from.values
         self.customKey = from.customKey
         self.valueChangeClosure = from.valueChangeClosure
@@ -135,7 +144,7 @@ extension SegmentValue {
 
 //: MARK: SegmentCell
 public final class SegmentCell: UITableViewCell {
-    static let identifier = "jmade.FormKit.segmentCell.identifier"
+    static let identifier = "jmade.FormKit.SegmentCell.identifier"
     
     var segmentedControl: UISegmentedControl = {
         let segmentedControl = UISegmentedControl()

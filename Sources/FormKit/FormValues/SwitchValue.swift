@@ -3,13 +3,11 @@
 import UIKit
 
 // MARK: - SwitchValue -
-public struct SwitchValue: Equatable, Hashable {
-
+public struct SwitchValue {
+    var identifier: UUID = UUID()
     public var title:String
     public var value:Bool = false
     public var customKey:String? = nil
-    
-    
 }
 
 
@@ -20,13 +18,41 @@ extension SwitchValue {
         self.value = value
     }
     
+    public init(_ title:String,_ value:Bool,_ customKey:String? = nil) {
+        self.title = title
+        self.value = value
+        self.customKey = customKey
+    }
+    
+    public init(_ title:String,_ customKey:String) {
+        self.title = title
+        self.customKey = customKey
+        self.value = false
+    }
+    
 }
+
+
+
+extension SwitchValue: Hashable, Equatable {
+    
+    public func hash(into hasher: inout Hasher) {
+        return hasher.combine(identifier)
+    }
+    
+    public static func == (lhs: SwitchValue, rhs: SwitchValue) -> Bool {
+        return lhs.identifier == rhs.identifier
+    }
+}
+
+
+
 
 
 extension SwitchValue {
     
     public func newToggled() -> SwitchValue {
-        SwitchValue(title: self.title, value: !self.value, customKey: self.customKey)
+        SwitchValue(identifier: UUID(), title: self.title, value: !self.value, customKey: self.customKey)
     }
     
 }
@@ -38,15 +64,15 @@ extension SwitchValue {
 
 extension SwitchValue: FormValue, TableViewSelectable {
     public func encodedValue() -> [String : String] {
-           return [ (customKey ?? title) : "\(value)" ]
-       }
+        [ (customKey ?? title) : "\(value ? "1" : "0")" ]
+    }
        
        public var isSelectable: Bool {
            return true
        }
        
        public var formItem: FormItem {
-           return FormItem.switchValue(self)
+           .switchValue(self)
        }
 }
 
@@ -163,7 +189,8 @@ public final class SwitchCell: UITableViewCell {
     private func selectionOccured() {
         performFeedback()
         guard let switchValue = formValue else { return }
-        let newSwitchValue = SwitchValue(switchValue.title, value: switchControl.isOn)
+        var newSwitchValue = SwitchValue(switchValue.title, value: switchControl.isOn)
+        newSwitchValue.customKey = switchValue.customKey
         updateFormValueDelegate?.updatedFormValue(
             newSwitchValue,
             indexPath

@@ -40,6 +40,9 @@ public class FormDataSource {
 }
 
 
+
+
+// MARK: - FormController -
 extension FormDataSource {
     
     public func generateFormController() -> FormController {
@@ -55,6 +58,7 @@ extension FormDataSource {
     }
    
 }
+
 
 
 extension FormDataSource {
@@ -155,6 +159,56 @@ extension FormDataSource {
 
 extension FormDataSource {
     
+    public func headerValues() -> [HeaderValue] {
+        var headers:[HeaderValue] = []
+        for (i,section) in sections.enumerated() {
+            var existingHeader = section.headerValue
+            existingHeader.updateSection(i,section.title)
+            headers.append(existingHeader)
+        }
+        return headers
+    }
+    
+}
+
+
+extension FormDataSource {
+    
+    public func newWith(_ sections: [FormSection]) -> FormDataSource {
+        
+        sections.forEach( {
+            $0.updateClosure = { [weak self] (section) in
+                self?.sectionWasUpdated(section: section)
+            }
+        })
+        
+        let new = FormDataSource(title: self.title, sections: sections)
+        new.updateClosure = self.updateClosure
+        new.additionalParameters = self.additionalParameters
+        return new
+    }
+    
+    public func newWith(title:String,sections: [FormSection]) -> FormDataSource {
+        
+        sections.forEach( {
+            $0.updateClosure = { [weak self] (section) in
+                self?.sectionWasUpdated(section: section)
+            }
+        })
+        
+        let new = FormDataSource(title: title, sections: sections)
+        new.updateClosure = self.updateClosure
+        new.additionalParameters = self.additionalParameters
+        return new
+    }
+    
+}
+
+
+
+
+extension FormDataSource {
+    
     /// Trickle down the update closure, when a section changes
     private func sectionWasUpdated(section: FormSection) {
         update()
@@ -230,7 +284,7 @@ extension FormDataSource {
 
 
 
-
+ 
 
 extension FormDataSource {
     
@@ -245,6 +299,22 @@ extension FormDataSource {
         
         return value.merged()
     }
+    
+    
+    public var activeParams:[String:String] {
+        var value:[ [String:String] ] = []
+        
+        for param in params {
+            if !param.value.isEmpty && (param.value != "-1") && !param.key.isEmpty {
+                value.append([param.key:param.value])
+            }
+        }
+        
+        return value.merged()
+    }
+    
+    
+    
     
     
     public func logParams() {
@@ -344,6 +414,8 @@ extension FormDataSource {
                 sections[path.section].rows[path.row] = formValue.formItem
             } else {
                 print("[FormKit Error]: (Row Error) Unable to update FormValue at IndexPath: \(path)")
+                self.logParams()
+                print("\n")
             }
         } else {
              print("[FormKit Error]: (Section Error) Unable to update FormValue at IndexPath: \(path)")
@@ -375,55 +447,71 @@ extension FormDataSource {
 
 extension FormDataSource {
     
-    public var inputIndexPaths:[IndexPath] {
+    public func getInputIndexPaths() -> [IndexPath] {
         var values:[IndexPath] = []
-        Array(0..<sections.count).forEach({
-            let sectionIndex = $0
-            sections[$0].inputRows.forEach({
-                values.append(IndexPath(row: $0, section: sectionIndex))
-            })
-        })
+               for (section,formSection) in sections.enumerated() {
+                   if formSection.headerValue.state == .expanded {
+                       for row in formSection.inputRows {
+                           values.append(
+                               IndexPath(row: row, section: section)
+                           )
+                       }
+                   }
+                   
+               }
         return values
     }
+    
+    
+    public var inputIndexPaths:[IndexPath] {
+       return getInputIndexPaths()
+    }
+    
     
     public var firstInputIndexPath: IndexPath? {
         return inputIndexPaths.first
     }
     
+    
     func nextIndexPath(_ from: IndexPath) -> IndexPath? {
-        if let currentIndex = inputIndexPaths.indexOf(from) {
-            let nextIndex = currentIndex + 1
-            if nextIndex > inputIndexPaths.count - 1 {
+        if let currentIndex = getInputIndexFor(from) {
+            let nextIndex = currentIndex+1
+            if nextIndex > (inputIndexPaths.count-1) {
                 return inputIndexPaths.first
             } else {
                 return inputIndexPaths[nextIndex]
             }
         } else {
+            print("Error finding Index \(from)")
             return nil
         }
     }
     
+    
     func previousIndexPath(_ from: IndexPath) -> IndexPath? {
-        if let currentIndex = inputIndexPaths.indexOf(from) {
-            var previousIndex = currentIndex - 1
-            
+        if let currentIndex = getInputIndexFor(from) {
+            let previousIndex = (currentIndex-1)
             if previousIndex < 0 {
-                previousIndex = inputIndexPaths.count - 1
-            }
-            
-            
-            if previousIndex > (inputIndexPaths.count - 1) {
-                previousIndex = 0
-                return inputIndexPaths[0]
+                return inputIndexPaths.last
             } else {
                 return inputIndexPaths[previousIndex]
             }
-            
-            
         } else {
+            print("Error finding Index \(from)")
             return nil
         }
     }
+    
+    
+    private func getInputIndexFor(_ path:IndexPath) -> Int? {
+        for (i,inputPath) in inputIndexPaths.enumerated() {
+            if inputPath == path {
+                return i
+            }
+        }
+        return nil
+    }
+    
     
 }
 

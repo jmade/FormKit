@@ -1,18 +1,13 @@
-//
-//  File.swift
-//  
-//
-//  Created by Justin Madewell on 10/1/20.
-//
 
 import UIKit
 
 
 public struct DateValue {
+    
     var identifier: UUID = UUID()
     public var customKey:String? = nil
     public var title:String?
-    public var date:Date? = Date()
+    public var date:Date
     public var dateFormat:String?
     /// TableSelectable
     public var isSelectable: Bool = false
@@ -20,17 +15,66 @@ public struct DateValue {
 
 
 extension DateValue {
-    public init(_ title:String?,_ customKey:String,_ dateFormat:String? = nil,_ date:Date? = Date()) {
+    
+    public init(_ date:Date = Date()) {
+        self.title =  nil
+        self.customKey = nil
+        self.dateFormat = nil
+        self.date = date
+    }
+    
+    public init(title:String,date:Date) {
+        self.title = title
+        self.customKey = nil
+        self.dateFormat = nil
+        self.date = date
+    }
+    
+    public init(_ title:String,_ date:Date) {
+        self.title = title
+        self.customKey = nil
+        self.dateFormat = nil
+        self.date = date
+    }
+    
+    
+    public init(_ title:String?,_ customKey:String,_ dateFormat:String,_ date:Date) {
         self.title = title
         self.customKey = customKey
         self.dateFormat = dateFormat
         self.date = date
     }
     
+    public init(_ title:String,_ customKey:String) {
+        self.title = title
+        self.customKey = customKey
+        self.dateFormat = nil
+        self.date = Date()
+    }
+
+
+    public init(_ title:String,_ customKey:String,_ date:Date?) {
+        self.title = title
+        self.customKey = customKey
+        self.dateFormat = nil
+        self.date = date ?? Date()
+    }
     
     public func newWith(_ date:Date) -> DateValue {
         DateValue(identifier: UUID(), customKey: self.customKey, title: self.title, date: date, dateFormat: self.dateFormat, isSelectable: self.isSelectable)
     }
+}
+
+
+
+extension DateValue {
+    
+    var formattedValue:String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = dateFormat ?? "yyyy-MM-dd"
+        return formatter.string(from: date)
+    }
+    
 }
 
 
@@ -47,14 +91,6 @@ extension DateValue {
         return "Date"
     }
     
-    
-    var selectedValue:String {
-        if let date = date {
-            return "\(date)"
-        }
-        return ""
-    }
-    
 }
 
 
@@ -65,7 +101,7 @@ extension DateValue: FormValue {
     }
 
     public func encodedValue() -> [String : String] {
-        return [ encodedTitle : selectedValue ]
+        return [ encodedTitle : formattedValue ]
     }
     
 }
@@ -108,7 +144,40 @@ extension DateValue: Hashable, Equatable {
 }
 
 
+extension DateValue {
+    public static func Random() -> DateValue {
+        DateValue("Date",
+                  Date(
+                    timeIntervalSince1970:
+                    Double.random(in: 1...Date().timeIntervalSince1970)
+            )
+        )
+    }
+}
 
+
+
+extension UIColor {
+    
+    
+    static var dateValueBackground:UIColor {
+        if #available(iOS 13.0, *) {
+            return .systemGray4
+        } else {
+            return .white
+        }
+    }
+    
+    
+    static var dateValueSelection:UIColor {
+        if #available(iOS 13.0, *) {
+            return .systemGray
+        } else {
+            return .white
+        }
+    }
+    
+}
 
 
 
@@ -121,17 +190,15 @@ public final class DateValueCell: UITableViewCell {
     
     static let identifier = "com.jmade.FormKit.DateValueCell.identifier"
     
+    static let OFFSET: CGFloat = 600.0
+    
     private lazy var collectionView: UICollectionView = {
         let flowLayout = UICollectionViewFlowLayout()
         flowLayout.scrollDirection = .horizontal
         
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
         
-        if #available(iOS 13.0, *) {
-            collectionView.backgroundColor = .systemGray4
-        } else {
-            collectionView.backgroundColor = .white
-        }
+        collectionView.backgroundColor = .dateValueBackground
         collectionView.isPagingEnabled = true
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.showsVerticalScrollIndicator = false
@@ -139,6 +206,7 @@ public final class DateValueCell: UITableViewCell {
         collectionView.dataSource = self
         collectionView.register(WeekDayCell.self, forCellWithReuseIdentifier: WeekDayCell.ReuseID)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.contentOffset = CGPoint(x: DateValueCell.OFFSET, y: 0)
         dateContainer.addSubview(collectionView)
         return collectionView
     }()
@@ -156,11 +224,7 @@ public final class DateValueCell: UITableViewCell {
     
     private lazy var dateContainer:UIView = {
         let view = UIView()
-        if #available(iOS 13.0, *) {
-            view.backgroundColor = .systemGray4
-        } else {
-            view.backgroundColor = .white
-        }
+        view.backgroundColor = .dateValueBackground
         view.layer.maskedCorners = [.layerMaxXMaxYCorner,.layerMaxXMinYCorner,.layerMinXMaxYCorner,.layerMinXMinYCorner]
         view.layer.masksToBounds = true
         view.layer.cornerRadius = 8.0
@@ -170,13 +234,19 @@ public final class DateValueCell: UITableViewCell {
     }()
     
     
-    private var dataSource:[WeekDayCellData] = WeekDayCellData.Data(60)
-    
+    private var dataSource:[WeekDayCellData] = []
     
     var formValue : DateValue? {
         didSet {
-            guard formValue != nil else { return }
-            prepareCollectionView()
+            guard formValue != nil else {
+                animate(.out)
+                return
+            }
+            
+            if dataSource.isEmpty {
+                dataSource = WeekDayCellData.Data(60)
+            }
+            animate(.in)
         }
     }
     
@@ -191,7 +261,7 @@ public final class DateValueCell: UITableViewCell {
             dateContainer.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
             dateContainer.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
             
-            collectionView.topAnchor.constraint(equalTo: dateContainer.topAnchor),
+            collectionView.topAnchor.constraint(equalTo: dateContainer.topAnchor, constant: 4.0),
             collectionView.leadingAnchor.constraint(equalTo: dateContainer.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: dateContainer.trailingAnchor),
             
@@ -199,14 +269,13 @@ public final class DateValueCell: UITableViewCell {
             infoLabel.leadingAnchor.constraint(equalTo: dateContainer.leadingAnchor),
             infoLabel.trailingAnchor.constraint(equalTo: dateContainer.trailingAnchor),
             
-            dateContainer.bottomAnchor.constraint(equalTo: infoLabel.bottomAnchor),
+            dateContainer.bottomAnchor.constraint(equalTo: infoLabel.bottomAnchor, constant: 4.0),
             contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: dateContainer.bottomAnchor),
-            collectionView.heightAnchor.constraint(greaterThanOrEqualToConstant: 88.0),
+            collectionView.heightAnchor.constraint(greaterThanOrEqualToConstant: 52.0),
         ])
+        prepareCollectionView()
     }
-    
-    
-    
+  
     public override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(false, animated: false)
     }
@@ -221,28 +290,57 @@ public final class DateValueCell: UITableViewCell {
 
 
 extension DateValueCell {
+    
+    enum AnimationDirection {
+        case `in`,out
+    }
+    
+    private func animate(_ direction:AnimationDirection) {
+        
+        let animator = UIViewPropertyAnimator(duration: 1.0, dampingRatio: 0.75, animations: nil)
+        
+        let cv = collectionView
+        let label = infoLabel
+        let text = dataSource[0].info
+        
+        var path = IndexPath(row: 0, section: 0)
+        if let dateValue = formValue {
+            for (i,day) in dataSource.enumerated() {
+                if day.date.dateString() == dateValue.date.dateString() {
+                    path = IndexPath(row: i, section: 0)
+                }
+            }
+        }
+        
+        switch direction {
+        case .in:
+            animator.addAnimations {
+                cv.selectItem(at: path, animated: false, scrollPosition: .left)
+                cv.scrollToItem(at: IndexPath(row: 0, section: 0), at: .left, animated: false)
+                label.text = text
+            }
+        case .out:
+            animator.addAnimations {
+                cv.scrollToItem(at: IndexPath(row: 30, section: 0), at: .left, animated: false)
+            }
+            label.text = nil
+        }
+        
+        animator.startAnimation()
+    }
+  
+    
 
     
     private func prepareCollectionView() {
         
-        let animator = UIViewPropertyAnimator(duration: 1/3, curve: .linear) { [weak self] in
-            guard let self = self else { return }
-            self.infoLabel.text = self.dataSource[0].info
-            if let flowLayout = self.collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
-                flowLayout.itemSize = CGSize(
-                    width: self.collectionView.bounds.width/7,
-                    height: self.collectionView.bounds.height
-                )
-            }
+        if let flowLayout = self.collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
+            flowLayout.itemSize = CGSize(
+                width: self.collectionView.bounds.width/7,
+                height: self.collectionView.bounds.height
+            )
         }
         
-        animator.addCompletion { (position) in
-            if position == .end {
-                self.collectionView.selectItem(at: IndexPath(row: 0, section: 0), animated: true, scrollPosition: .top)
-            }
-        }
-        
-        animator.startAnimation()
     }
     
 }
@@ -275,13 +373,18 @@ extension DateValueCell: UICollectionViewDataSource {
 extension DateValueCell: UICollectionViewDelegate {
 
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        infoLabel.text = dataSource[indexPath.row].info
         guard let dateValue = formValue else { return }
-        let newValue = dateValue.newWith(dataSource[indexPath.row].date)
+        
+        UIViewPropertyAnimator(duration: 1/3, curve: .easeInOut) { [weak self] in
+            guard let self = self else { return }
+            self.infoLabel.text = self.dataSource[indexPath.row].info
+        }.startAnimation()
+        
         updateFormValueDelegate?.updatedFormValue(
-            newValue,
-            indexPath
+            dateValue.newWith(dataSource[indexPath.row].date),
+            self.indexPath
         )
+        
     }
 }
 

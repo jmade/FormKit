@@ -325,7 +325,7 @@ extension ListSelectionValue {
     
     
     
-    public init(_ title:String,_ listItems:[ListSelectViewController.ListItem],_ selectionType: SelectionType = .multiple) {
+    public init(_ title:String,_ customKey:String? = nil,_ listItems:[ListSelectViewController.ListItem],_ selectionType: SelectionType = .single) {
         self.values = []
         self.selectedIndicies = []
         self.title = title
@@ -335,6 +335,8 @@ extension ListSelectionValue {
         self.color = nil
         self.loading = nil
         self.listItems = listItems
+        self.customKey = customKey
+        
     }
          
     
@@ -431,9 +433,9 @@ extension ListSelectionValue: FormValue {
     public func encodedValue() -> [String : String] {
         switch selectionType {
         case .single:
-            return [ (customKey ?? title ) : ( encodedSelectedValue ?? "-" ) ]
+            return [ (customKey ?? title ) : ( encodedSelectedValue ?? "" ) ]
         case .multiple:
-            return [ (customKey ?? title ) : ( encodedSelectedValues ?? "-" ) ]
+            return [ (customKey ?? title ) : ( encodedSelectedValues ?? "" ) ]
         }
     }
 }
@@ -635,7 +637,7 @@ public extension ListSelectionValue {
 
 // MARK: ListSelectionCell
 final public class ListSelectionCell: UITableViewCell {
-    static let identifier = "FormKit.ListSelectionCell"
+    static let identifier = "com.jmade.FormKit.ListSelectionCell"
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
     var indexPath: IndexPath?
     

@@ -7,12 +7,19 @@
 
 import Foundation
 
+ 
+// MARK: - SectionTapDelegate -
+public protocol SectionTapDelegate: class  {
+    func didSelectHeaderAt(_ section:Int)
+}
 
-// MARK: - FormSection -
 
 // MARK: - FormSectionUpdateClosure -
 public typealias FormSectionUpdateClosure = (FormSection) -> Void
 
+
+
+// MARK: - FormSection -
 public class FormSection: Equatable {
     
     public var title:String = ""
@@ -35,32 +42,68 @@ public class FormSection: Equatable {
     }
     
     public var updateClosure:FormSectionUpdateClosure = { _ in }
+    
+    
+    
+    public var headerValue:HeaderValue {
+        return _headerValue
+    }
+    
+    private var _headerValue = HeaderValue()
+    
 }
 
 
 extension FormSection {
     
-    public convenience init(title:String,rows:[FormItem]) {
+    public convenience init(header:HeaderValue,_ formValues:[FormValue]) {
         self.init()
-        self.title = title
-        self.rows = rows
+        self.rows = formValues.map({ $0.formItem })
+        self._headerValue = header
+        self.title = header.title
     }
     
-    public convenience init(_ rows:[FormItem]) {
+}
+
+extension FormSection {
+    
+    public func toggleState(_ sectionHeight:Double) {
+        self._headerValue.toggleMode(sectionHeight)
+    }
+    
+    public func setHeaderValue(_ headerValue:HeaderValue) {
+        self._headerValue = headerValue
+    }
+    
+}
+
+
+extension FormSection {
+    
+    public convenience init(title:String,formItems:[FormItem]) {
         self.init()
-        self.rows = rows
+        self.title = title
+        self.rows = formItems
+        self._headerValue = HeaderValue(title: title, section: -1)
+    }
+    
+    public convenience init(_ formItems:[FormItem]) {
+        self.init()
+        self.rows = formItems
     }
     
     public convenience init(_ title:String) {
         self.init()
         self.title = title
         self.rows = []
+        self._headerValue = HeaderValue(title: title, section: -1)
     }
     
-    public convenience init(_ title:String,_ rows:[FormItem]) {
+    public convenience init(_ title:String,_ formItems:[FormItem]) {
         self.init()
         self.title = title
-        self.rows = rows
+        self.rows = formItems
+        self._headerValue = HeaderValue(title: title, section: -1)
     }
     
     
@@ -69,29 +112,34 @@ extension FormSection {
 
 
 
+
+
+// MARK: - FormValue Init -
 extension FormSection {
     
-    public convenience init(_ title:String,_ values:[FormValue]) {
+    public convenience init(_ title:String,_ formValues:[FormValue]) {
         self.init()
         self.title = title
-        self.rows = values.map({ $0.formItem })
+        self.rows = formValues.map({ $0.formItem })
+        self._headerValue = HeaderValue(title: title, section: -1)
     }
     
-    public convenience init(_ title:String,_ value:FormValue) {
+    public convenience init(_ title:String,_ formValue:FormValue) {
         self.init()
         self.title = title
-        self.rows = [value.formItem]
+        self.rows = [formValue.formItem]
+        self._headerValue = HeaderValue(title: title, section: -1)
     }
     
     
-    public convenience init(_ values:[FormValue]) {
+    public convenience init(_ formValues:[FormValue]) {
         self.init()
-        self.rows = values.map({ $0.formItem })
+        self.rows = formValues.map({ $0.formItem })
     }
     
-    public convenience init(_ value:FormValue) {
+    public convenience init(_ formValue:FormValue) {
         self.init()
-        self.rows = [value.formItem]
+        self.rows = [formValue.formItem]
     }
     
 }
@@ -107,7 +155,7 @@ extension FormSection {
         var indicies:[Int] = []
         for (i,v) in rows.enumerated() {
             switch v {
-            case .text(_),.note(_) ,.numerical(_),.timeInput(_):
+            case .text(_),.note(_) ,.numerical(_),.timeInput(_), .input(_), .datePicker(_):
                 indicies.append(i)
             default:
                 break
@@ -130,6 +178,21 @@ extension FormSection {
             return nil
         }
     }
+    
+    
+    private func rowIndicies() -> [Int] {
+        var indicies:[Int] = []
+        for (i,_) in rows.enumerated() {
+            indicies.append(i)
+        }
+        return indicies
+    }
+    
+    
+    public func indexPaths(_ section:Int) -> [IndexPath] {
+        return rowIndicies().map({ IndexPath(row: $0, section: section) })
+    }
+    
     
 }
 
@@ -157,19 +220,25 @@ extension FormSection: Hashable {
 extension FormSection {
     
    public func newAddingRows(_ newRows:[FormItem]) -> FormSection {
-        FormSection(
+        let new = FormSection(
             self.title,
             [self.rows,newRows].reduce([],+)
         )
+        new._headerValue = self._headerValue
+        new.updateClosure = self.updateClosure
+        return new
     }
     
     
-   public func newWithRows(_ newRows:[FormItem]) -> FormSection {
-           FormSection(
-               self.title,
-               newRows
-           )
-       }
+    public func newWithRows(_ newRows:[FormItem]) -> FormSection {
+        let new =  FormSection(
+            self.title,
+            newRows
+        )
+        new._headerValue = self._headerValue
+        new.updateClosure = self.updateClosure
+        return new
+    }
     
 }
 
@@ -180,8 +249,6 @@ extension FormSection {
     public class func Random() -> FormSection {
         
         let randomFormItems:[FormItem] = stride(from: 0, to: Int.random(in: 2...6), by: 1).map({ _ in return FormItem.Random() })
-        
-        //var randomItems = Array( (0...Int.random(in: 2...6)) ).map({ _ in FormItem.Random() })
         let randomTitle = [
     "Sunrise","Planning","Additional","Northern","Southern","Dynamic","Properties","Information","Status","Results"
         ].randomElement()!
@@ -271,5 +338,36 @@ extension FormSection {
         return rows[index]
     }
     
+}
 
+
+
+public extension FormSection {
+    
+    var firstRow:FormItem? {
+        return row(for: 0)
+    }
+    
+    var secondRow:FormItem? {
+        return row(for: 1)
+    }
+    
+    var thirdRow:FormItem? {
+        return row(for: 2)
+    }
+    
+    
+    
+    var lastRow:FormItem? {
+        return row(for: rows.count-1)
+    }
+    
+    var secondToLastRow:FormItem? {
+        return row(for: rows.count-2)
+    }
+    
+    var thirdToLastRow:FormItem? {
+        return row(for: rows.count-3)
+    }
+    
 }

@@ -8,7 +8,6 @@ public struct ActionValue: Equatable {
     }
     
     var state:ActionState = .ready
-    
     private var lastState:ActionState?
     
     var operatingTitle: String {
@@ -29,7 +28,7 @@ public struct ActionValue: Equatable {
     private var customOperatingTitle:String? = nil
     
     public enum ActionStyle {
-       case none, disclosure, moderate, readOnly
+       case none, disclosure, moderate, readOnly, add
     }
     
     public var style:ActionStyle = .disclosure
@@ -282,7 +281,7 @@ extension ActionValue: Hashable {
 extension ActionValue: FormValue, TableViewSelectable {
     
     public func encodedValue() -> [String : String] {
-        return [ (customKey ?? title) : "@ction!" ]
+        return [ (customKey ?? title) : "" ]
     }
     
     public var isSelectable: Bool {
@@ -295,7 +294,7 @@ extension ActionValue: FormValue, TableViewSelectable {
     }
     
     public var formItem: FormItem {
-        return FormItem.action(self)
+        .action(self)
     }
     
 }
@@ -527,7 +526,12 @@ public final class ActionCell: UITableViewCell {
             valueLabel.attributedText = actionValue.readOnlyValue?.valueAttributedText
             titleLabel.isHidden = false
             valueLabel.isHidden = false
+        case .add:
+            textLabel?.textAlignment = .center
+            textLabel?.textColor = (textColor == nil) ? actionValue.color : textColor
+            
         }
+        
     }
     
 }

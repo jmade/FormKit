@@ -2,11 +2,13 @@ import UIKit
 
 
 // MARK: - TimeValue -
-public struct TimeInputValue: Equatable, Hashable {
+public struct TimeInputValue {
+    var identifier: UUID = UUID()
     public let title:String
     public let time:String
     public var useDirectionButtons:Bool = true
     public var customKey:String? = nil
+    public var formatString:String = "HH:mm"
 }
 
 
@@ -27,21 +29,64 @@ extension TimeInputValue {
 }
 
 extension TimeInputValue {
+    
     public func newWith(_ timeString:String) -> TimeInputValue {
-        TimeInputValue(title: self.title,
-                       time: timeString,
+        TimeInputValue(identifier: UUID(), title: self.title, time: timeString, useDirectionButtons: self.useDirectionButtons, customKey: self.customKey)
+    }
+    
+    
+    public func newByAdding(mins:Int) -> TimeInputValue {
+        TimeInputValue(identifier: UUID(),
+                       title: self.title,
+                       time: self.timeIncrementBy(mins: mins),
                        useDirectionButtons: self.useDirectionButtons,
                        customKey: self.customKey
         )
     }
     
     
-    public func newByAdding(mins:Int) -> TimeInputValue {
-           TimeInputValue(title: self.title,
-                          time: self.timeIncrementBy(mins: mins),
-                          useDirectionButtons: self.useDirectionButtons,
-                          customKey: self.customKey
-           )
+}
+
+
+extension TimeInputValue: Hashable, Equatable {
+    
+    public func hash(into hasher: inout Hasher) {
+        return hasher.combine(identifier)
+    }
+    
+    public static func == (lhs: TimeInputValue, rhs: TimeInputValue) -> Bool {
+        return lhs.identifier == rhs.identifier
+    }
+}
+
+
+extension TimeInputValue {
+    
+    private func convertTimeValue(_ newTime:String) -> String {
+           if newTime.contains("PM") {
+               let timeVal = newTime.split(" ").first!
+               let hourVal = timeVal.split(":").first!
+               let mins = timeVal.split(":").last!
+               var hrInt = Int(hourVal)!
+               if hrInt == 12 {
+                   hrInt = 0
+               }
+               if hrInt < 12 {
+                   hrInt = hrInt + 12
+               }
+               let newTimeValue = "\(String(format: "%02d", hrInt)):\(mins)"
+               return newTimeValue
+           } else {
+               let timeVal = newTime.split(" ").first!
+               let hourVal = timeVal.split(":").first!
+               let mins = timeVal.split(":").last!
+               var hrInt = Int(hourVal)!
+               if hrInt == 12 {
+                   hrInt = 0
+               }
+               let newTimeValue = "\(String(format: "%02d", hrInt)):\(mins)"
+               return newTimeValue
+           }
        }
     
     
@@ -53,13 +98,12 @@ extension TimeInputValue {
 extension TimeInputValue: FormValue {
     
     public var formItem:FormItem {
-        get {
-            return FormItem.timeInput(self)
-        }
+            .timeInput(self)
     }
     
+    
     public func encodedValue() -> [String : String] {
-        return [customKey ?? title : time ]
+        return [customKey ?? title : convertTimeValue(time) ]
     }
     
 }
@@ -163,16 +207,20 @@ public final class TimeInputCell: UITableViewCell, Activatable {
         let textField = TimeInputTextField()
         textField.autocorrectionType = .no
         textField.textAlignment = .right
-        textField.font = UIFont.preferredFont(forTextStyle: .headline)
+        textField.font = UIFont.preferredFont(forTextStyle: .body)
         textField.tintColor = .clear
         textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
         textField.delegate = self
-        
+        if #available(iOS 13.0, *) {
+            textField.textColor = .secondaryLabel
+        } else {
+            textField.textColor = .lightText
+        }
         textField.newTimeStringClosure = { [weak self] (timeString) in
             self?.newTimeString(timeString)
         }
         
-        let inputView = TimeInputKeyboard(timeString: "12:34 PM")
+        let inputView = TimeInputKeyboard(timeString:formValue?.time ?? "12:34 PM")
         textField.inputView = inputView
         inputView.observer = textField
         
@@ -190,6 +238,9 @@ public final class TimeInputCell: UITableViewCell, Activatable {
                 }
                 titleLabel.text = timeValue.title
                 textField.text = timeValue.time
+            } else {
+                titleLabel.text = nil
+                textField.text = nil
             }
         }
     }
@@ -211,8 +262,6 @@ public final class TimeInputCell: UITableViewCell, Activatable {
     
     
     public override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-        
         if selected {
             if let input = textField.inputView as? TimeInputKeyboard {
                 if let timeValue = formValue {
@@ -225,28 +274,28 @@ public final class TimeInputCell: UITableViewCell, Activatable {
             }
             textField.becomeFirstResponder()
         }
-        
+        super.setSelected(selected, animated: animated)
     }
     
+    
     override public func prepareForReuse() {
-           super.prepareForReuse()
-        textField.text = nil
-        titleLabel.text = nil
-       }
+        super.prepareForReuse()
+        formValue = nil
+    }
     
     
     func evaluateButtonBar(){
         
         guard let timeInputValue = formValue else { return }
         if timeInputValue.useDirectionButtons {
-            let inputBarHeight: CGFloat = 32.0
+            let inputBarHeight: CGFloat = 22.0
             
             let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: inputBarHeight)))
             
             
             let inputLabel = UILabel(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width * 0.60, height: inputBarHeight)))
-            inputLabel.text = "Input the time value here..."
-            inputLabel.font = .preferredFont(forTextStyle: .caption1)
+            inputLabel.text =  timeInputValue.title
+            inputLabel.font = .preferredFont(forTextStyle: .body)
             inputLabel.textAlignment = .center
             if #available(iOS 13.0, *) {
                 inputLabel.textColor = .tertiaryLabel
@@ -287,14 +336,15 @@ public final class TimeInputCell: UITableViewCell, Activatable {
     
     public func activate(){
         FormConstant.makeSelectionFeedback()
+        if let input = textField.inputView as? TimeInputKeyboard {
+           input.timeValue = formValue
+        }
         textField.becomeFirstResponder()
     }
     
     @objc
     func textFieldTextChanged() {
-        if let text = textField.text {
-            print("Text: \(text)")
-        }
+        // do something
     }
     
     private func endTextEditing(){
@@ -339,19 +389,22 @@ extension TimeInputCell: UITextFieldDelegate {
 extension TimeInputCell {
     
     func animateTitleForSelection(isSelected:Bool) {
+        /*
         if isSelected {
             UIViewPropertyAnimator(duration: 1.0, dampingRatio: 0.21) { [weak self] in
                 guard let self = self else { return }
-                self.titleLabel.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .headline).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+                //self.titleLabel.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .headline).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
                 self.titleLabel.textColor = UIColor.FormKit.inputSelected
             }.startAnimation()
         } else {
             UIViewPropertyAnimator(duration: 1.0, dampingRatio: 0.89) { [weak self] in
                 guard let self = self else { return }
-                self.titleLabel.font = .preferredFont(forTextStyle: .body)
+                //self.titleLabel.font = .preferredFont(forTextStyle: .body)
                 self.titleLabel.textColor = UIColor.FormKit.text
             }.startAnimation()
         }
+        */
+        
     }
     
 }
@@ -412,10 +465,10 @@ class TimeInputKeyboard: UIInputView {
         addSubview(pickerView)
         pickerView.delegate = self
         pickerView.dataSource = self
-        pickerView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor).isActive = true
-        pickerView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor).isActive = true
-        pickerView.topAnchor.constraint(equalTo: layoutMarginsGuide.topAnchor).isActive = true
-        pickerView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor).isActive = true
+        pickerView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor, constant: 8.0).isActive = true
+        pickerView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor, constant: 8.0).isActive = true
+        pickerView.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        layoutMarginsGuide.bottomAnchor.constraint(equalTo: pickerView.bottomAnchor).isActive = true
         return pickerView
     }()
     
@@ -430,50 +483,25 @@ class TimeInputKeyboard: UIInputView {
         f.prepare()
         return f
     }()
-    
-    
-    override var intrinsicContentSize: CGSize {
-        return CGSize(width: UIView.noIntrinsicMetric, height: 0)
-    }
-    
-    
-//    override func systemLayoutSizeFitting(_ targetSize: CGSize) -> CGSize {
-//        print("[Input] TargetSize: \(targetSize)")
-//        return CGSize(UIScreen.main.bounds.width, 240)
-//    }
-    
+
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    init() {
-        super.init(frame: .zero, inputViewStyle: .keyboard)
-        
-        
-        
-        //super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 275), inputViewStyle: .keyboard)
-        
-        setTime()
-        self.allowsSelfSizing = true
-    }
-    
-    
     init(timeString:String) {
-        
-        super.init(frame: .zero, inputViewStyle: .keyboard)
+        super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 230), inputViewStyle: .keyboard)
+
         dataSource = generateDataSource()
-        self.allowsSelfSizing = true
+        //self.allowsSelfSizing = true
         defer {
             self.startingTime = timeString
         }
     }
 
     
-    
-    
-    
     override func willMove(toSuperview newSuperview: UIView?) {
+        setTime()
         super.willMove(toSuperview: newSuperview)
     }
     
@@ -482,9 +510,8 @@ class TimeInputKeyboard: UIInputView {
         setTime()
     }
     
-//    override func systemLayoutSizeFitting(_ targetSize: CGSize, withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority, verticalFittingPriority: UILayoutPriority) -> CGSize {
-//
-//    }
+    
+    
     
 }
 

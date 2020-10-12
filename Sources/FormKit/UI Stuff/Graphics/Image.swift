@@ -26,7 +26,7 @@ extension Image {
 
 extension Image {
     
-    static func chevronDownImage(_ color:UIColor = .black, _ squaredSize:CGFloat = 90.0) -> UIImage {
+    static func chevronDownImage(_ color:UIColor = .black, _ squaredSize:CGFloat = 75.0) -> UIImage {
         let imageSize = CGSize(width: squaredSize, height:squaredSize)
         func chevronImage(_ path:UIBezierPath,_ size:CGSize,_ color:UIColor) -> UIImage {
             defer { UIGraphicsEndImageContext() }
@@ -39,7 +39,7 @@ extension Image {
         return chevronImage(Path.makeChevronDownPath(imageSize.width), imageSize, color)
     }
     
-    static func chevronLeftImage(_ color:UIColor = .black, _ squaredSize:CGFloat = 90.0) -> UIImage {
+    static func chevronLeftImage(_ color:UIColor = .black, _ squaredSize:CGFloat = 75.0) -> UIImage {
         let imageSize = CGSize(width: squaredSize, height:squaredSize)
         func chevronImage(_ path:UIBezierPath,_ size:CGSize,_ color:UIColor) -> UIImage {
             defer { UIGraphicsEndImageContext() }
@@ -52,7 +52,7 @@ extension Image {
         return chevronImage(Path.makeChevronLeftPath(imageSize.width), imageSize, color)
     }
 
-    static func chevronRightImage(_ color:UIColor = .black, _ squaredSize:CGFloat = 90.0) -> UIImage {
+    static func chevronRightImage(_ color:UIColor = .black, _ squaredSize:CGFloat = 75.0) -> UIImage {
         let imageSize = CGSize(width: squaredSize, height:squaredSize)
         func chevronImage(_ path:UIBezierPath,_ size:CGSize,_ color:UIColor) -> UIImage {
             defer { UIGraphicsEndImageContext() }

@@ -72,11 +72,7 @@ extension NoteValue: FormValueDisplayable {
 extension NoteValue {
     
     public func encodedValue() -> [String : String] {
-        if let key = customKey {
-            return [key:value ?? ""]
-        } else {
-            return ["Note":value ?? ""]
-        }
+        return [ customKey ?? "Note" : value ?? "" ]
     }
     
 }
@@ -97,7 +93,7 @@ extension NoteValue {
 
 //: MARK: - NoteCell -
 public final class NoteCell: UITableViewCell, Activatable {
-    static let identifier = "FormKit.noteCell"
+    static let identifier = "com.jmade.FormKit.NoteCell"
     
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
     var indexPath: IndexPath?

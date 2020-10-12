@@ -70,6 +70,36 @@ public extension NumericalValue {
         self.numberType = .int
     }
     
+    
+    init(intTitle: String,_ customKey:String? = nil) {
+        self.title = intTitle
+        self.value = ""
+        self.customKey = customKey
+        self.numberType = .int
+    }
+    
+    
+    
+}
+
+
+extension NumericalValue {
+    
+    var formattedValue: String {
+        switch numberType {
+        case .float:
+            guard let doubleValue = Double(value) else {
+                return value
+            }
+            return String(format: "%.2f", doubleValue)
+        case .int:
+            guard let intValue = Int(value) else {
+                return value
+            }
+            return "\(intValue)"
+        }
+    }
+    
 }
 
 
@@ -78,18 +108,16 @@ public extension NumericalValue {
 extension NumericalValue: FormValue {
     
     public var formItem: FormItem {
-           get {
-               return FormItem.numerical(self)
-           }
+           .numerical(self)
+    }
+    
+    public func encodedValue() -> [String : String] {
+           return [ (customKey ?? title) : formattedValue ]
        }
     
 }
 
 
-extension NumericalValue {
-    
-    
-}
 
 
 
@@ -116,13 +144,7 @@ extension NumericalValue: FormValueDisplayable, TableViewSelectable {
     
 }
 
-extension NumericalValue {
-    
-    public func encodedValue() -> [String : String] {
-        return [ (customKey ?? title) : value ]
-    }
-    
-}
+
 
 
 
