@@ -632,10 +632,19 @@ extension FormController {
                 switch formItem {
                 case .action(let actionValue):
                     if value.state != actionValue.state {
-                        print("They Are different!")
-                        dataSource.sections[path.section] = FormSection([value])
-                        if tableView.numberOfSections-1 >= path.section {
-                            tableView.reloadRows(at: [path], with: .none)
+                        if section.rows.count > 1 {
+                            if path.row == 0 {
+                                let newItems:[FormItem] = [.action(value),section.lastRow].compactMap({ $0 })
+                                dataSource.sections[path.section] = FormSection(newItems)
+                            } else {
+                                let newItems:[FormItem] = [section.firstRow,.action(value)].compactMap({ $0 })
+                                dataSource.sections[path.section] = FormSection(newItems)
+                            }
+                        } else {
+                            dataSource.sections[path.section] = FormSection([value])
+                            if tableView.numberOfSections-1 >= path.section {
+                                tableView.reloadRows(at: [path], with: .none)
+                            }
                         }
                     }
                 default:
@@ -917,6 +926,7 @@ extension FormController: UpdateFormValueDelegate {
                         if segmentValue.selectedValue != segment.selectedValue {
                             handleUpdatedFormValue(segmentValue , at: path)
                             segmentValue.valueChangeClosure?(segmentValue,self,path)
+                            validationClosure?(self.dataSource,self)
                         }
                     }
                 case .numerical(let numerical):
