@@ -183,6 +183,7 @@ class DateInputKeyboard: UIInputView {
     var date = Date() {
         didSet {
             self.datePicker.setDate(self.date, animated: true)
+            self.datePicker.minimumDate = self.date
         }
     }
     
@@ -413,9 +414,7 @@ extension DatePickerValueCell {
       
       @objc
       func textFieldTextChanged() {
-          if let text = textField.text {
-              print("DatePickerValueCell Text: \(text)")
-          }
+        
       }
       
       private func endTextEditing(){

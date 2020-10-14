@@ -574,12 +574,12 @@ public final class ListSelectViewController: UITableViewController {
                                 if new.title == value.title {
                                     form.dataSource.updateWith(formValue: new, at: path)
                                     form.tableView.reloadRows(at: [path], with: .none)
-                                    /*
+                                    
                                     guard !allowsMultipleSelection else { return }
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                                         nav.popViewController(animated: true)
                                     }
-                                    */
+                                    
                                 }
                             default:
                                 break
