@@ -382,8 +382,9 @@ public final class ListSelectViewController: UITableViewController {
     private func setupSearch() {
         listSearchTable = ListSearchTable()
         listSearchTable?.itemSelectedClosure = { [weak self] (item,ctrl,path) in
-            ctrl.dismiss(animated: true, completion: nil)
-            self?.handleSearchedSelection(item: item,at: path)
+            ctrl.dismiss(animated: true) {
+                self?.handleSearchedSelection(item: item,at: path)
+            }
         }
         listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: $0.detail, selected: $0.selected) })
         resultSearchController = UISearchController(searchResultsController: listSearchTable)
@@ -424,11 +425,6 @@ public final class ListSelectViewController: UITableViewController {
         tableView.tableFooterView = ItemsLoadingView()
         tableView.deleteSections(IndexSet(integersIn: 0..<tableView.numberOfSections), with: .top)
     }
-    
-    
-  
-
-    
     
     private func showDoNotDismiss() {
         let alert = UIAlertController(title: self.title ?? "",
@@ -574,12 +570,7 @@ public final class ListSelectViewController: UITableViewController {
                                 if new.title == value.title {
                                     form.dataSource.updateWith(formValue: new, at: path)
                                     form.tableView.reloadRows(at: [path], with: .none)
-                                    
-                                    guard !allowsMultipleSelection else { return }
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                                        nav.popViewController(animated: true)
-                                    }
-                                    
+                                    performPop()
                                 }
                             default:
                                 break
@@ -596,6 +587,17 @@ public final class ListSelectViewController: UITableViewController {
     
     
     
+    private func performPop() {
+        print("performPop1")
+        guard !allowsMultipleSelection else { return }
+        print("performPop2")
+        if let nav = navigationController {
+            print("performPop3")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.10) {
+                nav.popViewController(animated: true)
+            }
+        }
+    }
     
     
     
