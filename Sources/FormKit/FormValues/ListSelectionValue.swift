@@ -125,7 +125,10 @@ extension ListSelectionValue: Equatable, Hashable {
 
 
 extension ListSelectionValue {
-
+    
+    public func matchesContent(_ other:ListSelectionValue) -> Bool {
+        return other.title == self.title && other.customKey == self.customKey
+    }
     
     public var selectionRows:[ListSelectViewController.SelectionRow] {
         return listItems

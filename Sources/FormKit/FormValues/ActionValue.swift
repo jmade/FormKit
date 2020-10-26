@@ -129,6 +129,34 @@ extension ActionValue {
         self.style = .moderate
     }
     
+    
+    public init(saveValueDisabled formClosure: @escaping ActionValueFormClosure) {
+        self.title = "Save"
+        self.formClosure = formClosure
+        self.customOperatingTitle = "Saving"
+        self.color = UIColor.FormKit.save
+        self.style = .moderate
+        self.state = .disabled
+    }
+    
+    
+    public init(title: String, color:UIColor, state:ActionState, formClosure: @escaping ActionValueFormClosure) {
+        self.title = title
+        self.formClosure = formClosure
+        self.color = color
+        self.style = .moderate
+        self.state = state
+    }
+    
+    
+    public init(_ title: String,_ color:UIColor,_ state:ActionState = .disabled, formClosure: @escaping ActionValueFormClosure) {
+        self.title = title
+        self.formClosure = formClosure
+        self.color = color
+        self.style = .moderate
+        self.state = state
+    }
+    
 }
 
 
@@ -264,7 +292,6 @@ extension ActionValue: Hashable {
     }
     
     public var hash: Int {
-        //return "\(title)+\(color)+\(uuid)+\(state)".hashValue
         return "\(title)+\(color)+\(uuid)".hashValue
     }
     
@@ -430,6 +457,22 @@ public final class ActionCell: UITableViewCell {
         textLabel?.text = nil
         accessoryType = .none
         super.prepareForReuse()
+    }
+    
+    
+    public func setDisabled() {
+        textLabel?.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+        textLabel?.textColor = .disabled
+        self.selectionStyle = .none
+    }
+    
+    
+    public func setEnabled() {
+        textLabel?.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+        loadFromValue()
+        if selectionStyle == .none {
+            self.selectionStyle = .default
+        }
     }
     
     

@@ -314,6 +314,14 @@ extension FormDataSource {
     }
     
     
+    public var activeSet: Set<String> {
+        let lazyMapCollection = activeParams.keys
+        let componentArray: [String] = Array(lazyMapCollection)
+        let activeSet = Set(componentArray)
+        return activeSet
+    }
+    
+    
     
     
     
@@ -391,6 +399,25 @@ extension FormDataSource {
     
 
     public func rowsForSection(_ section:Int) -> [FormItem] {
+        if sections.count-1 >= section {
+            return sections[section].rows
+        } else {
+            return []
+        }
+    }
+    
+    
+    public func itemsForSection(_ section:Int) -> [FormItem] {
+        if sections.count-1 >= section {
+            return sections[section].rows
+        } else {
+            return []
+        }
+    }
+    
+    
+    public func itemsForSectionAt(_ path:IndexPath) -> [FormItem] {
+        let section = path.section
         if sections.count-1 >= section {
             return sections[section].rows
         } else {
@@ -553,6 +580,16 @@ extension FormDataSource {
 extension FormDataSource {
     
     public func section(for index: Int) -> FormSection? {
+        guard index >= 0, index < sections.endIndex else {
+            return nil
+        }
+        
+        return sections[index]
+    }
+    
+    
+    public func section(for path: IndexPath) -> FormSection? {
+        let index = path.section
         guard index >= 0, index < sections.endIndex else {
             return nil
         }

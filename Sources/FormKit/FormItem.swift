@@ -227,7 +227,35 @@ extension FormItem {
     
 }
 
+extension FormItem {
+    
+    public func isActionValue() -> Bool {
+        switch self {
+        case .action(_):
+            return true
+        default:
+            return false
+        }
+    }
+    
+    
+    
+    public func isValid() -> Bool {
+        switch self {
+        case .action(let action):
+            if action.isValid() == false {
+                return false
+            } else {
+                return true
+            }
+        default:
+           return false
+        }
+    }
+    
+}
 
+//
 
 
 // MARK: - SectionChange -

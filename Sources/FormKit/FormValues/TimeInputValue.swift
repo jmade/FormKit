@@ -189,7 +189,7 @@ extension TimeInputValue {
 
 //: MARK: TimeCell
 public final class TimeInputCell: UITableViewCell, Activatable {
-    static let identifier = "FormKit.TimeInputCell"
+    static let identifier = "com.jmade.FormKit.TimeInputCell"
     
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
     public lazy var indexPath: IndexPath? = nil
@@ -465,8 +465,12 @@ class TimeInputKeyboard: UIInputView {
         addSubview(pickerView)
         pickerView.delegate = self
         pickerView.dataSource = self
-        pickerView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor, constant: 8.0).isActive = true
-        pickerView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor, constant: 8.0).isActive = true
+        
+//        pickerView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor, constant: 8.0).isActive = true
+//        pickerView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor, constant: 8.0).isActive = true
+//
+        pickerView.centerXAnchor.constraint(equalTo: centerXAnchor, constant: 0).isActive = true
+        
         pickerView.topAnchor.constraint(equalTo: topAnchor).isActive = true
         layoutMarginsGuide.bottomAnchor.constraint(equalTo: pickerView.bottomAnchor).isActive = true
         return pickerView
@@ -498,7 +502,7 @@ class TimeInputKeyboard: UIInputView {
             self.startingTime = timeString
         }
     }
-
+    
     
     override func willMove(toSuperview newSuperview: UIView?) {
         setTime()

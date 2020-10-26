@@ -135,7 +135,7 @@ open class FormController: UITableViewController, CustomTransitionable {
                         )
                     }
                 })
-                validationClosure?(dataSource,self)
+                runValidation()
             } else {
                 handleDataEvaluation(
                     FormDataSource.evaluate(oldValue, new: dataSource)
@@ -152,7 +152,7 @@ open class FormController: UITableViewController, CustomTransitionable {
         return dataSource.headerValues()
     }
     
-    private var defaultContentInsets = UIEdgeInsets(top: 20, left: 0, bottom: 0, right: 0)
+    private var defaultContentInsets = UIEdgeInsets(top: 20, left: 0, bottom: 30, right: 0)
     
     
     /// Loading
@@ -332,16 +332,20 @@ open class FormController: UITableViewController, CustomTransitionable {
     open override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         checkForActiveInput()
-        validationClosure?(dataSource,self)
+        runValidation()
+    }
+    
+    
+    private func runValidation() {
+        if !dataSource.isEmpty {
+            validationClosure?(dataSource,self)
+        }
     }
     
     
     private func checkForActiveInput() {
-        //print("checkForActiveInput")
-        guard hasActivated == false else {
-            //print("bailing active input")
-            return
-        }
+        guard hasActivated == false else { return }
+        
         if activatesInputOnAppear {
             if let firstInputPath = dataSource.firstInputIndexPath {
                 if let nextCell = tableView.cellForRow(at: firstInputPath) {
@@ -352,6 +356,7 @@ open class FormController: UITableViewController, CustomTransitionable {
                 }
             }
         }
+        
     }
     
     
@@ -568,26 +573,8 @@ extension FormController {
 
 
 
-
-
-
-
-// MARK: - Update FormSection -
+// MARK: - ValidationStatus -
 extension FormController {
-    
-    private func actionValueAt(_ path:IndexPath) -> ActionValue? {
-        if let section = dataSource.section(for: path.section) {
-            if let formValue = section.itemForRowAt(path.row) {
-                switch formValue {
-                case .action(let actionValue):
-                    return actionValue
-                default:
-                    break
-                }
-            }
-        }
-        return nil
-    }
     
     
     public enum ValidationStatus {
@@ -625,6 +612,34 @@ extension FormController {
     }
     
     
+}
+
+
+
+
+
+
+// MARK: - Update FormSection -
+extension FormController {
+    
+    private func actionValueAt(_ path:IndexPath) -> ActionValue? {
+        if let section = dataSource.section(for: path.section) {
+            if let formValue = section.itemForRowAt(path.row) {
+                switch formValue {
+                case .action(let actionValue):
+                    return actionValue
+                default:
+                    break
+                }
+            }
+        }
+        return nil
+    }
+    
+    
+
+    
+    
     public func updateActionValue(_ value:ActionValue, at path:IndexPath) {
         
         if let section = dataSource.section(for: path.section) {
@@ -632,6 +647,9 @@ extension FormController {
                 switch formItem {
                 case .action(let actionValue):
                     if value.state != actionValue.state {
+                        
+                        
+                        
                         if section.rows.count > 1 {
                             if path.row == 0 {
                                 let newItems:[FormItem] = [.action(value),section.lastRow].compactMap({ $0 })
@@ -707,6 +725,80 @@ extension FormController {
     }
     
 }
+
+
+
+extension FormController {
+    
+    private func handleActionCellChanging(enabled:Bool) {
+        for cell in tableView.visibleCells {
+            if let actionCell = cell as? ActionCell {
+                if enabled {
+                    actionCell.setEnabled()
+                } else {
+                    actionCell.setDisabled()
+                }
+            }
+        }
+    }
+    
+    public func changeLastSection(_ newSection:FormSection,_ activate:Bool = false) {
+        changeSection(newSection, at: IndexPath(row: 0, section: dataSource.sections.count-1),activate)
+    }
+    
+    public func changeFirstSection(_ newSection:FormSection,_ activate:Bool = false) {
+        changeSection(newSection, at: IndexPath(row: 0, section: 0),activate)
+    }
+    
+    
+    public func changeSection(_ newSection:FormSection,at path:IndexPath,_ activate:Bool = false) {
+        _changeSection(newSection,at: path, activateInput: activate)
+    }
+    
+    
+    private func _changeSection(_ newSection:FormSection,at path:IndexPath,activateInput:Bool,_ animation:UITableView.RowAnimation = .fade) {
+      
+        let myCompletion: ((Bool) -> Void) = { (bool) in
+            
+            if let inputRow = newSection.firstInputRow {
+                let firstInputPath = IndexPath(row: inputRow, section: path.section)
+                if let nextCell = self.tableView.cellForRow(at: firstInputPath) {
+                    if let activatabelCell = nextCell as? Activatable {
+                        self.feedback(.impact)
+                        activatabelCell.activate()
+                    }
+                }
+            }
+        }
+    
+
+        if let currentSection = dataSource.section(for: path) {
+            
+            let changes = diff(old: currentSection.rows, new: newSection.rows)
+            dataSource.sections[path.section] = newSection
+            
+            if newSection.hasOnlyActionValues {
+                if currentSection.isEnabled && !newSection.isEnabled {
+                    handleActionCellChanging(enabled: false)
+                } else if !currentSection.isEnabled && newSection.isEnabled  {
+                    handleActionCellChanging(enabled: true)
+                }
+            } else {
+                tableView.reload(changes: changes,
+                                 section: path.section,
+                                 insertionAnimation: animation,
+                                 deletionAnimation: animation,
+                                 replacementAnimation: animation,
+                                 completion: activateInput ? myCompletion : nil
+                )
+            }
+        }
+    }
+    
+}
+
+
+
 
 
 
@@ -926,7 +1018,7 @@ extension FormController: UpdateFormValueDelegate {
                         if segmentValue.selectedValue != segment.selectedValue {
                             handleUpdatedFormValue(segmentValue , at: path)
                             segmentValue.valueChangeClosure?(segmentValue,self,path)
-                            validationClosure?(self.dataSource,self)
+                            runValidation()
                         }
                     }
                 case .numerical(let numerical):
@@ -1065,7 +1157,7 @@ extension FormController {
     
     private func handleUpdatedFormValue(_ formValue: FormValue, at path: IndexPath) {
         dataSource.updateWith(formValue: formValue, at: path)
-        validationClosure?(dataSource,self)
+        runValidation()
     }
     
 }

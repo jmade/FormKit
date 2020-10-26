@@ -7,6 +7,7 @@
 
 import Foundation
 
+
  
 // MARK: - SectionTapDelegate -
 public protocol SectionTapDelegate: class  {
@@ -27,7 +28,6 @@ public class FormSection: Equatable {
     public var rows:[FormItem] = [] {
         didSet {
             if oldValue != rows {
-                //print("\n------\nOLD: \(oldValue)\nNEW: \(rows)\n------\n")
                 updateClosure(self)
             } else {
                 print("same rows.. ")
@@ -42,7 +42,6 @@ public class FormSection: Equatable {
     }
     
     public var updateClosure:FormSectionUpdateClosure = { _ in }
-    
     
     
     public var headerValue:HeaderValue {
@@ -150,6 +149,12 @@ extension FormSection {
 
 
 extension FormSection {
+
+    
+    public func indexPaths(_ section:Int) -> [IndexPath] {
+           return rowIndicies().map({ IndexPath(row: $0, section: section) })
+       }
+    
     
     public var inputRows:[Int] {
         var indicies:[Int] = []
@@ -172,25 +177,14 @@ extension FormSection {
     
     
     public func itemForRowAt(_ row:Int) -> FormItem? {
-        if rows.count-1 >= row {
-            return rows[row]
-        } else {
-            return nil
-        }
+        guard !rows.isEmpty, (rows.startIndex...rows.index(before: rows.endIndex)).contains(row)
+        else { return nil }
+        return rows[row]
     }
     
     
     private func rowIndicies() -> [Int] {
-        var indicies:[Int] = []
-        for (i,_) in rows.enumerated() {
-            indicies.append(i)
-        }
-        return indicies
-    }
-    
-    
-    public func indexPaths(_ section:Int) -> [IndexPath] {
-        return rowIndicies().map({ IndexPath(row: $0, section: section) })
+        return Array(rows.indices)
     }
     
     
@@ -338,6 +332,22 @@ extension FormSection {
         return rows[index]
     }
     
+    
+    
+    public func actionValue(for index: Int) -> ActionValue? {
+        guard index >= 0, index < rows.endIndex, let formItem = itemForRowAt(index) else {
+            return nil
+        }
+        
+        switch formItem {
+        case .action(let actionValue):
+            return actionValue
+        default:
+            return nil
+        }
+        
+    }
+    
 }
 
 
@@ -373,5 +383,19 @@ public extension FormSection {
     var thirdToLastRow:FormItem? {
         return row(for: rows.count-3)
     }
+    
+    
+    var isEnabled:Bool {
+        return rows.allSatisfy({ $0.isValid() })
+    }
+    
+    
+    var hasOnlyActionValues: Bool {
+        return rows.allSatisfy({ $0.isActionValue() })
+    }
+    
+    
+    
+    
     
 }

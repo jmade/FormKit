@@ -83,17 +83,9 @@ public protocol Displayable {
 
 public typealias ListSelectable = Displayable & Selectable
 
-
-
-
-
-
-
-
 public protocol ListSelectRepresentable {
     var item:ListSelectViewController.ListItem {get set}
 }
-
 
 public protocol ListItemProvidable {
     var listItem:ListItem { get }
@@ -105,8 +97,23 @@ public protocol ListItemProvidable {
 //: MARK: - ListSelectViewController -
 public final class ListSelectViewController: UITableViewController {
     
+    
     // MARK: - ListItem -
-    public struct ListItem {
+    public struct ListItem: PropertySearchable, Hashable, Equatable {
+        
+        public func hash(into hasher: inout Hasher) {
+               return hasher.combine(uuid)
+           }
+           
+           public static func == (lhs: ListItem, rhs: ListItem) -> Bool {
+               return lhs.uuid == rhs.uuid
+           }
+        
+        var searchData: [(String,String)] {
+            return (detail == nil) ? [("",title)] : [("",title),("",detail!)]
+        }
+        
+        let uuid = UUID()
         public var title:String
         public var selected:Bool = false
         public var detail:String? = nil
@@ -185,22 +192,23 @@ public final class ListSelectViewController: UITableViewController {
             self.valueExtractionClosure = valueExtractionClosure
         }
         
-        
-        
     }
     
     
     
-    static let ReuseID = "FormKit.ListSelectionCell"
+    
+    static let ReuseID = "com.jmade.FormKit.ListSelectionCell"
     
     /// Closure
     var listSelectionChangeClosure: ListSelectionChangeClosure = { _ in }
-    
     
     /// Delegation
     weak var delegate:ListSelectionDelegate?
     
     
+    
+    
+    // MARK: - ListSelectionValue -
     
     public var formValue:ListSelectionValue? {
         set {
@@ -225,13 +233,11 @@ public final class ListSelectViewController: UITableViewController {
     
     
     private var _formValue:ListSelectionValue? = nil
-
-    
-    
     
     private var formIndexPath: IndexPath? = nil
     
     weak var formDelegate:UpdateFormValueDelegate?
+    
     
     // MARK: - DataSource -
     public typealias SelectionRow = ListItem
@@ -241,24 +247,22 @@ public final class ListSelectViewController: UITableViewController {
     private var dataSource: [SelectionRow] = [] {
         didSet {
             
-            guard tableView.window != nil, !dataSource.isEmpty else {
-                return
-            }
+//            guard tableView.window != nil, !dataSource.isEmpty else {
+//                return
+//            }
+//            
+//            tableView.tableFooterView = nil
+//            guard tableView.numberOfSections == 0 else {
+//                tableView.reloadData()
+//                listSearchTable?.searchItems = dataSource.map({
+//                    SearchResultItem(primary: $0.title, secondary: nil, selected: $0.selected)
+//                })
+//                return
+//            }
+//            
+//            tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
             
-            tableView.tableFooterView = nil
-            guard tableView.numberOfSections == 0 else {
-                tableView.reloadData()
-                listSearchTable?.searchItems = dataSource.map({
-                    SearchResultItem(primary: $0.title, secondary: nil, selected: $0.selected)
-                })
-                return
-            }
-            
-            tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
-            
-            listSearchTable?.searchItems = dataSource.map({
-                SearchResultItem(primary: $0.title, secondary: nil, selected: $0.selected)
-            })
+           
             
         }
     }
@@ -276,12 +280,10 @@ public final class ListSelectViewController: UITableViewController {
 
     
     public var jsonPayload: [String:Any]? = nil
+    private var sectionTitles = [""]
     
-    
-    // sectionTitles = []
-    private var sectionTitle: String = ""
-    
-    
+
+    // ***
     /// setting the data from outside
     private var unformatedData: ([String],[Int]) = ([],[]) {
         didSet {
@@ -292,11 +294,7 @@ public final class ListSelectViewController: UITableViewController {
     
     public var allowsMultipleSelection: Bool = true {
         didSet {
-            if allowsMultipleSelection {
-                tableView.allowsMultipleSelection = true
-            } else {
-                tableView.allowsMultipleSelection = false
-            }
+            tableView.allowsMultipleSelection = allowsMultipleSelection
         }
     }
     
@@ -312,12 +310,18 @@ public final class ListSelectViewController: UITableViewController {
     
     
     
+    
+    
     // MARK: - Searching -
     private var searchEnabled = true
+    private var searchTextField: SearchTextField? = nil
     
-    
+    /// ***
     private var listSearchTable:ListSearchTable? = nil
     private var resultSearchController:UISearchController? = nil
+    
+    
+    var isSeachBarAnimationCompleted: Bool = false
     
     
     // MARK: - Init -
@@ -329,7 +333,7 @@ public final class ListSelectViewController: UITableViewController {
         tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
         self.title = listSelectValue.title
         self.allowsMultipleSelection = listSelectValue.selectionType == .multiple
-        self.sectionTitle = listSelectValue.selectionTitle
+        self.sectionTitles = [listSelectValue.selectionTitle]
         self.formIndexPath = path
         self._formValue = listSelectValue
     }
@@ -338,6 +342,7 @@ public final class ListSelectViewController: UITableViewController {
     public func setValue(_ listSelectValue:ListSelectionValue) {
         self._formValue = listSelectValue
         dataSource = listSelectValue.listItems
+        completeDataSource = listSelectValue.listItems
     }
     
     
@@ -370,16 +375,18 @@ public final class ListSelectViewController: UITableViewController {
                     loadingClosure(self)
                 } else {
                     dataSource = listSelectValue.listItems
+                    completeDataSource = listSelectValue.listItems
                 }
             }
         }
         
-        //addBackbutton(title: " ")
         setupSearch()
     }
     
-    
+    /*
     private func setupSearch() {
+        self.searchTextField = textField
+        
         listSearchTable = ListSearchTable()
         listSearchTable?.itemSelectedClosure = { [weak self] (item,ctrl,path) in
             ctrl.dismiss(animated: true) {
@@ -397,7 +404,10 @@ public final class ListSelectViewController: UITableViewController {
         
         resultSearchController?.hidesNavigationBarDuringPresentation = false
         definesPresentationContext = true
+        
     }
+    */
+    
     
     
     @objc func donePressed() {
@@ -409,8 +419,6 @@ public final class ListSelectViewController: UITableViewController {
     }
     
     
-
-    
     public func setLoading() {
         guard tableView.tableFooterView == nil else {
             return
@@ -421,10 +429,11 @@ public final class ListSelectViewController: UITableViewController {
     
     private func prepareTableForLoading() {
         dataSource = []
-        sectionTitle = ""
+        sectionTitles = [""]
         tableView.tableFooterView = ItemsLoadingView()
         tableView.deleteSections(IndexSet(integersIn: 0..<tableView.numberOfSections), with: .top)
     }
+    
     
     private func showDoNotDismiss() {
         let alert = UIAlertController(title: self.title ?? "",
@@ -439,13 +448,13 @@ public final class ListSelectViewController: UITableViewController {
   
     
     
-    
+    /// ***
     public func reloadExistingData() {
           let existingData = self.unformatedData
           setUnformatedData(existingData)
       }
       
-
+/// ***
       public func setUnformatedData(_ unformated: ([String],[Int])) {
           DispatchQueue.main.async(execute: { [weak self] in
               self?.unformatedData = unformated
@@ -453,7 +462,7 @@ public final class ListSelectViewController: UITableViewController {
       }
         
     
-    
+    /// ***
     private func formatData(_ data:[String],_ selected:[Int]) {
         var newDataSource: [SelectionRow] = []
         for (i,entry) in data.enumerated() {
@@ -473,20 +482,14 @@ public final class ListSelectViewController: UITableViewController {
 
     // MARK: - TableView functions -
     public override func numberOfSections(in tableView: UITableView) -> Int {
-        return dataSource.isEmpty ? 0 : 1
+        return dataSource.isEmpty ? 1 : sectionTitles.count
     }
     
     
     public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        let selectedCount = getSelectedIndicies(removingIndex: nil).count
-        if selectedCount == 0 {
-            return "Make a Selection"
-        } else {
-            return "\(selectedCount) Selected"
-        }
-        
-        
+        return nil
     }
+    
     
     public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return dataSource.count
@@ -541,9 +544,22 @@ public final class ListSelectViewController: UITableViewController {
                 }
             }
         }
-            
+        
+        
+        let selectedItems = dataSource.filter({ $0.selected })
+        for (i,item) in completeDataSource.enumerated() {
+            if selectedItems.contains(item) {
+                completeDataSource[i].selected = true
+            }
+        }
+   
+        
+        
         if let currentListSelectValue = _formValue {
-            let newListSelectValue = currentListSelectValue.newWith(dataSource)
+            
+            
+            let newListSelectValue = currentListSelectValue.newWith(completeDataSource)
+            //let newListSelectValue = currentListSelectValue.newWith(dataSource)
             crawlDelegate(newListSelectValue)
         }
         
@@ -567,11 +583,19 @@ public final class ListSelectViewController: UITableViewController {
                         if let row = section.row(for: path.row) {
                             switch row {
                             case .listSelection(let value):
+                                if value.matchesContent(new) {
+                                    form.dataSource.updateWith(formValue: new, at: path)
+                                    form.tableView.reloadRows(at: [path], with: .none)
+                                    performPop()
+                                }
+                                
+                                /*
                                 if new.title == value.title {
                                     form.dataSource.updateWith(formValue: new, at: path)
                                     form.tableView.reloadRows(at: [path], with: .none)
                                     performPop()
                                 }
+                                */
                             default:
                                 break
                             }
@@ -588,88 +612,18 @@ public final class ListSelectViewController: UITableViewController {
     
     
     private func performPop() {
-        print("performPop1")
         guard !allowsMultipleSelection else { return }
-        print("performPop2")
         if let nav = navigationController {
-            print("performPop3")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.10) {
                 nav.popViewController(animated: true)
             }
         }
     }
-    
-    
-    
-    
-    
-    private func makeNewDataSourceSingleSelectionAt(_ selectedIndex:Int?) -> [SelectionRow] {
-        
-        var newData: [SelectionRow] = []
-        
-        if let newSelected = selectedIndex {
-            for (row,value) in dataSource.enumerated() {
-                newData.append(
-                    SelectionRow(title: value.title,
-                                 selected: (newSelected == row),
-                                 valueIdentifier: value.valueIdentifier
-                    )
-                )
-            }
-        } else {
-            newData = dataSource.map({
-                SelectionRow(title: $0.title, selected: false, valueIdentifier: $0.valueIdentifier)
-                
-            })
-        }
-        
-        return newData
-    }
-    
-     
-    private func newSelectedIndicies(_ indexPath: IndexPath) -> [Int] {
-        if allowsMultipleSelection {
-            let selectedRow = dataSource[indexPath.row]
-            if selectedRow.selected {
-                return getSelectedIndicies(removingIndex: indexPath.row)
-            } else {
-                var currentIndicies = getSelectedIndicies(removingIndex: nil)
-                currentIndicies.append(indexPath.row)
-                return currentIndicies
-            }
-        } else {
-            let selectedRow = dataSource[indexPath.row]
-            if selectedRow.selected {
-                return []
-            } else {
-                return [indexPath.row]
-            }
-        }
-    }
-    
-    
-    
-    private func makeNewListSelectValue(_ selectedIndicies:[Int]) -> ListSelectionValue {
-        
-        guard let currentValue = _formValue else {
-            return .init(title: title ?? "",
-                         values: dataSource.map({ $0.title }),
-                         selected: selectedIndicies
-            )
-        }
-        
-        var new = currentValue
-        new.values = dataSource.map({ $0.title })
-        new.selectedIndicies = selectedIndicies
-        new.listItems = dataSource
-        return new
-    }
 
     
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if let cell = tableView.dequeueReusableCell(withIdentifier: ListItemCell.ReuseID, for: indexPath) as? ListItemCell {
-             let row = dataSource[indexPath.row]
-            cell.configureCell(row)
+            cell.configureCell(dataSource[indexPath.row])
             return cell
         }
         return .init()
@@ -680,7 +634,7 @@ public final class ListSelectViewController: UITableViewController {
     private func getSelectedIndicies(removingIndex:Int?) -> [Int] {
         var selectedPaths: [Int] = []
         
-        for (row,value) in dataSource.enumerated() {
+        for (row,value) in completeDataSource.enumerated() {
             if value.selected {
                 if let indexToSkip = removingIndex {
                     if row != indexToSkip {
@@ -714,14 +668,85 @@ public final class ListSelectViewController: UITableViewController {
             }
         }
     }
- 
-    /// When a selection is made, we need to make a new `ListSelectValue`
+
+}
+
+
+
+extension ListSelectViewController: UISearchControllerDelegate, UISearchBarDelegate {
     
-    private func updateSeletion() {
-        let selectedValues = dataSource.filter({ $0.selected }).map({ $0.title })
-        delegate?.selectionUpdated(values: selectedValues)
-        listSelectionChangeClosure(selectedValues)
+    public func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        handleSearchQuery("")
     }
+    
+    private func setupSearch() {
+        
+        let searchController = UISearchController(searchResultsController: nil)
+        searchController.delegate = self
+        searchController.searchResultsUpdater = self
+        searchController.searchBar.autocapitalizationType = .none
+        searchController.searchBar.autocorrectionType = .no
+        searchController.dimsBackgroundDuringPresentation = false
+        searchController.searchBar.delegate = self // Monitor when the search button is tapped.
+        self.navigationItem.searchController = searchController
+        
+        // Make the search bar always visible.
+        navigationItem.hidesSearchBarWhenScrolling = false
+        
+        if #available(iOS 13.0, *) {
+            searchController.searchBar.searchTextField.backgroundColor = .systemBackground
+            searchController.searchBar.tintColor = .label
+        }
+        
+        
+        definesPresentationContext = true
+        tableView.keyboardDismissMode = .interactive
+        
+    }
+
+    
+    private func handleSearchQuery(_ query:String) {
+        
+        let old = dataSource
+        let new = filterItems(query)
+        let changes = diff(old: old, new: new)
+        
+        self.dataSource = new
+        tableView.reload(changes: changes,
+                         section: 0,
+                         insertionAnimation: .fade,
+                         deletionAnimation: .fade,
+                         replacementAnimation: .fade,
+                         completion: nil
+        )
+    }
+
+    
+       func matchesUserFilter(_ userFilter : String) -> (ListItem) -> Bool {
+           return {
+               return $0.searchData.map({($0.0, "\($0.1)")}).reduce(false){
+                   return $0 || $1.1.localizedStandardContains(userFilter) || userFilter == ""
+               }
+           }
+       }
+
+       func filterItems(_ filter:String) -> [ListItem] {
+           return completeDataSource
+               .filter(matchesUserFilter(filter))
+       }
+    
+}
+
+
+extension ListSelectViewController: UISearchResultsUpdating {
+    
+    public func updateSearchResults(for searchController: UISearchController) {
+        
+        if let text = searchController.searchBar.text {
+            handleSearchQuery(text)
+        }
+    }
+    
 }
 
 
