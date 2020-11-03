@@ -459,6 +459,8 @@ class TimeInputKeyboard: UIInputView {
     
     var minIncrement: Int = 1
     
+
+    
     private lazy var picker: UIPickerView = {
         let pickerView = UIPickerView()
         pickerView.translatesAutoresizingMaskIntoConstraints = false
@@ -506,6 +508,19 @@ class TimeInputKeyboard: UIInputView {
     
     override func willMove(toSuperview newSuperview: UIView?) {
         setTime()
+        
+        if let newsuper = newSuperview {
+            print(newsuper)
+        }
+            
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            print("Setting Width")
+            picker.widthAnchor.constraint(equalToConstant: 320).isActive = true
+        } else {
+            
+        }
+        
+        
         super.willMove(toSuperview: newSuperview)
     }
     

@@ -66,16 +66,6 @@ public struct ListSelectionValue {
             self.loadingClosure = loadingClosure
         }
         
-        
-        
-     
-        
-        
-        
-        
-        
-        
-        
         public var matchingOnString: Bool {
             return matchingIntegerValues == nil
         }
@@ -104,7 +94,19 @@ public struct ListSelectionValue {
     var uuid:String = UUID().uuidString
     
     public var listItems:[ListItem] = []
+    public var underlyingObjects:[Any] = []
     
+}
+
+extension ListSelectionValue: CustomStringConvertible {
+    public var description: String {
+        """
+        Title: \(title)
+        Selected: \(selectedValue ?? "None")
+        Underlying Object Count: \(underlyingObjects.count)
+        Underlying Type: \( (underlyingObjects.count > 0) ? type(of: underlyingObjects[0]) : type(of: underlyingObjects.first) )
+        """
+    }
 }
 
 
@@ -341,7 +343,25 @@ extension ListSelectionValue {
         self.customKey = customKey
         
     }
-         
+    
+    
+    public init(_ title:String,_ customKey:String? = nil,_ listItems:[ListSelectViewController.ListItem],_ underlyingObjects:[Any]) {
+        self.values = []
+        self.selectedIndicies = []
+        self.title = title
+        self.selectionMessage = "Select a Value"
+        self.selectionType = .single
+        self.loadingClosure = nil
+        self.color = nil
+        self.loading = nil
+        self.listItems = listItems
+        self.customKey = customKey
+        self.underlyingObjects = underlyingObjects
+    }
+    
+    
+    
+    
     
     
 }
@@ -482,46 +502,48 @@ extension ListSelectionValue {
                 uuid: self.uuid
         )
         new.listItems = listItems
+        new.underlyingObjects = self.underlyingObjects
         return new
     }
     
     
-    public func newWith(selectedValues:[String],_ selectedValueIdentifiers:[String]? = nil) -> ListSelectionValue {
-        var newSelectedIndicies: [Int] = []
-        for selected in selectedValues {
-            if let index = values.firstIndex(of: selected) {
-                newSelectedIndicies.append(index)
-            }
-        }
+//    public func newWith(selectedValues:[String],selectedValueIdentifiers:[String]? = nil) -> ListSelectionValue {
+//        var newSelectedIndicies: [Int] = []
+//        for selected in selectedValues {
+//            if let index = values.firstIndex(of: selected) {
+//                newSelectedIndicies.append(index)
+//            }
+//        }
+//
+//
+//        var new = ListSelectionValue(
+//                selectionType: self.selectionType,
+//                values: self.values,
+//                selectedIndicies: newSelectedIndicies,
+//                title: self.title,
+//                selectionMessage: self.selectionMessage,
+//                color: self.color,
+//                valueIdentifiers: selectedValueIdentifiers,
+//                loading: self.loading,
+//                loadingClosure: self.loadingClosure,
+//                generationClosure: self.generationClosure,
+//                customKey: self.customKey,
+//                uuid: self.uuid
+//        )
+//
+//        new.listItems = listItems
+//        return new
+//
+//    }
+    
+    
+    
+    
+    public func newWith(_ listItems:[ListSelectViewController.ListItem],_ fromLoading:Bool = false) -> ListSelectionValue  {
         
-        
-        var new = ListSelectionValue(
-                selectionType: self.selectionType,
-                values: self.values,
-                selectedIndicies: newSelectedIndicies,
-                title: self.title,
-                selectionMessage: self.selectionMessage,
-                color: self.color,
-                valueIdentifiers: selectedValueIdentifiers,
-                loading: self.loading,
-                loadingClosure: self.loadingClosure,
-                generationClosure: self.generationClosure,
-                customKey: self.customKey,
-                uuid: self.uuid
-        )
-        
-        new.listItems = listItems
-        return new
-            
-    }
-    
-    
-    
-    
-    public func newWith(_ listItems:[ListSelectViewController.ListItem]) -> ListSelectionValue  {
-      
         var newSelectedIndicies: [Int] = []
         var newMatchingStringValues:[String] = []
+        
         
         for (i,listItem) in listItems.enumerated() {
             if listItem.selected {
@@ -529,7 +551,7 @@ extension ListSelectionValue {
                 newMatchingStringValues.append(listItem.identifier ?? "!?")
             }
         }
-        
+               
         let newValues = listItems.map({ $0.title })
         let newIdentifiers = listItems.compactMap({ $0.identifier })
        
@@ -562,14 +584,85 @@ extension ListSelectionValue {
         )
         
         newValue.listItems = listItems
-        
-        
-        
+        newValue.underlyingObjects = self.underlyingObjects
         return newValue
             
     }
     
 }
+
+
+
+extension ListSelectionValue {
+    
+    
+    public func newWith(_ listItems:[ListSelectViewController.ListItem],_ underlyingObjects:[Any]) -> ListSelectionValue  {
+            //let fromLoading = true
+                
+        print(self)
+        
+          var screenedListItems = listItems
+          var newSelectedIndicies: [Int] = []
+          var newMatchingStringValues:[String] = []
+          
+          if let existingSelectedValue = self.selectedValue {
+              for (i,listItem) in listItems.enumerated() {
+                  if listItem.title == existingSelectedValue {
+                      newSelectedIndicies.append(i)
+                      newMatchingStringValues.append(listItem.identifier ?? "!?")
+                      screenedListItems[i].selected = true
+                  }
+              }
+          } else {
+              for (i,listItem) in listItems.enumerated() {
+                  if listItem.selected {
+                      newSelectedIndicies.append(i)
+                      newMatchingStringValues.append(listItem.identifier ?? "!?")
+                  }
+              }
+          }
+                 
+          let newValues = listItems.map({ $0.title })
+          let newIdentifiers = listItems.compactMap({ $0.identifier })
+         
+          var newLoading:Loading? = nil
+          if let currentLoading = self.loading {
+              newLoading = currentLoading
+              if currentLoading.matchingStringValues != nil {
+                  /// `[String]`
+                  newLoading?.matchingStringValues = newMatchingStringValues
+              } else {
+                  /// `[Int]`
+                  newLoading?.matchingIntegerValues = newMatchingStringValues.compactMap({ Int($0) })
+              }
+          }
+          
+          
+          var newValue = ListSelectionValue(
+                  selectionType: self.selectionType,
+                  values: newValues,
+                  selectedIndicies: newSelectedIndicies,
+                  title: self.title,
+                  selectionMessage: self.selectionMessage,
+                  color: self.color,
+                  valueIdentifiers: newIdentifiers,
+                  loading: newLoading,
+                  loadingClosure: self.loadingClosure,
+                  generationClosure: self.generationClosure,
+                  customKey: self.customKey,
+                  uuid: UUID().uuidString
+          )
+          
+          newValue.listItems = screenedListItems
+        newValue.underlyingObjects = underlyingObjects
+          return newValue
+              
+      }
+    
+}
+
+
+
 
 
 // MARK: - FormValueDisplayable -

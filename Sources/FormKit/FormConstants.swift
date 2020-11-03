@@ -125,7 +125,7 @@ public extension UIColor {
     
    static var operating:UIColor {
        if #available(iOS 13.0, *) {
-           return .systemIndigo
+           return .systemBlue
        } else {
            return .purple
        }

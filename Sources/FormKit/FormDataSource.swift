@@ -461,13 +461,7 @@ extension FormDataSource {
     }
     
     
-    public func sectionTitle(at section:Int) -> String? {
-        if sections.count-1 >= section {
-            return sections[section].title
-        } else {
-            return nil
-        }
-    }
+   
     
 }
 
@@ -595,6 +589,18 @@ extension FormDataSource {
         }
         
         return sections[index]
+    }
+    
+    public func sectionTitle(at: Int) -> String? {
+        if let sec = section(for: at) {
+            return sec.title
+        }
+        return nil
+    }
+    
+    
+    var sectionHeaders:[String] {
+        return sections.map({ $0.title })
     }
     
     

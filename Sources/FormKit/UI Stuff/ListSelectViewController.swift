@@ -244,29 +244,7 @@ public final class ListSelectViewController: UITableViewController {
     
     private var completeDataSource:[SelectionRow] = []
     
-    private var dataSource: [SelectionRow] = [] {
-        didSet {
-            
-//            guard tableView.window != nil, !dataSource.isEmpty else {
-//                return
-//            }
-//            
-//            tableView.tableFooterView = nil
-//            guard tableView.numberOfSections == 0 else {
-//                tableView.reloadData()
-//                listSearchTable?.searchItems = dataSource.map({
-//                    SearchResultItem(primary: $0.title, secondary: nil, selected: $0.selected)
-//                })
-//                return
-//            }
-//            
-//            tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
-            
-           
-            
-        }
-    }
-    
+    private var dataSource: [SelectionRow] = []
     
     public var allowDismissal:Bool = true {
         didSet {
@@ -343,6 +321,8 @@ public final class ListSelectViewController: UITableViewController {
         self._formValue = listSelectValue
         dataSource = listSelectValue.listItems
         completeDataSource = listSelectValue.listItems
+        tableView.tableFooterView = nil
+        tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
     }
     
     
@@ -361,6 +341,10 @@ public final class ListSelectViewController: UITableViewController {
     
     
     private func setup() {
+        
+        if navigationItem.largeTitleDisplayMode != .never {
+            tableView.contentInset = UIEdgeInsets(top: 20, left: 0, bottom: 20, right: 0)
+        }
         
         if let listSelectValue = _formValue {
             
@@ -382,32 +366,6 @@ public final class ListSelectViewController: UITableViewController {
         
         setupSearch()
     }
-    
-    /*
-    private func setupSearch() {
-        self.searchTextField = textField
-        
-        listSearchTable = ListSearchTable()
-        listSearchTable?.itemSelectedClosure = { [weak self] (item,ctrl,path) in
-            ctrl.dismiss(animated: true) {
-                self?.handleSearchedSelection(item: item,at: path)
-            }
-        }
-        listSearchTable?.searchItems = dataSource.map({ SearchResultItem(primary: $0.title, secondary: $0.detail, selected: $0.selected) })
-        resultSearchController = UISearchController(searchResultsController: listSearchTable)
-        resultSearchController?.searchResultsUpdater = listSearchTable
-        
-        let searchBar = resultSearchController!.searchBar
-        searchBar.sizeToFit()
-        searchBar.placeholder = "Search"
-        navigationItem.titleView = resultSearchController?.searchBar
-        
-        resultSearchController?.hidesNavigationBarDuringPresentation = false
-        definesPresentationContext = true
-        
-    }
-    */
-    
     
     
     @objc func donePressed() {
@@ -431,6 +389,11 @@ public final class ListSelectViewController: UITableViewController {
         dataSource = []
         sectionTitles = [""]
         tableView.tableFooterView = ItemsLoadingView()
+        
+        guard tableView.numberOfSections > 0 else {
+            return
+        }
+        
         tableView.deleteSections(IndexSet(integersIn: 0..<tableView.numberOfSections), with: .top)
     }
     
@@ -482,7 +445,7 @@ public final class ListSelectViewController: UITableViewController {
 
     // MARK: - TableView functions -
     public override func numberOfSections(in tableView: UITableView) -> Int {
-        return dataSource.isEmpty ? 1 : sectionTitles.count
+        return dataSource.isEmpty ? 0 : sectionTitles.count
     }
     
     
@@ -505,7 +468,7 @@ public final class ListSelectViewController: UITableViewController {
     
     
     private func newDidSelect(_ indexPath: IndexPath) {
-        
+        print("Did Select At: \(indexPath)")
         if allowsMultipleSelection {
             dataSource[indexPath.row].selected.toggle()
             if let cell = tableView.cellForRow(at: indexPath) {
@@ -547,16 +510,16 @@ public final class ListSelectViewController: UITableViewController {
         
         
         let selectedItems = dataSource.filter({ $0.selected })
+        selectedItems.forEach({ print("Selected Item: \($0.title)") })
         for (i,item) in completeDataSource.enumerated() {
-            if selectedItems.contains(item) {
-                completeDataSource[i].selected = true
-            }
+            completeDataSource[i].selected = selectedItems.contains(item)
         }
    
         
         
         if let currentListSelectValue = _formValue {
             
+            completeDataSource.filter({ $0.selected }).forEach({ print("Completed Selected Item: \($0.title)") })
             
             let newListSelectValue = currentListSelectValue.newWith(completeDataSource)
             //let newListSelectValue = currentListSelectValue.newWith(dataSource)

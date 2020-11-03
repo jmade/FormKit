@@ -11,7 +11,7 @@ import UIKit
 public struct InputValue {
     
     public enum InputType {
-        case zipcode, phoneNumber
+        case zipcode, phoneNumber, password
     }
     var type: InputType = .zipcode
     var identifier: UUID = UUID()
@@ -53,8 +53,11 @@ extension InputValue {
             return "Phone Number"
         case .zipcode:
             return "Zip Code"
+        case .password:
+            return "Password"
         }
     }
+    
     
     var formatedTextPattern: String {
         guard let pattern = textPattern else {
@@ -63,6 +66,8 @@ extension InputValue {
                 return "(###) ###-####"
             case .zipcode:
                 return "#####"
+            case .password:
+                return "########"
             }
         }
         return pattern
@@ -79,6 +84,8 @@ extension InputValue {
             if let val = value {
                 return "\(val)"
             }
+        case .password:
+            break
         }
         return ""
     }
@@ -101,7 +108,7 @@ extension InputValue {
 extension InputValue: FormValue, TableViewSelectable {
     
     public var formItem: FormItem {
-        return .input(self)
+        .input(self)
     }
     
     
@@ -182,7 +189,27 @@ extension InputValue {
 // MARK: InputValueCell
 public final class InputValueCell: UITableViewCell, Activatable {
     
-    static let identifier = "inputCell"
+    static let identifier = "com.jmade.FormKit.InputValueCell.identifier"
+    
+    private lazy var approvedPasswordSet:CharacterSet = {
+        let sets:[CharacterSet] = [
+            .alphanumerics,
+            .letters,
+            .capitalizedLetters,
+            .lowercaseLetters,
+            .uppercaseLetters,
+            .decimalDigits,
+            .punctuationCharacters
+        ]
+        
+        var megaSet = CharacterSet()
+        
+        for set in sets {
+            megaSet.formUnion(set)
+        }
+        return megaSet
+    }()
+    
     
     var formatter:DefaultTextInputFormatter? = nil
     
@@ -193,59 +220,17 @@ public final class InputValueCell: UITableViewCell, Activatable {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: .body)
         label.textAlignment = .left
+        label.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(label)
         return label
     }()
     
     
     private lazy var textField: UITextField = {
         let textField = UITextField()
-        textField.borderStyle = .roundedRect
         textField.returnKeyType = .done
-        textField.textAlignment = .left
-        textField.font = UIFont.preferredFont(forTextStyle: .headline)
-        return textField
-    }()
-    
-    var formValue : InputValue? {
-        didSet {
-            if let inputValue = formValue {
-                formatter = DefaultTextInputFormatter(textPattern: inputValue.formatedTextPattern)
-                titleLabel.text = inputValue.title
-                textField.text = inputValue.displayValue
-                textField.placeholder = inputValue.placeholder
-                layout()
-            }
-        }
-    }
-    
-    private var didLayout:Bool = false
-    
-    required init?(coder aDecoder: NSCoder) {fatalError()}
-    public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-        
-        [titleLabel,textField].forEach({
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview($0)
-        })
-        
+
         textField.delegate = self
-        textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
-    }
-    
-    override public func prepareForReuse() {
-        super.prepareForReuse()
-        textField.text = nil
-        titleLabel.text = nil
-        indexPath = nil
-    }
-    
-    func layout(){
-        guard let _ = formValue, didLayout == false else { return }
-        
-        evaluateButtonBar()
-        let margin = contentView.layoutMarginsGuide
-        
         textField.keyboardType = .numberPad
         
         textField.textAlignment = .right
@@ -257,21 +242,122 @@ public final class InputValueCell: UITableViewCell, Activatable {
         } else {
             textField.textColor = .gray
         }
-        NSLayoutConstraint.activate([
-            titleLabel.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
-            textField.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
-            textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
-            textField.widthAnchor.constraint(equalTo: margin.widthAnchor, multiplier: 0.5),
-        ])
-
+        textField.addTarget(self, action: #selector(textFieldTextChanged(textField:)), for: .editingChanged)
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(textField)
+        return textField
+    }()
+    
+    
+    //private let passwordField = HideShowPasswordTextField()
+    
+    private lazy var passwordField: HideShowPasswordTextField = {
+        let textField = HideShowPasswordTextField()
+        textField.autocapitalizationType = .none
+        textField.autocorrectionType = .no
+        textField.font = UIFont.preferredFont(forTextStyle: .headline)
+        if #available(iOS 13.0, *) {
+            textField.rightView?.tintColor = .label
+            textField.textColor = .label
+        } else {
+            textField.textColor = .black
+            textField.rightView?.tintColor = .black
+        }
+        textField.textAlignment = .left
+        textField.borderStyle = .none // .roundedRect
+        textField.delegate = self
+        
+        textField.clearButtonMode = .never
+        textField.keyboardType = .default
+        textField.isSecureTextEntry = true
+        textField.returnKeyType = .default
+        textField.placeholder = "Password"
+        textField.addTarget(self, action: #selector(textFieldTextChanged(textField:)), for: .editingChanged)
+        
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(textField)
+        return textField
+    }()
+    
+    
+    
+    var formValue : InputValue? {
+        didSet {
+            if let inputValue = formValue {
+                
+                if inputValue.type == .password {
+                    titleLabel.text = nil
+                    passwordField.text = inputValue.value
+                } else {
+                    formatter = DefaultTextInputFormatter(textPattern: inputValue.formatedTextPattern)
+                    titleLabel.text = inputValue.title
+                    textField.text = inputValue.displayValue
+                    textField.placeholder = inputValue.placeholder
+                }
+                
+                layout()
+            }
+        }
+    }
+    
+    
+    private var didLayout:Bool = false
+    
+    
+    
+    required init?(coder aDecoder: NSCoder) {fatalError()}
+    public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+    }
+    
+    override public func prepareForReuse() {
+        super.prepareForReuse()
+        textField.text = nil
+        titleLabel.text = nil
+        indexPath = nil
+        passwordField.text = nil
+    }
+    
+    
+    func layout(){
+        guard let inputValue = formValue, didLayout == false else { return }
+        
+        evaluateButtonBar()
+        
+        if inputValue.type == .password {
+            NSLayoutConstraint.activate([
+                passwordField.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+                passwordField.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+                passwordField.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+                contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: passwordField.bottomAnchor),
+                
+                //passwordField.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.5),
+            ])
+        } else {
+            NSLayoutConstraint.activate([
+                titleLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+                titleLabel.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
+                
+                textField.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
+                textField.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+                textField.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.5),
+            ])
+        }
+        
         didLayout = true
     }
     
+    
     override public func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: false)
+        
         if selected {
-            textField.becomeFirstResponder()
+            guard let inputValue = formValue else { return }
+            if inputValue.type == .password {
+                passwordField.becomeFirstResponder()
+            } else {
+                textField.becomeFirstResponder()
+            }
         }
     }
     
@@ -288,7 +374,14 @@ public final class InputValueCell: UITableViewCell, Activatable {
             bar.items = [previous,next,spacer,done]
             
             bar.sizeToFit()
-            textField.inputAccessoryView = bar
+            if inputValue.type == .password {
+                passwordField.inputAccessoryView = bar
+            } else {
+                textField.inputAccessoryView = bar
+            }
+            
+            
+            
         }
     }
     
@@ -312,12 +405,18 @@ public final class InputValueCell: UITableViewCell, Activatable {
         }
     }
     
+    
     public func activate(){
-        textField.becomeFirstResponder()
+        guard let inputValue = formValue else { return }
+        if inputValue.type == .password {
+            passwordField.becomeFirstResponder()
+        } else {
+            textField.becomeFirstResponder()
+        }
     }
     
     @objc
-    func textFieldTextChanged() {
+    func textFieldTextChanged(textField:UITextField) {
         if let text = textField.text {
             guard let inputValue = formValue else { return }
             updateFormValueDelegate?.updatedFormValue(inputValue.newWith(text), indexPath)
@@ -325,7 +424,12 @@ public final class InputValueCell: UITableViewCell, Activatable {
     }
     
     private func endTextEditing(){
-        textField.resignFirstResponder()
+        guard let inputValue = formValue else { return }
+        if inputValue.type == .password {
+            passwordField.resignFirstResponder()
+        } else {
+            textField.resignFirstResponder()
+        }
     }
     
 }
@@ -342,7 +446,7 @@ extension InputValueCell: UITextFieldDelegate {
     
     public func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         
-        guard let inputValue = formValue,let formatter = formatter else { return false }
+        guard let inputValue = formValue else { return false }
         
         switch inputValue.type {
         case .phoneNumber:
@@ -354,24 +458,27 @@ extension InputValueCell: UITextFieldDelegate {
             guard CharacterSet.decimalDigits.isSuperset(of: CharacterSet(charactersIn: string)) else {
                 return false
             }
+        case .password:
+            guard approvedPasswordSet.isSuperset(of: CharacterSet(charactersIn: string)) else {
+                return false
+            }
         }
         
         
-        let result = formatter.formatInput(currentText: textField.text ?? "", range: range, replacementString: string)
-        textField.text = result.formattedText
-        textField.setCursorLocation(result.caretBeginOffset)
-        
-        let newValue = result.formattedText
-        print(" newValue -> \(newValue) ")
-        if let unformatted = formatter.unformat(newValue) {
-            print(" unformatted -> \(unformatted) ")
+        if let formatter = formatter {
+            let result = formatter.formatInput(currentText: textField.text ?? "", range: range, replacementString: string)
+            textField.text = result.formattedText
+            textField.setCursorLocation(result.caretBeginOffset)
+            return false
+        } else {
+            if let newValue = textField.text {
+                print(" newValue -> \(newValue) ")
+                let newInputValue = inputValue.newWith(newValue)
+                updateFormValueDelegate?.updatedFormValue(newInputValue, indexPath)
+            }
+            
+            return true
         }
-        let newInputValue = inputValue.newWith(newValue)
-        print(" newInputValue -> \(newInputValue) ")
-        
-        updateFormValueDelegate?.updatedFormValue(newInputValue, indexPath)
-        
-        return false
         
     }
     

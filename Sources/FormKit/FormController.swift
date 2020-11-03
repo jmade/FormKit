@@ -1,6 +1,8 @@
 import UIKit
 
 
+
+// MARK: - FormValidationClosure -
 public typealias FormValidationClosure = ( (FormDataSource,FormController) -> Void )
 
 
@@ -88,7 +90,7 @@ extension BottomBarActionItem {
 
 
 
-// MARK: - FormTableViewController -
+// MARK: - FormController -
 open class FormController: UITableViewController, CustomTransitionable {
     
     private var contentSizeObserver : NSKeyValueObservation?
@@ -116,9 +118,8 @@ open class FormController: UITableViewController, CustomTransitionable {
             guard tableView.window != nil else {
                 return
             }
-            print("Setting Title: \(self.dataSource.title)")
-            self.title = self.dataSource.title
             
+            self.title = self.dataSource.title
             
             if oldValue.isEmpty {
                 DispatchQueue.main.async(execute: { [weak self] in
@@ -142,8 +143,6 @@ open class FormController: UITableViewController, CustomTransitionable {
                 )
             }
 
-           
-            
         }
     }
     
@@ -189,7 +188,27 @@ open class FormController: UITableViewController, CustomTransitionable {
     private var alertTextFieldInput: String? = nil
     
     
-    // MARK: - init -
+    public enum FormDisplayStyle {
+        case modern
+        case classic
+        case classicGrouped
+        case custom(UITableView.Style)
+        
+        public func isModern() -> Bool {
+            switch self {
+            case .modern:
+                return true
+            default:
+                return false
+            }
+        }
+    }
+    
+    private var displayStyle:FormDisplayStyle = .modern
+    
+    
+    
+    // MARK: - Init -
     required public init?(coder aDecoder: NSCoder) {fatalError()}
  
     public init(formData: FormDataSource) {
@@ -198,7 +217,6 @@ open class FormController: UITableViewController, CustomTransitionable {
         } else {
             super.init(style: .grouped)
         }
-        controllerInitialize()
         defer {
             self.dataSource = formData
         }
@@ -217,14 +235,54 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     
     
+    public init(title: String,style: FormDisplayStyle,loading: @escaping FormDataLoadingClosure) {
+        switch style {
+        case .modern:
+            if #available(iOS 13.0, *) {
+                super.init(style: .insetGrouped)
+            } else {
+                super.init(style: .grouped)
+            }
+        case .classic:
+            super.init(style: .plain)
+        case .classicGrouped:
+            super.init(style: .grouped)
+        case .custom(let customStyle):
+            super.init(style: customStyle)
+        }
+        self.displayStyle = style
+        self.title = title
+        self.loadingClosure = loading
+    }
+    
+    
+    public init(data: FormDataSource,style: FormDisplayStyle) {
+        switch style {
+        case .modern:
+            if #available(iOS 13.0, *) {
+                super.init(style: .insetGrouped)
+            } else {
+                super.init(style: .grouped)
+            }
+        case .classic:
+            super.init(style: .plain)
+        case .classicGrouped:
+            super.init(style: .grouped)
+        case .custom(let customStyle):
+            super.init(style: customStyle)
+        }
+        self.displayStyle = style
+        self.title = data.title
+        defer {
+            self.dataSource = data
+        }
+    }
+    
+    
     public func setNewData(_ newData:FormDataSource) {
         DispatchQueue.main.async(execute: { [weak self] in
             guard let self = self else { return }
-            UIViewPropertyAnimator(duration: 0.5, curve: .linear) { [weak self] in
-                guard let self = self else { return }
-                self.dataSource = newData
-                self.title = newData.title
-            }.startAnimation()
+            self.dataSource = newData
         })
     }
     
@@ -235,11 +293,20 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     private func setupUI() {
         // Header Cell
-        tableView.register(FormHeaderCell.self, forHeaderFooterViewReuseIdentifier: FormHeaderCell.identifier)
+        
+        switch displayStyle {
+        case .modern:
+            tableView.register(FormHeaderCell.self, forHeaderFooterViewReuseIdentifier: FormHeaderCell.identifier)
+            tableView.contentInset = defaultContentInsets
+        default:
+            break
+        }
+        
+        
         tableView.keyboardDismissMode = .interactive
         tableView.estimatedRowHeight = 44.0
         tableView.rowHeight = UITableView.automaticDimension
-        tableView.contentInset = defaultContentInsets
+        
         
         if showsCancelButton {
             navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(cancelPressed))
@@ -267,6 +334,11 @@ open class FormController: UITableViewController, CustomTransitionable {
         
         
         if let closure = loadingClosure {
+            if #available(iOS 13.0, *) {
+                tableView.tableFooterView = ItemsLoadingView(message: "Loading", textStyle: .body, color: .label)
+            } else {
+                tableView.tableFooterView = ItemsLoadingView(message: "Loading", textStyle: .body, color: .black)
+            }
             closure(self)
         }
         
@@ -503,6 +575,15 @@ extension FormController {
         return dataSource.sections.count
     }
     
+    
+    open override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        if tableView.style == .plain || tableView.style == .grouped && !displayStyle.isModern() {
+            return dataSource.sectionTitle(at: section)
+        } else {
+            return nil
+        }
+    }
+    
     override open func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         let formSection = dataSource.sections[section]
         return (formSection.headerValue.state == .collapsed) ? 0 : formSection.rows.count
@@ -550,6 +631,12 @@ extension FormController {
     
     
     override open func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        
+        guard displayStyle.isModern() else {
+            return nil
+        }
+        
+        
         if !dataSource.sections[section].title.isEmpty {
             if let headerCell = tableView.dequeueReusableHeaderFooterView(withIdentifier: FormHeaderCell.identifier) as? FormHeaderCell {
                 headerCell.configureView(headers[section])
@@ -557,6 +644,7 @@ extension FormController {
                 return headerCell
             }
         }
+        
         return nil
     }
     
@@ -659,7 +747,7 @@ extension FormController {
                                 dataSource.sections[path.section] = FormSection(newItems)
                             }
                         } else {
-                            dataSource.sections[path.section] = FormSection([value])
+                            dataSource.sections[path.section] =  FormSection(section.title, value)
                             if tableView.numberOfSections-1 >= path.section {
                                 tableView.reloadRows(at: [path], with: .none)
                             }
