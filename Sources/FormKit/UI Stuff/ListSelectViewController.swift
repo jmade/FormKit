@@ -445,7 +445,8 @@ public final class ListSelectViewController: UITableViewController {
 
     // MARK: - TableView functions -
     public override func numberOfSections(in tableView: UITableView) -> Int {
-        return dataSource.isEmpty ? 0 : sectionTitles.count
+        return 1
+        //return dataSource.isEmpty ? 0 : sectionTitles.count
     }
     
     
