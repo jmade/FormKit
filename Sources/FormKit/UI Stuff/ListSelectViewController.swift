@@ -469,6 +469,7 @@ public final class ListSelectViewController: UITableViewController {
     
     
     private func newDidSelect(_ indexPath: IndexPath) {
+        
         print("Did Select At: \(indexPath)")
         if allowsMultipleSelection {
             dataSource[indexPath.row].selected.toggle()
@@ -550,6 +551,11 @@ public final class ListSelectViewController: UITableViewController {
                                 if value.matchesContent(new) {
                                     form.dataSource.updateWith(formValue: new, at: path)
                                     form.tableView.reloadRows(at: [path], with: .none)
+                                    if let selectionClosure = formValue?.listItemSelection {
+                                        if let item = new.selectedListItem {
+                                            selectionClosure(item)
+                                        }
+                                    }
                                     performPop()
                                 }
                                 

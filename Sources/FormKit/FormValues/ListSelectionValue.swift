@@ -12,6 +12,7 @@ public typealias ListSelectLoadingClosure = (ListSelectViewController) -> Void
 
 public typealias ListItem = ListSelectViewController.ListItem
 public typealias JSONGenerationClosure = ([String:Any],ListSelectionValue.Loading) -> ([ListItem])
+public typealias ListItemSelectionClosure = (ListItem) -> Void
 
  
 
@@ -95,6 +96,7 @@ public struct ListSelectionValue {
     
     public var listItems:[ListItem] = []
     public var underlyingObjects:[Any] = []
+    public var listItemSelection: ListItemSelectionClosure?
     
 }
 
@@ -461,6 +463,11 @@ extension ListSelectionValue: FormValue {
             return [ (customKey ?? title ) : ( encodedSelectedValues ?? "" ) ]
         }
     }
+    
+    
+    var selectedListItem:ListItem? {
+        return listItems.filter({ $0.selected }).first
+    }
 }
 
 extension ListSelectionValue {
@@ -503,38 +510,10 @@ extension ListSelectionValue {
         )
         new.listItems = listItems
         new.underlyingObjects = self.underlyingObjects
+        new.listItemSelection = self.listItemSelection
         return new
     }
-    
-    
-//    public func newWith(selectedValues:[String],selectedValueIdentifiers:[String]? = nil) -> ListSelectionValue {
-//        var newSelectedIndicies: [Int] = []
-//        for selected in selectedValues {
-//            if let index = values.firstIndex(of: selected) {
-//                newSelectedIndicies.append(index)
-//            }
-//        }
-//
-//
-//        var new = ListSelectionValue(
-//                selectionType: self.selectionType,
-//                values: self.values,
-//                selectedIndicies: newSelectedIndicies,
-//                title: self.title,
-//                selectionMessage: self.selectionMessage,
-//                color: self.color,
-//                valueIdentifiers: selectedValueIdentifiers,
-//                loading: self.loading,
-//                loadingClosure: self.loadingClosure,
-//                generationClosure: self.generationClosure,
-//                customKey: self.customKey,
-//                uuid: self.uuid
-//        )
-//
-//        new.listItems = listItems
-//        return new
-//
-//    }
+
     
     
     
@@ -585,6 +564,7 @@ extension ListSelectionValue {
         
         newValue.listItems = listItems
         newValue.underlyingObjects = self.underlyingObjects
+        newValue.listItemSelection = self.listItemSelection
         return newValue
             
     }
@@ -655,6 +635,7 @@ extension ListSelectionValue {
           
           newValue.listItems = screenedListItems
         newValue.underlyingObjects = underlyingObjects
+        newValue.listItemSelection = self.listItemSelection
           return newValue
               
       }

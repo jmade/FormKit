@@ -23,7 +23,7 @@ public struct TextValue {
     
     public var placeholder:String? = nil
     public let title:String
-    public let value:String
+    public var value:String
     public var style:Style = .horizontalDiscrete
     public var useDirectionButtons:Bool = true
     public var uuid:String = UUID().uuidString
@@ -76,6 +76,13 @@ extension TextValue {
     }
     
     public init(_ title: String,_ customKey: String?,_ placeholder:String) {
+        self.title = title
+        self.value = ""
+        self.customKey = customKey
+        self.placeholder = placeholder
+    }
+    
+    public init(_ title: String,_ value:String,_ customKey: String?,_ placeholder:String) {
         self.title = title
         self.value = ""
         self.customKey = customKey
