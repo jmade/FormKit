@@ -471,7 +471,7 @@ extension InputValueCell: UITextFieldDelegate {
             textField.setCursorLocation(result.caretBeginOffset)
             return false
         } else {
-            if let newValue = textField.text {s
+            if let newValue = textField.text {
                 let newInputValue = inputValue.newWith(newValue)
                 updateFormValueDelegate?.updatedFormValue(newInputValue, indexPath)
             }
