@@ -271,7 +271,7 @@ public final class InputValueCell: UITableViewCell, Activatable {
         textField.keyboardType = .default
         textField.isSecureTextEntry = true
         textField.returnKeyType = .default
-        textField.placeholder = "Password"
+        //textField.placeholder = "Password"
         textField.addTarget(self, action: #selector(textFieldTextChanged(textField:)), for: .editingChanged)
         
         textField.translatesAutoresizingMaskIntoConstraints = false
@@ -287,6 +287,7 @@ public final class InputValueCell: UITableViewCell, Activatable {
                 
                 if inputValue.type == .password {
                     titleLabel.text = nil
+                    passwordField.placeholder = "Password"
                     passwordField.text = inputValue.value
                 } else {
                     formatter = DefaultTextInputFormatter(textPattern: inputValue.formatedTextPattern)
@@ -451,7 +452,6 @@ extension InputValueCell: UITextFieldDelegate {
         switch inputValue.type {
         case .phoneNumber:
             guard CharacterSet.decimalDigits.isSuperset(of: CharacterSet(charactersIn: string)) else {
-                print(" Early Return \(string) ")
                 return false
             }
         case .zipcode:
@@ -471,8 +471,7 @@ extension InputValueCell: UITextFieldDelegate {
             textField.setCursorLocation(result.caretBeginOffset)
             return false
         } else {
-            if let newValue = textField.text {
-                print(" newValue -> \(newValue) ")
+            if let newValue = textField.text {s
                 let newInputValue = inputValue.newWith(newValue)
                 updateFormValueDelegate?.updatedFormValue(newInputValue, indexPath)
             }

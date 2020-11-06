@@ -469,8 +469,6 @@ public final class ListSelectViewController: UITableViewController {
     
     
     private func newDidSelect(_ indexPath: IndexPath) {
-        
-        print("Did Select At: \(indexPath)")
         if allowsMultipleSelection {
             dataSource[indexPath.row].selected.toggle()
             if let cell = tableView.cellForRow(at: indexPath) {
@@ -512,7 +510,7 @@ public final class ListSelectViewController: UITableViewController {
         
         
         let selectedItems = dataSource.filter({ $0.selected })
-        selectedItems.forEach({ print("Selected Item: \($0.title)") })
+      
         for (i,item) in completeDataSource.enumerated() {
             completeDataSource[i].selected = selectedItems.contains(item)
         }
@@ -521,7 +519,7 @@ public final class ListSelectViewController: UITableViewController {
         
         if let currentListSelectValue = _formValue {
             
-            completeDataSource.filter({ $0.selected }).forEach({ print("Completed Selected Item: \($0.title)") })
+           
             
             let newListSelectValue = currentListSelectValue.newWith(completeDataSource)
             //let newListSelectValue = currentListSelectValue.newWith(dataSource)
@@ -549,13 +547,16 @@ public final class ListSelectViewController: UITableViewController {
                             switch row {
                             case .listSelection(let value):
                                 if value.matchesContent(new) {
-                                    form.dataSource.updateWith(formValue: new, at: path)
-                                    form.tableView.reloadRows(at: [path], with: .none)
+                                    
                                     if let selectionClosure = formValue?.listItemSelection {
                                         if let item = new.selectedListItem {
-                                            selectionClosure(item)
+                                            selectionClosure(item,nav)
                                         }
+                                    } else {
+                                        form.dataSource.updateWith(formValue: new, at: path)
+                                        form.tableView.reloadRows(at: [path], with: .none)
                                     }
+                                    
                                     performPop()
                                 }
                                 

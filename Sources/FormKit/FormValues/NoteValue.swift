@@ -205,8 +205,6 @@ public final class NoteCell: UITableViewCell, Activatable {
         textView.becomeFirstResponder()
         let mode = derivedMode()
         
-        print(" mode -> \(mode) ")
-        
         
         if mode == .placeholder {
             let newPosition = textView.beginningOfDocument

@@ -12,7 +12,7 @@ public typealias ListSelectLoadingClosure = (ListSelectViewController) -> Void
 
 public typealias ListItem = ListSelectViewController.ListItem
 public typealias JSONGenerationClosure = ([String:Any],ListSelectionValue.Loading) -> ([ListItem])
-public typealias ListItemSelectionClosure = (ListItem) -> Void
+public typealias ListItemSelectionClosure = (ListItem,UINavigationController?) -> Void
 
  
 
@@ -386,6 +386,9 @@ extension ListSelectionValue {
                     return "-"
                 }
             } else {
+                if let value = selectedValue {
+                    return value
+                }
                 return ""
             }
         case .multiple:
@@ -577,9 +580,6 @@ extension ListSelectionValue {
     
     
     public func newWith(_ listItems:[ListSelectViewController.ListItem],_ underlyingObjects:[Any]) -> ListSelectionValue  {
-            //let fromLoading = true
-                
-        print(self)
         
           var screenedListItems = listItems
           var newSelectedIndicies: [Int] = []

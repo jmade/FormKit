@@ -84,7 +84,7 @@ extension TextValue {
     
     public init(_ title: String,_ value:String,_ customKey: String?,_ placeholder:String) {
         self.title = title
-        self.value = ""
+        self.value = value
         self.customKey = customKey
         self.placeholder = placeholder
     }

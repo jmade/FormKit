@@ -122,12 +122,13 @@ extension PickerSelectionValue {
     
     
     public func selectedValue() -> String? {
-        var result:String? = nil
         if let selectedId = selectedId {
             return "\(selectedId)"
         }
-        result = values[selectedIndex]
-        return result
+        guard values.count > selectedIndex else {
+            return nil
+        }
+        return values[selectedIndex]
     }
     
     
