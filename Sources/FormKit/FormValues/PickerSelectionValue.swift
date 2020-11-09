@@ -15,6 +15,7 @@ public struct PickerSelectionValue: Equatable, Hashable {
 
     public var mode:Mode = .display
     public var customKey: String? = nil
+    public let identifier = UUID()
 }
 
 
@@ -96,7 +97,7 @@ extension PickerSelectionValue {
 extension PickerSelectionValue {
     
     var cellId:String {
-        return "picSel_\(selectedIndex)"
+        return "picSel_\(identifier.uuidString)"
     }
     
     mutating func switchToSelection(){
@@ -125,7 +126,7 @@ extension PickerSelectionValue {
         if let selectedId = selectedId {
             return "\(selectedId)"
         }
-        guard values.count > selectedIndex else {
+        guard !values.isEmpty, values.count > selectedIndex else {
             return nil
         }
         return values[selectedIndex]
@@ -180,7 +181,7 @@ extension PickerSelectionValue: FormValueDisplayable {
     }
     
     public var cellDescriptor: FormCellDescriptor {
-        return FormCellDescriptor(Cell.identifier, configureCell, didSelect)
+        return FormCellDescriptor(Cell.identifier+identifier.uuidString, configureCell, didSelect)
     }
     
 }
@@ -246,7 +247,7 @@ public final class PickerSelectionCell: UITableViewCell {
         label.textColor = .lightGray
         label.lineBreakMode = .byWordWrapping
         label.textAlignment = .center
-        label.text = "Make a Selection"
+        label.text = ""
         label.adjustsFontForContentSizeCategory = true
         return label
     }()
@@ -261,10 +262,15 @@ public final class PickerSelectionCell: UITableViewCell {
         }
     }
     
-    var formValue : PickerSelectionValue! {
+    var formValue : PickerSelectionValue? {
         didSet {
             
+            guard let formValue = formValue else { return }
+            
+            title.text = formValue.title
+            
             guard !(formValue.selectedIndex >= formValue.values.count) else {
+                selectedValue.text = "-"
                 return
             }
             
@@ -326,6 +332,22 @@ public final class PickerSelectionCell: UITableViewCell {
         
     }
     
+    public override func prepareForReuse() {
+        super.prepareForReuse()
+        self.title.text = nil
+        self.selectionLabel.text = nil
+        self.formValue = nil
+        
+    }
+    
+    
+    public override func setSelected(_ selected: Bool, animated: Bool) {
+        guard let value = formValue, !value.values.isEmpty else {
+            super.setSelected(false, animated: false)
+            return
+        }
+    }
+    
     func renderForDisplay() {
         UIViewPropertyAnimator(duration: 1/3, curve: .easeOut) { [weak self] in
             guard let self = self else { return }
@@ -339,6 +361,7 @@ public final class PickerSelectionCell: UITableViewCell {
         }.startAnimation()
     }
     
+    
     func renderForSelection(){
         UIViewPropertyAnimator(duration: 1/3, curve: .easeIn) { [weak self] in
             guard let self = self else { return }
@@ -349,7 +372,9 @@ public final class PickerSelectionCell: UITableViewCell {
             self.pickerView.isHidden = false
             self.standardHeightConstraint.isActive = false
             self.pickerBottomConstriant.isActive = true
-            self.pickerView.selectRow(self.formValue.selectedIndex, inComponent: 0, animated: true)
+            if let pickerValue = self.formValue {
+                 self.pickerView.selectRow(pickerValue.selectedIndex, inComponent: 0, animated: true)
+            }
         }.startAnimation()
     }
     
@@ -385,8 +410,10 @@ extension PickerSelectionCell: UIPickerViewDelegate {
     }
     
     public func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-        
-       updateFormValueDelegate?.updatedFormValue(formValue.newWith(row), indexPath)
+        if let pickerValue = formValue {
+            updateFormValueDelegate?.updatedFormValue(pickerValue.newWith(row), indexPath)
+        }
+       
         
     }
     

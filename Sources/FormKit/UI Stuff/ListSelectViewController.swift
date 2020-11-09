@@ -469,7 +469,14 @@ public final class ListSelectViewController: UITableViewController {
     
     
     private func newDidSelect(_ indexPath: IndexPath) {
+       
+        var uncheckedRows:[ListItem] = []
         if allowsMultipleSelection {
+            
+            if dataSource[indexPath.row].selected {
+                uncheckedRows.append(dataSource[indexPath.row])
+            }
+           
             dataSource[indexPath.row].selected.toggle()
             if let cell = tableView.cellForRow(at: indexPath) {
                 cell.accessoryType = dataSource[indexPath.row].selected ? .checkmark : .none
@@ -477,6 +484,7 @@ public final class ListSelectViewController: UITableViewController {
             }
         } else { /// Single Selection Mode
             let selectedIndicies = getSelectedIndicies(removingIndex: nil)
+            
             if selectedIndicies.isEmpty {
                 /// No Selection
                 dataSource[indexPath.row].selected = true
@@ -494,9 +502,22 @@ public final class ListSelectViewController: UITableViewController {
                         cell.accessoryType = .none
                         tableView.deselectRow(at: indexPath, animated: true)
                     }
+                
                 } else {
-                    dataSource[selectedRow].selected = false
+                    
+                    /// does not remove the lasrt selected one...
+                    if (dataSource.count-1) >= selectedRow {
+                        dataSource[selectedRow].selected = false
+                    } else {
+                        /// remove the currently selected on in the completed datra source
+                        for (i,_) in completeDataSource.enumerated() {
+                            completeDataSource[i].selected = false
+                        }
+                    }
+                    
+                    
                     dataSource[indexPath.row].selected = true
+                   
                     if let selectedCell = tableView.cellForRow(at: IndexPath(row: selectedRow, section: 0)) {
                         selectedCell.accessoryType = .none
                     }
@@ -504,30 +525,48 @@ public final class ListSelectViewController: UITableViewController {
                         cell.accessoryType = .checkmark
                     }
                     tableView.deselectRow(at: indexPath, animated: true)
+                    
+                }
+            }
+            
+        }
+        
+        
+        let selectedItems = dataSource.filter({ $0.selected })
+        
+        //print("Selected Items: (\(selectedItems.count))")
+        
+        selectedItems.forEach({ print(" \($0.title)") })
+        
+        if !allowsMultipleSelection {
+            for (i,item) in completeDataSource.enumerated() {
+                if let lastItem = selectedItems.first {
+                    completeDataSource[i].selected = (lastItem == item)
+                }
+            }
+        } else {
+            //print("Unchecked Rows: (\(uncheckedRows.count))")
+            for (i,item) in completeDataSource.enumerated() {
+                if selectedItems.contains(item) {
+                    completeDataSource[i].selected = true
+                }
+                if uncheckedRows.contains(item) {
+                    completeDataSource[i].selected = false
                 }
             }
         }
         
         
-        let selectedItems = dataSource.filter({ $0.selected })
-      
-        for (i,item) in completeDataSource.enumerated() {
-            completeDataSource[i].selected = selectedItems.contains(item)
-        }
-   
-        
-        
         if let currentListSelectValue = _formValue {
-            
-           
-            
             let newListSelectValue = currentListSelectValue.newWith(completeDataSource)
-            //let newListSelectValue = currentListSelectValue.newWith(dataSource)
             crawlDelegate(newListSelectValue)
         }
         
+        
     }
     
+    
+
     
     private func crawlDelegate(_ new:ListSelectionValue) {
         
@@ -624,6 +663,31 @@ public final class ListSelectViewController: UITableViewController {
         
         return selectedPaths
     }
+    
+    
+    private func getFilteredSelectedIndicies(removingIndex:Int?) -> [Int] {
+           var selectedPaths: [Int] = []
+           
+           for (row,value) in dataSource.enumerated() {
+               if value.selected {
+                   if let indexToSkip = removingIndex {
+                       if row != indexToSkip {
+                           selectedPaths.append(
+                               row
+                           )
+                       }
+                   } else {
+                       selectedPaths.append(
+                           row
+                       )
+                   }
+               }
+           }
+           
+           
+           return selectedPaths
+       }
+    
     
     
     private func handleSearchedSelection(item:SearchResultItem, at path:IndexPath) {
