@@ -483,7 +483,7 @@ public final class ListSelectViewController: UITableViewController {
                 tableView.deselectRow(at: indexPath, animated: true)
             }
         } else { /// Single Selection Mode
-            let selectedIndicies = getSelectedIndicies(removingIndex: nil)
+            let selectedIndicies = getFilteredSelectedIndicies(removingIndex: nil)
             
             if selectedIndicies.isEmpty {
                 /// No Selection
@@ -505,7 +505,12 @@ public final class ListSelectViewController: UITableViewController {
                 
                 } else {
                     
-                    /// does not remove the lasrt selected one...
+                    for (i,_) in dataSource.enumerated() {
+                        dataSource[i].selected = false
+                    }
+                    
+                    
+                    /// does not remove the last selected one...
                     if (dataSource.count-1) >= selectedRow {
                         dataSource[selectedRow].selected = false
                     } else {
@@ -535,12 +540,11 @@ public final class ListSelectViewController: UITableViewController {
         let selectedItems = dataSource.filter({ $0.selected })
         
         //print("Selected Items: (\(selectedItems.count))")
-        
-        selectedItems.forEach({ print(" \($0.title)") })
+        //selectedItems.forEach({ print(" \($0.title)") })
         
         if !allowsMultipleSelection {
             for (i,item) in completeDataSource.enumerated() {
-                if let lastItem = selectedItems.first {
+                if let lastItem = selectedItems.last {
                     completeDataSource[i].selected = (lastItem == item)
                 }
             }
@@ -555,6 +559,15 @@ public final class ListSelectViewController: UITableViewController {
                 }
             }
         }
+        
+        
+        if !allowsMultipleSelection && selectedItems.isEmpty {
+            for (i,_) in completeDataSource.enumerated() {
+                completeDataSource[i].selected = false
+            }
+        }
+        
+
         
         
         if let currentListSelectValue = _formValue {
