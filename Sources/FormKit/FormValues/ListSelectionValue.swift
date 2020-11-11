@@ -13,6 +13,7 @@ public typealias ListSelectLoadingClosure = (ListSelectViewController) -> Void
 public typealias ListItem = ListSelectViewController.ListItem
 public typealias JSONGenerationClosure = ([String:Any],ListSelectionValue.Loading) -> ([ListItem])
 public typealias ListItemSelectionClosure = (ListItem,UINavigationController?) -> Void
+public typealias ListSelectValueChangeClosure = ( (ListSelectionValue,FormController,IndexPath) -> Void )
 
  
 
@@ -97,6 +98,7 @@ public struct ListSelectionValue {
     public var listItems:[ListItem] = []
     public var underlyingObjects:[Any] = []
     public var listItemSelection: ListItemSelectionClosure?
+    public var valueChangeClosure: ListSelectValueChangeClosure?
     
 }
 
@@ -514,6 +516,7 @@ extension ListSelectionValue {
         new.listItems = listItems
         new.underlyingObjects = self.underlyingObjects
         new.listItemSelection = self.listItemSelection
+        new.valueChangeClosure = self.valueChangeClosure
         return new
     }
 
@@ -568,6 +571,7 @@ extension ListSelectionValue {
         newValue.listItems = listItems
         newValue.underlyingObjects = self.underlyingObjects
         newValue.listItemSelection = self.listItemSelection
+        newValue.valueChangeClosure = self.valueChangeClosure
         return newValue
             
     }
@@ -636,6 +640,7 @@ extension ListSelectionValue {
           newValue.listItems = screenedListItems
         newValue.underlyingObjects = underlyingObjects
         newValue.listItemSelection = self.listItemSelection
+        newValue.valueChangeClosure = self.valueChangeClosure
           return newValue
               
       }
@@ -654,14 +659,6 @@ extension ListSelectionValue: FormValueDisplayable {
     
     public var cellDescriptor: FormCellDescriptor {
         return FormCellDescriptor("\(Cell.identifier)_\(idKey)", configureCell, didSelect)
-        /*
-        switch selectionType {
-        case .single:
-            return FormCellDescriptor("\(Cell.identifier)_\(idKey)", configureCell, didSelect)
-        case .multiple:
-            return FormCellDescriptor("\(Cell.identifier)_\(idKey)", configureCell, didSelect)
-        }
-        */
     }
     
     public func configureCell(_ formController: Controller, _ cell: Cell, _ path: IndexPath) {
@@ -671,8 +668,6 @@ extension ListSelectionValue: FormValueDisplayable {
     }
 
     public func didSelect(_ formController: Controller, _ path: IndexPath) {
-       
-        
         let listVC = ListSelectViewController(self, at: path)
         listVC.formDelegate = formController
         formController.navigationController?.pushViewController(

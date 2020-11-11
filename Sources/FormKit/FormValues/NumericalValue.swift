@@ -39,7 +39,7 @@ public extension NumericalValue {
     /// General with Value
     init(title:String, value:String, numberType:NumberType, customKey:String?) {
         self.title = title
-        self.value = ""
+        self.value = value
         self.numberType = numberType
         self.customKey = customKey
     }

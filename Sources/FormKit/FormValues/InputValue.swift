@@ -32,6 +32,9 @@ extension InputValue {
         self.type = type
         self.customKey = customKey
         if let value = value {
+            if value > 1_000_000_0000 {
+                self.value = "\( value - 1_000_000_0000 )"
+            }
             self.value = "\(value)"
         }
     }
@@ -313,6 +316,7 @@ public final class InputValueCell: UITableViewCell, Activatable {
     
     override public func prepareForReuse() {
         super.prepareForReuse()
+        formValue = nil
         textField.text = nil
         titleLabel.text = nil
         indexPath = nil
@@ -418,8 +422,10 @@ public final class InputValueCell: UITableViewCell, Activatable {
     
     @objc
     func textFieldTextChanged(textField:UITextField) {
+        print(" textFieldTextChanged Firing")
         if let text = textField.text {
             guard let inputValue = formValue else { return }
+            print("TEXT: \(text)")
             updateFormValueDelegate?.updatedFormValue(inputValue.newWith(text), indexPath)
         }
     }
@@ -469,6 +475,11 @@ extension InputValueCell: UITextFieldDelegate {
             let result = formatter.formatInput(currentText: textField.text ?? "", range: range, replacementString: string)
             textField.text = result.formattedText
             textField.setCursorLocation(result.caretBeginOffset)
+            print("InputValue \(textField.text ?? "-")")
+            if let newValue = textField.text {
+                let newInputValue = inputValue.newWith(newValue)
+                updateFormValueDelegate?.updatedFormValue(newInputValue, indexPath)
+            }
             return false
         } else {
             if let newValue = textField.text {

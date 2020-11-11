@@ -1144,7 +1144,8 @@ extension FormController: UpdateFormValueDelegate {
                 case .listSelection(let list):
                     if let listSelectionValue = formValue as? ListSelectionValue {
                         if listSelectionValue != list {
-                            handleUpdatedFormValue(listSelectionValue , at: path)
+                            listSelectionValue.valueChangeClosure?(listSelectionValue,self,path)
+                            handleUpdatedFormValue(listSelectionValue, at: path)
                             tableView.reloadRows(at: [path], with: .none)
                         }
                     }

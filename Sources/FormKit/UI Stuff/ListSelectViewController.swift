@@ -605,6 +605,7 @@ public final class ListSelectViewController: UITableViewController {
                                             selectionClosure(item,nav)
                                         }
                                     } else {
+                                        new.valueChangeClosure?(new,form,path)
                                         form.dataSource.updateWith(formValue: new, at: path)
                                         form.tableView.reloadRows(at: [path], with: .none)
                                     }
