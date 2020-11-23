@@ -128,6 +128,55 @@ extension WeekDayCellData {
 }
 
 
+extension WeekDayCellData {
+    
+    
+    
+    
+    
+    static func GenerateData(range:Int) -> [WeekDayCellData] {
+        
+        var data: [WeekDayCellData] = []
+    
+        func getValueFrom(_ date:Date) -> (dayOfMonth:String,weekDay:String) {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "d-E"
+            let dateString = dateFormatter.string(from: date)
+            return ((dateString.split("-").first ?? ""),(dateString.split("-").last ?? ""))
+        }
+        
+        print("Range: \(range)")
+        
+        let endRange = (range+range)
+        print(" endRange -> \(endRange) ")
+        let startDate = Date().daysBefore(range)
+        print(" startDate -> \(startDate) ")
+        
+        var date = startDate
+        
+        Array(stride(from: 0, to: endRange, by: 1)).forEach({ cnt in
+            print("Count: \(cnt)")
+            let val = getValueFrom(date)
+            data.append(
+                WeekDayCellData(
+                    date: date,
+                    weekDay: val.weekDay,
+                    dayOfMonth: val.dayOfMonth
+                )
+            )
+           date = date.nextDay()
+        })
+        
+        return data
+    }
+    
+    
+    
+}
+
+
+
+
 
 // MARK: - WeekDayCell -
 class WeekDayCell: UICollectionViewCell {

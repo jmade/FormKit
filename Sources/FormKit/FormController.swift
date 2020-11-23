@@ -344,6 +344,8 @@ open class FormController: UITableViewController, CustomTransitionable {
         
         didLoad = true
         
+        self.view.setNeedsLayout()
+        
     }
 
     
@@ -1338,7 +1340,12 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
         label.lineBreakMode = .byWordWrapping
         label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: textStyle).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        
+        //label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
+        
+        
         labelContainer.addSubview(label)
         label.leadingAnchor.constraint(equalTo: labelContainer.leadingAnchor).isActive = true
         label.trailingAnchor.constraint(equalTo: labelContainer.trailingAnchor).isActive = true
@@ -1350,6 +1357,8 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
     
     private lazy var labelContainer:UIView = {
         let container = UIView()
+        container.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        container.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
         container.translatesAutoresizingMaskIntoConstraints = false
         return container
     }()
@@ -1409,6 +1418,7 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
         
         let data:(image:UIImage?,color:UIColor?) = getImage(header)
         self.titleLabel.text = header.title
+        self.titleLabel.sizeToFit()
         if let color = data.color {
             indicatorView.tintColor = color
         } else {

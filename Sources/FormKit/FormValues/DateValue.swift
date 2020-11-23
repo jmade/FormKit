@@ -4,13 +4,17 @@ import UIKit
 
 public struct DateValue {
     
-    var identifier: UUID = UUID()
+    let identifier: UUID = UUID()
     public var customKey:String? = nil
     public var title:String?
     public var date:Date
     public var dateFormat:String?
     /// TableSelectable
     public var isSelectable: Bool = false
+    
+    public var minDate:Date?
+    public var maxDate:Date?
+    
 }
 
 
@@ -60,9 +64,32 @@ extension DateValue {
         self.date = date ?? Date()
     }
     
-    public func newWith(_ date:Date) -> DateValue {
-        DateValue(identifier: UUID(), customKey: self.customKey, title: self.title, date: date, dateFormat: self.dateFormat, isSelectable: self.isSelectable)
+    
+    public init(_ title:String,_ customKey:String,_ date:Date?,_ minDate:Date?,_ maxDate:Date?) {
+        self.title = title
+        self.customKey = customKey
+        self.dateFormat = nil
+        self.date = date ?? Date()
+        self.minDate = minDate
+        self.maxDate = maxDate
     }
+    
+}
+
+
+extension DateValue {
+    
+    public func newWith(_ date:Date) -> DateValue {
+        DateValue(customKey: self.customKey,
+                  title: self.title,
+                  date: date,
+                  dateFormat: self.dateFormat,
+                  isSelectable: self.isSelectable,
+                  minDate: self.minDate,
+                  maxDate: self.maxDate
+        )
+    }
+    
 }
 
 
@@ -73,6 +100,13 @@ extension DateValue {
         let formatter = DateFormatter()
         formatter.dateFormat = dateFormat ?? "yyyy-MM-dd"
         return formatter.string(from: date)
+    }
+    
+    var range:Int? {
+        guard let min = minDate,let max = maxDate else {
+            return nil
+        }
+        return max.daysApart(min)
     }
     
 }
@@ -238,13 +272,18 @@ public final class DateValueCell: UITableViewCell {
     
     var formValue : DateValue? {
         didSet {
-            guard formValue != nil else {
+            
+            guard let dateValue = formValue else {
                 animate(.out)
                 return
             }
             
             if dataSource.isEmpty {
-                dataSource = WeekDayCellData.Data(60)
+                if let range = dateValue.range {
+                    dataSource = WeekDayCellData.GenerateData(range: range)
+                } else {
+                    dataSource = WeekDayCellData.Data(60)
+                }
             }
             animate(.in)
         }

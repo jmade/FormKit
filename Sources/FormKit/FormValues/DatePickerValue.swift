@@ -3,9 +3,9 @@ import Foundation
 
 
 
-// MARK: - TimeValue -
+// MARK: - DatePickerValue -
 public struct DatePickerValue {
-    var identifier: UUID = UUID()
+    let identifier: UUID = UUID()
     public var title:String?
     public var date:Date
     public var dateFormat:String?
@@ -13,6 +13,9 @@ public struct DatePickerValue {
     public var isSelectable: Bool = false
     public var customKey:String? = "Date"
     public var useDirectionButtons:Bool = true
+    
+    public var minDate:Date?
+    public var maxDate:Date?
 }
 
 
@@ -62,12 +65,26 @@ extension DatePickerValue {
         self.date = date ?? Date()
     }
     
+    public init(_ title:String,_ customKey:String,_ date:Date?,_ minDate:Date?,_ maxDate:Date?) {
+        self.title = title
+        self.customKey = customKey
+        self.dateFormat = nil
+        self.date = date ?? Date()
+        self.minDate = minDate
+        self.maxDate = maxDate
+    }
     
     
+   
+}
+
+
+extension DatePickerValue {
     
     public func newWith(_ date:Date) -> DatePickerValue {
-        DatePickerValue(identifier: UUID(), title: self.title, date: date, dateFormat: self.dateFormat, isSelectable: self.isSelectable, customKey: self.customKey, useDirectionButtons: self.useDirectionButtons)
-    }
+        DatePickerValue(title: self.title, date: date, dateFormat: self.dateFormat, isSelectable: self.isSelectable, customKey: self.customKey, useDirectionButtons: self.useDirectionButtons, minDate: self.minDate, maxDate: self.maxDate)
+       }
+    
 }
 
 
@@ -183,7 +200,19 @@ class DateInputKeyboard: UIInputView {
     var date = Date() {
         didSet {
             self.datePicker.setDate(self.date, animated: true)
-            self.datePicker.minimumDate = self.date
+        }
+    }
+    
+    
+    var minDate:Date? {
+        didSet {
+            self.datePicker.minimumDate = minDate
+        }
+    }
+    
+    var maxDate:Date? {
+        didSet {
+            self.datePicker.maximumDate = maxDate
         }
     }
     
@@ -206,6 +235,11 @@ class DateInputKeyboard: UIInputView {
     
     
     init(date: Date? = nil) {
+        super.init(frame: CGRect(.zero, CGSize(width: 100, height: 230)) , inputViewStyle: .keyboard)
+        self.date = date ?? Date()
+    }
+    
+    init(date: Date? = nil,minDate:Date? = nil,maxDate:Date? = nil) {
         super.init(frame: CGRect(.zero, CGSize(width: 100, height: 230)) , inputViewStyle: .keyboard)
         self.date = date ?? Date()
     }
@@ -282,7 +316,7 @@ public final class DatePickerValueCell: UITableViewCell, Activatable {
     }()
     
     
-    private let dateInputView = DateInputKeyboard(date: nil)
+    private var dateInputView = DateInputKeyboard(date: nil)
     
     var indexPath:IndexPath?
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
@@ -295,6 +329,8 @@ public final class DatePickerValueCell: UITableViewCell, Activatable {
                 }
                 titleLabel.text = dateValue.title
                 textField.text = dateValue.formattedValue
+                dateInputView.date = dateValue.date
+                dateInputView.minDate  = dateValue.minDate ?? dateValue.date
             } else {
                 titleLabel.text = nil
                 textField.text = nil
