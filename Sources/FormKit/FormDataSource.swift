@@ -310,6 +310,14 @@ extension FormDataSource {
             }
         }
         
+        if let additional = additionalParameters {
+           for param in additional {
+               if !param.value.isEmpty && (param.value != "-1") && !param.key.isEmpty {
+                   value.append([param.key:param.value])
+               }
+           }
+        }
+        
         return value.merged()
     }
     

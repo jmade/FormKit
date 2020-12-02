@@ -45,6 +45,21 @@ extension InputValue {
         self.placeholder = placeholder
     }
     
+    
+    public init(phoneNumber:String,_ customKey:String?) {
+        self.type = .phoneNumber
+        self.customKey = customKey
+        self.value = phoneNumber
+    }
+    
+    public init(zipCode:String,_ customKey:String?) {
+           self.type = .zipcode
+           self.customKey = customKey
+           self.value = zipCode
+       }
+    
+    
+    
 }
 
 

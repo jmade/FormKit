@@ -344,7 +344,7 @@ open class FormController: UITableViewController, CustomTransitionable {
         
         didLoad = true
         
-        self.view.setNeedsLayout()
+        //self.view.setNeedsLayout()
         
     }
 
@@ -381,7 +381,11 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     override open func viewDidLoad() {
         super.viewDidLoad()
+        if didLoad == false {
+            setupUI()
+        }
     }
+    
     
     override open func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -650,10 +654,10 @@ extension FormController {
         return nil
     }
     
-    
-    override open func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return dataSource.sections[section].title.isEmpty ? 0 : UITableView.automaticDimension
-    }
+//
+//    override open func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+//        return dataSource.sections[section].title.isEmpty ? 0 : UITableView.automaticDimension
+//    }
     
     override open func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         UIApplication.shared.sendAction(#selector(UIApplication.resignFirstResponder), to: nil, from: nil, for: nil)
