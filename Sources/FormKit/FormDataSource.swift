@@ -14,6 +14,8 @@ public protocol FormDataSourceUpdateDelegate: class {
 
 public class FormDataSource {
     
+    public var storage:[String:Any] = [:]
+    
     public var additionalParameters:[String:String]?
     
     public weak var delegate:FormDataSourceUpdateDelegate?
@@ -185,6 +187,7 @@ extension FormDataSource {
         let new = FormDataSource(title: self.title, sections: sections)
         new.updateClosure = self.updateClosure
         new.additionalParameters = self.additionalParameters
+        new.storage = self.storage
         return new
     }
     
@@ -199,6 +202,7 @@ extension FormDataSource {
         let new = FormDataSource(title: title, sections: sections)
         new.updateClosure = self.updateClosure
         new.additionalParameters = self.additionalParameters
+        new.storage = self.storage
         return new
     }
     
@@ -323,10 +327,7 @@ extension FormDataSource {
     
     
     public var activeSet: Set<String> {
-        let lazyMapCollection = activeParams.keys
-        let componentArray: [String] = Array(lazyMapCollection)
-        let activeSet = Set(componentArray)
-        return activeSet
+        Set(Array(activeParams.keys))
     }
     
     
@@ -466,6 +467,10 @@ extension FormDataSource {
         } else {
             return nil
         }
+    }
+    
+    public func containsStoredObjectForKey(_ key:String) -> Bool {
+        ( storage.index(forKey: key) != nil )
     }
     
     

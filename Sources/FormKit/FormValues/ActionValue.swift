@@ -219,7 +219,7 @@ public extension ActionValue {
     }
     
     
-    func readyVersion() -> ActionValue {
+    func readyVersion(_ newTitle:String? = nil,_ newColor:UIColor? = nil) -> ActionValue {
         ActionValue(
             state: .ready,
             customOperatingTitle: self.customOperatingTitle,
@@ -228,8 +228,8 @@ public extension ActionValue {
             action: self.action,
             dataAction: self.dataAction,
             formClosure: self.formClosure,
-            title: self.title,
-            color: self.color,
+            title: newTitle ?? self.title,
+            color: newColor ?? self.color,
             uuid: UUID().uuidString,
             readOnlyValue: self.readOnlyValue
         )
