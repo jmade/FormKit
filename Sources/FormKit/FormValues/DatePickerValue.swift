@@ -371,11 +371,13 @@ public final class DatePickerValueCell: UITableViewCell, Activatable {
     
 }
 
+
 extension DatePickerValueCell: DateInputKeyboardObserver {
     
     func newDate(date: Date) {
         guard let dateValue = formValue else { return }
         let newValue = dateValue.newWith(date)
+        updateFormValueDelegate?.updatedFormValue(newValue, indexPath)
         self.formValue = newValue
     }
     
