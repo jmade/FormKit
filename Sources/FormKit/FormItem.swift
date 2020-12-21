@@ -227,15 +227,25 @@ extension FormItem {
     
 }
 
+
+
 extension FormItem {
     
-    public func isActionValue() -> Bool {
+    
+    public func isActionValue(_ actionValue:ActionValue? = nil) -> Bool {
+        var isActionValue:Bool = false
         switch self {
-        case .action(_):
-            return true
+        case .action(let av):
+            if let inquiring = actionValue {
+                isActionValue = inquiring.dataMatches(av)
+            } else {
+                isActionValue = true
+            }
+            break
         default:
-            return false
+            break
         }
+        return isActionValue
     }
     
     

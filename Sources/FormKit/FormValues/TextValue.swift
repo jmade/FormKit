@@ -3,6 +3,29 @@ import UIKit
 
 public typealias TextFieldConfigurationClosure = ( (UITextField) -> Void )
 
+extension CharacterSet {
+    
+    static var textValue:CharacterSet {
+        let sets:[CharacterSet] = [
+            .alphanumerics,
+            .letters,
+            .capitalizedLetters,
+            .lowercaseLetters,
+            .uppercaseLetters,
+            .decimalDigits,
+            .punctuationCharacters
+        ]
+        
+        var megaSet = CharacterSet()
+        
+        for set in sets {
+            megaSet.formUnion(set)
+        }
+        return megaSet
+    }
+    
+}
+
 
 // MARK: - TextValue -
 public struct TextValue {

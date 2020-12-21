@@ -89,6 +89,164 @@ extension BottomBarActionItem {
 
 
 
+public typealias DocumentInteractionControllerClosure = ( (FormController,UIDocumentInteractionController) -> Void )
+
+
+
+
+// MARK: - BarItem -
+public struct BarItem {
+    
+    public typealias ActionClosure = ((FormController,BarItem) -> Void)
+    
+    public enum Side {
+        case leading, trailing
+    }
+    
+    public var title:String? = nil
+    public var imageName:String? = nil
+    public var action: ActionClosure?
+    public var side:Side = .trailing
+    let identifier = UUID()
+}
+
+
+extension BarItem: Hashable, Equatable {
+    
+    public func hash(into hasher: inout Hasher) {
+        return hasher.combine(identifier)
+    }
+    
+    public static func == (lhs: BarItem, rhs: BarItem) -> Bool {
+        return lhs.identifier == rhs.identifier
+    }
+}
+
+
+public extension BarItem {
+    
+    init(title:String,action:ActionClosure?) {
+        self.title = title
+        self.imageName = nil
+        self.action = action
+    }
+    
+    
+    init(title:String,_ side:Side,action:ActionClosure?) {
+        self.title = title
+        self.imageName = nil
+        self.side = side
+        self.action = action
+    }
+    
+    
+    init(imageName:String, action: @escaping ActionClosure) {
+        self.action = action
+        self.imageName = imageName
+        self.title = nil
+    }
+    
+    
+    init(imageName:String,_ side:Side, action: @escaping ActionClosure) {
+        self.action = action
+        self.side = side
+        self.imageName = imageName
+        self.title = nil
+    }
+    
+    
+}
+
+
+
+extension BarItem {
+    
+    static func Cancel(_ action: @escaping ActionClosure) -> BarItem {
+        BarItem(title: "Cancel", .leading, action: action)
+    }
+    
+    static func Done(_ action: @escaping ActionClosure) -> BarItem {
+        BarItem(title: "Done", .trailing, action: action)
+    }
+    
+}
+
+
+
+extension BarItem {
+    
+    var isDone:Bool {
+        if let text = title {
+            if text == "Done" {
+                return true
+            } else {
+                return false
+            }
+        } else {
+            return false
+        }
+    }
+    
+    var isCancel:Bool {
+        if let text = title {
+            if text == "Cancel" {
+                return true
+            } else {
+                return false
+            }
+        } else {
+            return false
+        }
+    }
+    
+    
+    enum BarItemType {
+        case text, image
+    }
+    
+    
+    var type:BarItemType {
+        if let _ = title {
+            return .text
+        } else {
+            return .image
+        }
+    }
+    
+    
+    var image:UIImage? {
+        if let name = imageName {
+            if #available(iOS 13.0, *) {
+                return UIImage(systemName: name)
+            }
+        }
+        return nil
+    }
+    
+    
+    func barButtonItem(target: UIViewController,selector:Selector) -> UIBarButtonItem {
+        switch self.type {
+        case .image:
+            return UIBarButtonItem(image: self.image ?? UIImage(), style: .plain, target: target, action: selector)
+        case .text:
+            return UIBarButtonItem(title: title, style: isDone ? .done : .plain, target: target, action: selector)
+        }
+    }
+    
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 // MARK: - FormController -
 open class FormController: UITableViewController, CustomTransitionable {
@@ -103,6 +261,45 @@ open class FormController: UITableViewController, CustomTransitionable {
 
     var selectedIndexPath: IndexPath? = nil
     private var reuseIdentifiers: Set<String> = []
+    
+    
+    public var barItems:[BarItem] = [] {
+        didSet {
+            checkBarItems()
+        }
+    }
+    
+    public var leadingBarItems:[BarItem] {
+        get {
+            return barItems.filter({ $0.side == .leading })
+        }
+    }
+    
+    public var trailingBarItems:[BarItem] {
+        get {
+            return barItems.filter({ $0.side == .trailing })
+        }
+    }
+    
+    private var currentInPlaceBarItem: BarItem?
+    
+    private var currentInPlaceBarButtonItem: UIBarButtonItem? {
+        didSet {
+            if currentInPlaceBarButtonItem != nil {
+                generateHapticFeedback(.impact)
+            } else {
+                currentInPlaceBarItem = nil
+            }
+        }
+    }
+
+    //private var loadingBarButtonItem = UIBarButtonItem()
+
+    
+    /// Additional Closures
+    public var documentInteractionWillBegin: DocumentInteractionControllerClosure?
+    public var documentInteractionDidEnd: DocumentInteractionControllerClosure?
+    
     
     public var validationClosure:FormValidationClosure?
     
@@ -166,10 +363,55 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     // MARK: - ShouldRefresh -
     public var shouldRefresh:Bool = false
+    
+    
     // MARK: - DoneButton -
-    public var showsDoneButton:Bool = false
+    private lazy var doneBarItem: BarItem = {
+        return BarItem.Done { form,_ in
+            form.donePressed()
+        }
+    }()
+    
+    
+    public var showsDoneButton:Bool = false {
+        didSet {
+            if showsDoneButton {
+                if !barItems.containsItem(doneBarItem) {
+                    barItems.append(doneBarItem)
+                }
+            } else {
+                if barItems.containsItem(doneBarItem) {
+                    barItems.removeObject(doneBarItem)
+                }
+            }
+        }
+    }
+    
+    
+    
     // MARK: - Cancel Button -
-    public var showsCancelButton:Bool = false
+    private lazy var cancelBarItem: BarItem = {
+        return BarItem.Cancel { form,_ in
+            form.cancelPressed()
+        }
+    }()
+    
+    
+    public var showsCancelButton:Bool = false {
+        didSet {
+            if showsCancelButton {
+                if !barItems.containsItem(cancelBarItem) {
+                    barItems.append(cancelBarItem)
+                }
+            } else {
+                if barItems.containsItem(cancelBarItem) {
+                    barItems.removeObject(cancelBarItem)
+                }
+            }
+        }
+    }
+    
+    
     
     // MARK: - Activates Input On Appear -
     public var activatesInputOnAppear: Bool = false
@@ -183,11 +425,15 @@ open class FormController: UITableViewController, CustomTransitionable {
         }
     }
     
+    
+    
     private var hasActivated = false
     
     private var alertTextFieldInput: String? = nil
     
     
+    
+    // MARK: - FormDisplayStyle -
     public enum FormDisplayStyle {
         case modern
         case classic
@@ -208,7 +454,7 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     
     
-    // MARK: - Init -
+    // MARK: - INIT -
     required public init?(coder aDecoder: NSCoder) {fatalError()}
  
     public init(formData: FormDataSource) {
@@ -217,10 +463,27 @@ open class FormController: UITableViewController, CustomTransitionable {
         } else {
             super.init(style: .grouped)
         }
-        defer {
-            self.dataSource = formData
-        }
+        self.dataSource = formData
+        self.title = dataSource.title
     }
+    
+    
+    
+    
+    public init(_ data: FormDataSource, validation: @escaping FormValidationClosure) {
+        if #available(iOS 13.0, *) {
+            super.init(style: .insetGrouped)
+        } else {
+            super.init(style: .grouped)
+        }
+        self.dataSource = data
+        self.title = dataSource.title
+        self.validationClosure = validation
+    }
+    
+    
+    
+    
     
     
     public init(loadingMessage:String?,loadingClosure: @escaping FormDataLoadingClosure) {
@@ -276,6 +539,7 @@ open class FormController: UITableViewController, CustomTransitionable {
         defer {
             self.dataSource = data
         }
+        
     }
     
     
@@ -292,6 +556,7 @@ open class FormController: UITableViewController, CustomTransitionable {
     private func controllerInitialize() { }
     
     private func setupUI() {
+        print("[FromKit] Form Controller (setupUI)")
         // Header Cell
         
         switch displayStyle {
@@ -302,20 +567,12 @@ open class FormController: UITableViewController, CustomTransitionable {
             break
         }
         
-        
         tableView.keyboardDismissMode = .interactive
         tableView.estimatedRowHeight = 44.0
         tableView.rowHeight = UITableView.automaticDimension
-        
-        
-        if showsCancelButton {
-            navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(cancelPressed))
-        }
-        
-        if showsDoneButton {
-            navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(barButtonItemPressed(_:)))
-        }
-        
+
+        checkBarItems()
+            
         if shouldRefresh {
             let refreshControl = UIRefreshControl()
             refreshControl.addTarget(self, action: #selector(refresh(_:)), for: .valueChanged)
@@ -344,8 +601,291 @@ open class FormController: UITableViewController, CustomTransitionable {
         
         didLoad = true
         
-        //self.view.setNeedsLayout()
+    }
+    
+    
+    private func checkBarItems() {
         
+         var leading:[UIBarButtonItem] = []
+         for (i,item) in leadingBarItems.enumerated() {
+             switch i {
+             case 0:
+                 leading.append(
+                     item.barButtonItem(target: self, selector: #selector(firstLeadingBarItem) )
+                 )
+             case 1:
+                 leading.append(
+                     item.barButtonItem(target: self, selector: #selector(secondLeadingBarItem) )
+                 )
+             case 2:
+                 leading.append(
+                     item.barButtonItem(target: self, selector: #selector(thirdLeadingBarItem) )
+                 )
+             default:
+                 print("Error too many `leading` BarItems.")
+             }
+         }
+         
+        
+         
+         var trailing:[UIBarButtonItem] = []
+         for (i,item) in trailingBarItems.enumerated() {
+             switch i {
+             case 0:
+                 trailing.append(
+                     item.barButtonItem(target: self, selector: #selector(firstTrailingBarItem) )
+                 )
+             case 1:
+                 trailing.append(
+                     item.barButtonItem(target: self, selector: #selector(secondTrailingBarItem) )
+                 )
+             case 2:
+                 trailing.append(
+                     item.barButtonItem(target: self, selector: #selector(thirdTrailingBarItem) )
+                 )
+             default:
+                 print("Error too many `trailing` BarItems.")
+             }
+         }
+        
+        navigationItem.setLeftBarButtonItems(leading, animated: true)
+        navigationItem.setRightBarButtonItems(trailing, animated: true)
+    }
+    
+    
+    
+    
+    public func resetLoadingBarItem(_ withDelay:TimeInterval? = nil) {
+        
+        guard let currentBarItem = currentInPlaceBarItem,let currentBarButtonItem = currentInPlaceBarButtonItem else {
+            return
+        }
+        
+        if let result = getBarButtonItemFor(currentBarItem) {
+            switch currentBarItem.side {
+            case .leading:
+                if let delay = withDelay {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                        guard let self = self else { return }
+                        if result.index == 0 {
+                            self.navigationItem.setLeftBarButtonItems([currentBarButtonItem], animated: true)
+                        } else {
+                            var newItems:[UIBarButtonItem] = []
+                            if let items = self.navigationItem.leftBarButtonItems {
+                                for (i,item) in items.enumerated() {
+                                    if i != result.index {
+                                        newItems.append(item)
+                                    } else {
+                                        newItems.append(currentBarButtonItem)
+                                    }
+                                }
+                            }
+                            self.navigationItem.setLeftBarButtonItems(newItems, animated: true)
+                        }
+                        self.currentInPlaceBarButtonItem = nil
+                    }
+                } else {
+                    if result.index == 0 {
+                        navigationItem.setLeftBarButtonItems([currentBarButtonItem], animated: true)
+                    } else {
+                        var newItems:[UIBarButtonItem] = []
+                        if let items = navigationItem.leftBarButtonItems {
+                            for (i,item) in items.enumerated() {
+                                if i != result.index {
+                                    newItems.append(item)
+                                } else {
+                                    newItems.append(currentBarButtonItem)
+                                }
+                            }
+                        }
+                        navigationItem.setLeftBarButtonItems(newItems, animated: true)
+                    }
+                    currentInPlaceBarButtonItem = nil
+                }
+            case .trailing:
+               if let delay = withDelay {
+                   DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                       guard let self = self else { return }
+                       if result.index == 0 {
+                           self.navigationItem.setRightBarButtonItems([currentBarButtonItem], animated: true)
+                       } else {
+                           var newItems:[UIBarButtonItem] = []
+                           if let items = self.navigationItem.rightBarButtonItems {
+                               for (i,item) in items.enumerated() {
+                                   if i != result.index {
+                                       newItems.append(item)
+                                   } else {
+                                       newItems.append(currentBarButtonItem)
+                                   }
+                               }
+                           }
+                           self.navigationItem.setRightBarButtonItems(newItems, animated: true)
+                       }
+                       self.currentInPlaceBarButtonItem = nil
+                   }
+               } else {
+                   if result.index == 0 {
+                       navigationItem.setRightBarButtonItems([currentBarButtonItem], animated: true)
+                   } else {
+                       var newItems:[UIBarButtonItem] = []
+                       if let items = navigationItem.rightBarButtonItems {
+                           for (i,item) in items.enumerated() {
+                               if i != result.index {
+                                   newItems.append(item)
+                               } else {
+                                   newItems.append(currentBarButtonItem)
+                               }
+                           }
+                       }
+                       navigationItem.setRightBarButtonItems(newItems, animated: true)
+                   }
+                   currentInPlaceBarButtonItem = nil
+               }
+            }
+        }
+        
+    }
+    
+    
+    
+    public func setBarItemLoading(_ barItem:BarItem) {
+        
+        if let result = getBarButtonItemFor(barItem) {
+            
+            currentInPlaceBarButtonItem = result.barButtonItem
+            currentInPlaceBarItem = barItem
+            
+            let activityIndicator = UIActivityIndicatorView(style: .white)
+            activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+            activityIndicator.widthAnchor.constraint(equalToConstant: 44.0).isActive = true
+            activityIndicator.heightAnchor.constraint(equalTo: activityIndicator.widthAnchor, multiplier: 1.0).isActive = true
+            activityIndicator.startAnimating()
+            let loading = UIBarButtonItem(customView: activityIndicator)
+            
+           
+            
+            switch barItem.side {
+            case .leading:
+                if result.index == 0 {
+                    navigationItem.setLeftBarButtonItems([loading], animated: true)
+                } else {
+                    var newItems:[UIBarButtonItem] = []
+                    if let items = navigationItem.leftBarButtonItems {
+                        for (i,item) in items.enumerated() {
+                            if i != result.index {
+                                newItems.append(item)
+                            } else {
+                                newItems.append(loading)
+                            }
+                        }
+                    }
+                    navigationItem.setLeftBarButtonItems(newItems, animated: true)
+                }
+            case .trailing:
+                if result.index == 0 {
+                    navigationItem.setRightBarButtonItems([loading], animated: true)
+                } else {
+                    var newItems:[UIBarButtonItem] = []
+                    if let items = navigationItem.rightBarButtonItems {
+                        for (i,item) in items.enumerated() {
+                            if i != result.index {
+                                newItems.append(item)
+                            } else {
+                                newItems.append(loading)
+                            }
+                        }
+                    }
+                    navigationItem.setRightBarButtonItems(newItems, animated: true)
+                }
+                
+            }
+            
+            
+            
+        }
+        
+        
+        
+    }
+    
+    
+    
+    private func getBarButtonItemFor(_ barItem:BarItem) -> (barButtonItem:UIBarButtonItem,index:Int)? {
+        switch barItem.side {
+        case .leading:
+            if let index = leadingBarItems.indexOf(barItem) {
+                if let items = navigationItem.leftBarButtonItems {
+                    return (items[index],index)
+                }
+            }
+            break
+        case .trailing:
+            if let index = trailingBarItems.indexOf(barItem) {
+                if let items = navigationItem.rightBarButtonItems {
+                    return (items[index],index)
+                }
+            }
+            break
+        }
+        return nil
+    }
+    
+    public func setBarItems(_ items:[BarItem]) {
+        let existingBarItems = self.barItems
+        var newItems:[BarItem] = []
+        for item in items {
+            if !existingBarItems.containsItem(item) {
+                newItems.append(item)
+            }
+        }
+        self.barItems.append(contentsOf: newItems)
+    }
+    
+    public func addBarItem(_ barItem:BarItem) {
+       appendBarItem(barItem)
+    }
+    
+    
+    private func appendBarItem(_ barItem:BarItem) {
+        switch barItem.side {
+        case .leading:
+            let newPosition = leadingBarItems.count + 1
+            switch newPosition {
+            case 0:
+                let barButtonItem = barItem.barButtonItem(target: self, selector: #selector(firstTrailingBarItem))
+                navigationItem.setLeftBarButton(barButtonItem, animated: true)
+            case 1:
+                let barButtonItem = barItem.barButtonItem(target: self, selector: #selector(secondTrailingBarItem))
+                let newItems = [ (navigationItem.leftBarButtonItems ?? []), [barButtonItem] ].reduce([],+)
+                navigationItem.setLeftBarButtonItems(newItems, animated: true)
+            case 2:
+                let barButtonItem = barItem.barButtonItem(target: self, selector: #selector(thirdTrailingBarItem))
+                let newItems = [ (navigationItem.leftBarButtonItems ?? []), [barButtonItem] ].reduce([],+)
+                navigationItem.setLeftBarButtonItems(newItems, animated: true)
+            default:
+                print("Error too many `trailing` BarItems.")
+            }
+        case .trailing:
+            let newPosition = trailingBarItems.count + 1
+            switch newPosition {
+            case 0:
+                let barButtonItem = barItem.barButtonItem(target: self, selector: #selector(firstTrailingBarItem))
+                navigationItem.setRightBarButton(barButtonItem, animated: true)
+            case 1:
+                let barButtonItem = barItem.barButtonItem(target: self, selector: #selector(secondTrailingBarItem))
+                let newItems = [ (navigationItem.rightBarButtonItems ?? []), [barButtonItem] ].reduce([],+)
+                navigationItem.setRightBarButtonItems(newItems, animated: true)
+            case 2:
+                let barButtonItem = barItem.barButtonItem(target: self, selector: #selector(thirdTrailingBarItem))
+                let newItems = [ (navigationItem.rightBarButtonItems ?? []), [barButtonItem] ].reduce([],+)
+                navigationItem.setRightBarButtonItems(newItems, animated: true)
+            default:
+                print("Error too many `trailing` BarItems.")
+            }
+            
+        }
+        
+        barItems.append(barItem)
     }
 
     
@@ -445,24 +985,64 @@ open class FormController: UITableViewController, CustomTransitionable {
         }
         self.dataSource = FormDataSource()
     }
+
+    
+}
+
+
+
+
+/// BarItem Methods
+
+extension FormController {
+    
+    @objc
+    private func firstLeadingBarItem() {
+        guard leadingBarItems.count > 0 else { return }
+        leadingBarItems[0].action?(self,leadingBarItems[0])
+    }
+    
+    @objc
+    private func secondLeadingBarItem() {
+        guard leadingBarItems.count > 1 else { return }
+        leadingBarItems[1].action?(self,leadingBarItems[1])
+    }
+    
+    @objc
+    private func thirdLeadingBarItem() {
+        guard leadingBarItems.count > 2 else { return }
+        leadingBarItems[2].action?(self,leadingBarItems[2])
+    }
     
     
     @objc
-    private func barButtonItemPressed(_ barButtonItem:UIBarButtonItem) {
-        
-        if let barButtonTitle = barButtonItem.title {
-            print("Bar Button Item Pressed: \(barButtonTitle)")
-            switch barButtonTitle  {
-            case "Done":
-                donePressed()
-            default:
-                ()
-            }
-        }
-        
+    private func firstTrailingBarItem() {
+        guard trailingBarItems.count > 0 else { return }
+        trailingBarItems[0].action?(self,trailingBarItems[0])
     }
     
+    @objc
+    private func secondTrailingBarItem() {
+        guard trailingBarItems.count > 1 else { return }
+        trailingBarItems[1].action?(self,trailingBarItems[1])
+    }
+    
+    @objc
+    private func thirdTrailingBarItem() {
+        guard trailingBarItems.count > 2 else { return }
+        trailingBarItems[2].action?(self,trailingBarItems[2])
+    }
+    
+    
 }
+
+
+
+
+
+
+
+
 
 
 
@@ -653,12 +1233,7 @@ extension FormController {
         
         return nil
     }
-    
-//
-//    override open func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-//        return dataSource.sections[section].title.isEmpty ? 0 : UITableView.automaticDimension
-//    }
-    
+
     override open func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         UIApplication.shared.sendAction(#selector(UIApplication.resignFirstResponder), to: nil, from: nil, for: nil)
     }
@@ -710,6 +1285,14 @@ extension FormController {
 
 
 
+extension FormController {
+    
+    public func params() -> [String:String] {
+        return dataSource.activeParams
+    }
+    
+}
+
 
 
 
@@ -731,18 +1314,49 @@ extension FormController {
     }
     
     
-
+    
+    
+    public func update(_ value:ActionValue,_ withDelay:TimeInterval? = nil) {
+        
+        if let delay = withDelay {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                guard let self = self else { return }
+                if let actionValuePath = self.dataSource.pathForActionValue(value) {
+                    self.dataSource.sections[actionValuePath.section].rows[actionValuePath.row] = value.formItem
+                    
+                    if let _ = self.tableView.cellForRow(at: actionValuePath) {
+                        self.tableView.reloadRows(at: [actionValuePath], with: .fade)
+                    }
+                } else {
+                    print("Error finding ActionValue \(value)")
+                }
+            }
+        } else {
+            DispatchQueue.main.async(execute: { [weak self] in
+                guard let self = self else { return }
+                if let actionValuePath = self.dataSource.pathForActionValue(value) {
+                    self.dataSource.sections[actionValuePath.section].rows[actionValuePath.row] = value.formItem
+                    
+                    if let _ = self.tableView.cellForRow(at: actionValuePath) {
+                        self.tableView.reloadRows(at: [actionValuePath], with: .fade)
+                    }
+                } else {
+                    print("Error finding ActionValue \(value)")
+                }
+            })
+        }
+    }
+    
     
     
     public func updateActionValue(_ value:ActionValue, at path:IndexPath) {
         
         if let section = dataSource.section(for: path.section) {
             if let formItem = section.itemForRowAt(path.row) {
+                
                 switch formItem {
                 case .action(let actionValue):
                     if value.state != actionValue.state {
-                        
-                        
                         
                         if section.rows.count > 1 {
                             if path.row == 0 {
@@ -753,7 +1367,7 @@ extension FormController {
                                 dataSource.sections[path.section] = FormSection(newItems)
                             }
                         } else {
-                            dataSource.sections[path.section] =  FormSection(section.title, value)
+                            dataSource.sections[path.section] = FormSection(section.title, value)
                             if tableView.numberOfSections-1 >= path.section {
                                 tableView.reloadRows(at: [path], with: .none)
                             }
@@ -836,9 +1450,42 @@ extension FormController {
         }
     }
     
+    
+    private func handleActionCellChanging(for rows:[IndexPath],enabled:Bool) {
+        
+        if let visiblePaths = tableView.indexPathsForVisibleRows {
+            for row in rows {
+                if visiblePaths.contains(row) {
+                    if let actionCell = tableView.cellForRow(at: row) as? ActionCell {
+                        print("Changing Action Cell at:\(row) | \(actionCell)")
+                        enabled ? actionCell.setEnabled() : actionCell.setDisabled()
+                    }
+                }
+            }
+        }
+    }
+    
+    
+    
+    
     public func changeLastSection(_ newSection:FormSection,_ activate:Bool = false) {
+        
+       
         changeSection(newSection, at: IndexPath(row: 0, section: dataSource.sections.count-1),activate)
     }
+    
+    
+    
+    public func changeSecondToLastSection(_ newSection:FormSection,_ activate:Bool = false) {
+        let secondToLastSection = dataSource.sections.count-2
+        guard secondToLastSection >= 0 else {
+            return
+        }
+        
+        changeSection(newSection, at: IndexPath(row: 0, section: dataSource.sections.count-2),activate)
+    }
+    
+    
     
     public func changeFirstSection(_ newSection:FormSection,_ activate:Bool = false) {
         changeSection(newSection, at: IndexPath(row: 0, section: 0),activate)
@@ -846,11 +1493,15 @@ extension FormController {
     
     
     public func changeSection(_ newSection:FormSection,at path:IndexPath,_ activate:Bool = false) {
+        guard !dataSource.sections.isEmpty else { return }
         _changeSection(newSection,at: path, activateInput: activate)
     }
     
     
-    private func _changeSection(_ newSection:FormSection,at path:IndexPath,activateInput:Bool,_ animation:UITableView.RowAnimation = .fade) {
+    private func _changeSection(_ newSection:FormSection,
+                                at path:IndexPath,
+                                activateInput:Bool,
+                                _ animation:UITableView.RowAnimation = .fade) {
       
         let myCompletion: ((Bool) -> Void) = { (bool) in
             
@@ -872,10 +1523,12 @@ extension FormController {
             dataSource.sections[path.section] = newSection
             
             if newSection.hasOnlyActionValues {
+                 let changingRows = Array(0..<newSection.rows.count).map({ IndexPath(row: $0, section: path.section) })
+                
                 if currentSection.isEnabled && !newSection.isEnabled {
-                    handleActionCellChanging(enabled: false)
+                    handleActionCellChanging(for: changingRows, enabled: false)
                 } else if !currentSection.isEnabled && newSection.isEnabled  {
-                    handleActionCellChanging(enabled: true)
+                    handleActionCellChanging(for: changingRows, enabled: true)
                 }
             } else {
                 tableView.reload(changes: changes,
@@ -1315,6 +1968,73 @@ extension FormController: SectionTapDelegate {
     }
     
 }
+
+
+// MARK: - UIDocumentInteractionControllerDelegate -  
+extension FormController: UIDocumentInteractionControllerDelegate {
+    
+    
+    public func documentInteractionControllerWillBeginPreview(_ controller: UIDocumentInteractionController) {
+        documentInteractionWillBegin?(self,controller)
+    }
+    
+
+    public func documentInteractionControllerDidEndPreview(_ controller: UIDocumentInteractionController) {
+        documentInteractionDidEnd?(self,controller)
+    }
+    
+    public func documentInteractionControllerWillPresentOptionsMenu(_ controller: UIDocumentInteractionController) {
+        //
+    }
+
+    
+    
+    public func documentInteractionControllerViewControllerForPreview(_ controller: UIDocumentInteractionController) -> UIViewController {
+          return self
+    }
+    
+    
+    public func showDocument(_ documentURL:URL?) {
+        if let url = documentURL {
+            DispatchQueue.main.async(execute: { [weak self] in
+                guard let self = self else { return }
+                let viewer = UIDocumentInteractionController(url: url)
+                viewer.delegate = self
+                viewer.presentPreview(animated: true)
+                self.generateHapticFeedback(.impact)
+            })
+        }
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

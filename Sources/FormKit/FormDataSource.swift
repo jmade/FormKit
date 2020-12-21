@@ -112,6 +112,7 @@ extension FormDataSource {
     }
     
     
+    
     public convenience init(_ sections:[FormSection] = []) {
         self.init()
         self.sections = sections
@@ -144,6 +145,22 @@ extension FormDataSource {
         self.init()
         self.title = title
         self.updateClosure = updateClosure
+        
+        sections.forEach( {
+            $0.updateClosure = { [weak self] (section) in
+                self?.sectionWasUpdated(section: section)
+            }
+        })
+        
+        self.sections = sections
+        
+    }
+    
+    
+    
+    public convenience init(_ title: String,_ sections:[FormSection]) {
+        self.init()
+        self.title = title
         
         sections.forEach( {
             $0.updateClosure = { [weak self] (section) in
@@ -548,6 +565,26 @@ extension FormDataSource {
     
     
 }
+
+
+extension FormDataSource {
+    
+    public func pathForActionValue(_ actionValue:ActionValue) -> IndexPath? {
+        
+        for (sectionIndex,section) in sections.enumerated() {
+            for (row,item) in section.rows.enumerated() {
+                if item.isActionValue(actionValue) {
+                    return IndexPath(row: row, section: sectionIndex)
+                }
+            }
+        }
+        
+        return nil
+        
+    }
+    
+}
+
 
 
 extension FormDataSource {

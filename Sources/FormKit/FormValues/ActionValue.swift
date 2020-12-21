@@ -49,6 +49,7 @@ public struct ActionValue: Equatable {
     var uuid:String = UUID().uuidString
     
     public var readOnlyValue:ReadOnlyValue? = nil
+    public var originalId:String? = nil
 
 }
 
@@ -60,6 +61,7 @@ extension ActionValue {
     public init(title: String, formClosure: @escaping ActionValueFormClosure) {
         self.title = title
         self.formClosure = formClosure
+        self.customKey = "\(title.uppercased())-\(UUID().uuidString.split("-").first ?? "!!")"
         self.style = .moderate
     }
     
@@ -67,6 +69,7 @@ extension ActionValue {
     public init(_ title: String,_ formClosure: @escaping ActionValueFormClosure) {
         self.title = title
         self.formClosure = formClosure
+        self.customKey = "\(title.uppercased())-\(UUID().uuidString.split("-").first ?? "!!")"
         self.style = .moderate
     }
     
@@ -77,6 +80,7 @@ extension ActionValue {
         self.formClosure = formClosure
         self.color = color
         self.style = .moderate
+        self.customKey = "\(title.uppercased())-\(UUID().uuidString.split("-").first ?? "!!")"
     }
     
     
@@ -85,6 +89,7 @@ extension ActionValue {
         self.formClosure = formClosure
         self.color = color
         self.style = .moderate
+        self.customKey = "\(title.uppercased())-\(UUID().uuidString.split("-").first ?? "!!")"
     }
     
     
@@ -121,27 +126,9 @@ extension ActionValue {
 
 extension ActionValue {
     
-    public init(saveValue formClosure: @escaping ActionValueFormClosure) {
-        self.title = "Save"
-        self.formClosure = formClosure
-        self.customOperatingTitle = "Saving"
-        self.color = UIColor.FormKit.save
-        self.style = .moderate
-    }
-    
-    
-    public init(saveValueDisabled formClosure: @escaping ActionValueFormClosure) {
-        self.title = "Save"
-        self.formClosure = formClosure
-        self.customOperatingTitle = "Saving"
-        self.color = UIColor.FormKit.save
-        self.style = .moderate
-        self.state = .disabled
-    }
-    
-    
     public init(title: String, color:UIColor, state:ActionState, formClosure: @escaping ActionValueFormClosure) {
         self.title = title
+        self.customKey = "\(title.uppercased())-\(UUID().uuidString.split("-").first ?? "!!")"
         self.formClosure = formClosure
         self.color = color
         self.style = .moderate
@@ -151,6 +138,7 @@ extension ActionValue {
     
     public init(_ title: String,_ color:UIColor,_ state:ActionState = .disabled, formClosure: @escaping ActionValueFormClosure) {
         self.title = title
+        self.customKey = "\(title.uppercased())-\(UUID().uuidString.split("-").first ?? "!!")"
         self.formClosure = formClosure
         self.color = color
         self.style = .moderate
@@ -158,6 +146,62 @@ extension ActionValue {
     }
     
 }
+
+
+// Save / Submit
+
+extension ActionValue {
+    
+    public init(saveValue formClosure: @escaping ActionValueFormClosure) {
+        self.title = "Save"
+        self.customKey = "\(title.uppercased())-\(UUID().uuidString.split("-").first ?? "!!")"
+        self.formClosure = formClosure
+        self.customOperatingTitle = "Saving"
+        self.color = UIColor.FormKit.save
+        self.style = .moderate
+    }
+    
+    
+    public init(saveValueDisabled formClosure: @escaping ActionValueFormClosure) {
+        self.title = "Save"
+        self.customKey = "\(title.uppercased())-\(UUID().uuidString.split("-").first ?? "!!")"
+        self.formClosure = formClosure
+        self.customOperatingTitle = "Saving"
+        self.color = UIColor.FormKit.save
+        self.style = .moderate
+        self.state = .disabled
+    }
+    
+
+    public init(submitValue formClosure: @escaping ActionValueFormClosure) {
+        self.title = "Submit"
+        self.customKey = "\(title.uppercased())-\(UUID().uuidString.split("-").first ?? "!!")"
+        self.formClosure = formClosure
+        self.customOperatingTitle = "Submitting"
+        self.color = UIColor.FormKit.save
+        self.style = .moderate
+    }
+    
+    
+    public init(submitValueDisabled formClosure: @escaping ActionValueFormClosure) {
+        self.title = "Submit"
+        self.customKey = "\(title.uppercased())-\(UUID().uuidString.split("-").first ?? "!!")"
+        self.formClosure = formClosure
+        self.customOperatingTitle = "Submitting"
+        self.color = UIColor.FormKit.save
+        self.style = .moderate
+        self.state = .disabled
+    }
+    
+
+    public static func Submit(_ formClosure: @escaping ActionValueFormClosure) -> ActionValue {
+        ActionValue(submitValueDisabled: formClosure)
+    }
+    
+}
+
+
+
 
 
 // MARK: - Demo -
@@ -185,7 +229,7 @@ public extension ActionValue {
 
 public extension ActionValue {
     
-    func operatingVersion(_ newColor:UIColor? = .operating) -> ActionValue {
+    func operatingVersion(_ newTitle:String = "",_ newColor:UIColor? = .operating) -> ActionValue {
         ActionValue(
             state: .operating,
             customOperatingTitle: self.customOperatingTitle,
@@ -194,10 +238,11 @@ public extension ActionValue {
             action: self.action,
             dataAction: self.dataAction,
             formClosure: self.formClosure,
-            title: self.title,
+            title: (newTitle.isEmpty ? self.title : newTitle),
             color: (newColor ?? self.color),
             uuid: UUID().uuidString,
-            readOnlyValue: self.readOnlyValue
+            readOnlyValue: self.readOnlyValue,
+            originalId: self.uuid
         )
     }
     
@@ -214,7 +259,8 @@ public extension ActionValue {
             title: newTitle,
             color: (newColor ?? self.color),
             uuid: UUID().uuidString,
-            readOnlyValue: self.readOnlyValue
+            readOnlyValue: self.readOnlyValue,
+            originalId: self.uuid
         )
     }
     
@@ -231,13 +277,13 @@ public extension ActionValue {
             title: newTitle ?? self.title,
             color: newColor ?? self.color,
             uuid: UUID().uuidString,
-            readOnlyValue: self.readOnlyValue
+            readOnlyValue: self.readOnlyValue,
+            originalId: self.uuid
         )
     }
     
     
     func disabled() -> ActionValue {
-        
         var newValue = ActionValue(
             state: .disabled,
             customOperatingTitle: self.customOperatingTitle,
@@ -249,7 +295,8 @@ public extension ActionValue {
             title: self.title,
             color: self.color,
             uuid: UUID().uuidString,
-            readOnlyValue: self.readOnlyValue
+            readOnlyValue: self.readOnlyValue,
+            originalId: self.uuid
         )
         
         newValue.lastState = self.state
@@ -257,7 +304,27 @@ public extension ActionValue {
     }
     
     
+    func enabled() -> ActionValue {
+           var newValue =  ActionValue(
+               state: .ready,
+               customOperatingTitle: self.customOperatingTitle,
+               style: self.style,
+               customKey: self.customKey,
+               action: self.action,
+               dataAction: self.dataAction,
+               formClosure: self.formClosure,
+               title: self.title,
+               color: self.color,
+               uuid: UUID().uuidString,
+               readOnlyValue: self.readOnlyValue,
+               originalId: self.uuid
+           )
+        newValue.lastState = self.state
+        return newValue
+       }
     
+    
+    /*
     func enabled() -> ActionValue {
         return ActionValue(
             state: .ready,
@@ -270,14 +337,27 @@ public extension ActionValue {
             title: self.title,
             color: self.color,
             uuid: UUID().uuidString,
-            readOnlyValue: self.readOnlyValue
+            readOnlyValue: self.readOnlyValue,
+            originalId: self.uuid
         )
     }
-    
+    */
     
     
     func isValid() -> Bool {
         return state != .disabled
+    }
+    
+    
+    func dataMatches(_ av:ActionValue) -> Bool {
+        
+        if let original = self.originalId {
+            if av.uuid == original {
+                return true
+            }
+        }
+        
+        return customKey == av.customKey
     }
     
     
@@ -291,6 +371,7 @@ extension ActionValue: Hashable {
         hasher.combine(hash)
     }
     
+    
     public var hash: Int {
         return "\(title)+\(color)+\(uuid)".hashValue
     }
@@ -299,6 +380,23 @@ extension ActionValue: Hashable {
         return lhs.hash == rhs.hash
     }
 
+}
+
+
+
+extension ActionValue: CustomStringConvertible {
+    public var description: String {
+        """
+        
+        ActionValue:
+         Title: \(title)
+         UUID: \(uuid)
+         State: \(state)
+         TitleColor: \(color)
+         isValid: \(state != .disabled)
+        
+        """
+    }
 }
 
 
@@ -380,7 +478,7 @@ public final class ActionCell: UITableViewCell {
         return label
     }()
     
-    private lazy var operatingStackView = UIStackView()
+    private var operatingStackView = UIStackView()
     
     /// `ReadOnly` Styling
     private lazy var titleLabel: UILabel = {
@@ -414,6 +512,7 @@ public final class ActionCell: UITableViewCell {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
+    
     
     var formValue : ActionValue? {
         didSet {
@@ -452,8 +551,12 @@ public final class ActionCell: UITableViewCell {
         formValue = nil
         valueLabel.attributedText = nil
         titleLabel.text = nil
+        
         operatingTitleLabel.text = nil
-        operatingStackView.removeFromSuperview()
+        if contentView.subviews.contains(operatingStackView) {
+            operatingStackView.removeFromSuperview()
+        }
+        
         textLabel?.text = nil
         accessoryType = .none
         super.prepareForReuse()
@@ -494,50 +597,55 @@ public final class ActionCell: UITableViewCell {
     }
     
     
+    
+    
+    
+    
+    
     private func setupCellForOperating(_ operatingTitle:String,_ color:UIColor) {
-        textLabel?.text = nil
-        accessoryType = .none
-        operatingStackView.removeFromSuperview()
-        operatingStackView = makeOperatingStackView(operatingTitle,color)
-        contentView.addSubview(operatingStackView)
-        
-        operatingStackView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
-        operatingStackView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor).isActive = true
-        operatingStackView.topAnchor.constraint(equalTo: contentView.topAnchor).isActive = true
-        operatingStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).isActive = true
-    }
-    
-    
-    private func makeOperatingStackView(_ operatingTitle:String,_ color:UIColor) -> UIStackView {
-        
-        let stackView = UIStackView()
-        stackView.alignment = .center
-        stackView.axis = .horizontal
-        stackView.distribution = .fillProportionally
-        stackView.spacing = 8.0
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        
-        operatingTitleLabel.text = operatingTitle
-        operatingTitleLabel.textColor = color
-        operatingTitleLabel.sizeToFit()
-        operatingTitleLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        let progressView = UIActivityIndicatorView()
-        if #available(iOS 13.0, *) {
-            progressView.style = .medium
-        } else {
-            progressView.style = .gray
-        }
-        progressView.translatesAutoresizingMaskIntoConstraints = false
-        
-        stackView.addArrangedSubview(operatingTitleLabel)
-        stackView.addArrangedSubview(progressView)
-        
-        progressView.startAnimating()
-        
-        return stackView
-        
-    }
+           textLabel?.text = nil
+           accessoryType = .none
+           operatingStackView.removeFromSuperview()
+           operatingStackView = makeOperatingStackView(operatingTitle,color)
+           contentView.addSubview(operatingStackView)
+           
+           operatingStackView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
+           operatingStackView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor).isActive = true
+           operatingStackView.topAnchor.constraint(equalTo: contentView.topAnchor).isActive = true
+           operatingStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).isActive = true
+       }
+       
+       
+       private func makeOperatingStackView(_ operatingTitle:String,_ color:UIColor) -> UIStackView {
+           
+           let stackView = UIStackView()
+           stackView.alignment = .center
+           stackView.axis = .horizontal
+           stackView.distribution = .fillProportionally
+           stackView.spacing = 8.0
+           stackView.translatesAutoresizingMaskIntoConstraints = false
+           
+           operatingTitleLabel.text = operatingTitle
+           operatingTitleLabel.textColor = color
+           operatingTitleLabel.sizeToFit()
+           operatingTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+           
+           let progressView = UIActivityIndicatorView()
+           if #available(iOS 13.0, *) {
+               progressView.style = .medium
+           } else {
+               progressView.style = .gray
+           }
+           progressView.translatesAutoresizingMaskIntoConstraints = false
+           
+           stackView.addArrangedSubview(operatingTitleLabel)
+           stackView.addArrangedSubview(progressView)
+           
+           progressView.startAnimating()
+           
+           return stackView
+           
+       }
     
     
     

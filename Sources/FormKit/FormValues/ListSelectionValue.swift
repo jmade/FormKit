@@ -105,10 +105,12 @@ public struct ListSelectionValue {
 extension ListSelectionValue: CustomStringConvertible {
     public var description: String {
         """
+        
         Title: \(title)
         Selected: \(selectedValue ?? "None")
         Underlying Object Count: \(underlyingObjects.count)
         Underlying Type: \( (underlyingObjects.count > 0) ? type(of: underlyingObjects[0]) : type(of: underlyingObjects.first) )
+        
         """
     }
 }

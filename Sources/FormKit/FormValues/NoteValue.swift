@@ -9,26 +9,55 @@ extension UIBarButtonItem {
 }
 
 
+extension CharacterSet {
+    
+    static var noteValue:CharacterSet {
+        let sets:[CharacterSet] = [
+            .alphanumerics,
+            .letters,
+            .capitalizedLetters,
+            .lowercaseLetters,
+            .uppercaseLetters,
+            .decimalDigits,
+            .whitespacesAndNewlines,
+            CharacterSet(charactersIn: ".?!,()[]$*%#-=/:;")
+        ]
+        
+        var megaSet = CharacterSet()
+        
+        for set in sets {
+            megaSet.formUnion(set)
+        }
+        return megaSet
+    }
+    
+}
+
+
 
 
 // MARK: - NoteValue -
-public struct NoteValue: FormValue, TextNumericalInput, Equatable, Hashable {
+public struct NoteValue: TextNumericalInput {
+    
+   public enum NoteStyle {
+        case standard
+        case long
+        case custom(CGFloat)
+    }
+    
     var identifier: UUID = UUID()
     public var value:String?
     public var placeholderValue:String?
     public var customKey: String?
     public var useDirectionButtons:Bool
+    
+    public var style:NoteStyle = .standard
+    
 }
 
 
 extension NoteValue {
     
-    public init(value: String,placeholderValue:String = "Type Note here...",_ useDirectionButtons:Bool = true) {
-        self.value = value
-        self.placeholderValue = placeholderValue
-        self.useDirectionButtons = useDirectionButtons
-        self.customKey = nil
-    }
     
     public init(placeholderValue:String,_ customKey:String?) {
         self.value = ""
@@ -37,10 +66,49 @@ extension NoteValue {
         self.customKey = customKey
     }
     
+    
+    public init(value: String,placeholderValue:String = "Type Note here...",_ useDirectionButtons:Bool = true) {
+        self.value = value
+        self.placeholderValue = placeholderValue
+        self.useDirectionButtons = useDirectionButtons
+        self.customKey = nil
+    }
+    
+    
+    public init(style:NoteStyle,_ useDirectionButtons:Bool = true,_ customKey:String?) {
+        self.value = ""
+        self.useDirectionButtons = useDirectionButtons
+        self.customKey = customKey
+    }
+    
+    
 }
 
 
-extension NoteValue {
+
+extension NoteValue: Hashable, Equatable {
+    
+    public func hash(into hasher: inout Hasher) {
+        return hasher.combine(identifier)
+    }
+    
+    public static func == (lhs: NoteValue, rhs: NoteValue) -> Bool {
+        return lhs.identifier == rhs.identifier
+    }
+}
+
+
+public extension NoteValue {
+    
+    static var FeedBack: NoteValue {
+        NoteValue(style: .long, false, "message")
+    }
+    
+}
+
+
+
+extension NoteValue: FormValue {
     public var formItem: FormItem {
         .note(self)
     }
@@ -86,7 +154,13 @@ extension NoteValue {
     
     
     public func newWith(_ text:String) -> NoteValue {
-      return  NoteValue(identifier: UUID(), value: text, placeholderValue: self.placeholderValue, customKey: self.customKey, useDirectionButtons: self.useDirectionButtons)
+      return  NoteValue(identifier: UUID(),
+                        value: text,
+                        placeholderValue: self.placeholderValue,
+                        customKey: self.customKey,
+                        useDirectionButtons: self.useDirectionButtons,
+                        style: self.style
+        )
     }
 }
 
@@ -98,6 +172,8 @@ public final class NoteCell: UITableViewCell, Activatable {
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
     var indexPath: IndexPath?
     
+    private let gen = UIImpactFeedbackGenerator()
+    
     private lazy var textView: UITextView = {
         let textView = UITextView()
         textView.keyboardType = .alphabet
@@ -107,22 +183,38 @@ public final class NoteCell: UITableViewCell, Activatable {
         return textView
     }()
     
+    
+    var standardHeightConstraint = NSLayoutConstraint()
+    var noteValueConstraint = NSLayoutConstraint()
+    
+    
     var formValue : NoteValue? {
         didSet {
-            if let _ = formValue {
+            if let val = formValue {
+                
+               
+                
+                
                 
                 let mode = derivedMode()
                 switchToMode(mode)
                
-                evaluateButtonsBar()
-            }
+                if val.useDirectionButtons {
+                    evaluateButtonsBar()
+                }
+                
+            }     
         }
     }
+    
+    
+    
     
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
+
         activateDefaultHeightAnchorConstraint(92)
         
         textView.translatesAutoresizingMaskIntoConstraints = false
@@ -133,9 +225,9 @@ public final class NoteCell: UITableViewCell, Activatable {
         
         NSLayoutConstraint.activate([
             textView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-            textView.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            contentView.layoutMarginsGuide.trailingAnchor.constraint(equalTo: textView.trailingAnchor),
             textView.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-            textView.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor)
+            textView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor),
             ])
     }
     
@@ -191,15 +283,13 @@ public final class NoteCell: UITableViewCell, Activatable {
         if let newText = textView.text {
             if let existingNoteValue = formValue {
                 updateFormValueDelegate?.updatedFormValue(
-                    NoteValue(value: newText, existingNoteValue.useDirectionButtons),
+                    existingNoteValue.newWith(newText),
                     indexPath
                 )
             }
         }
     }
-    
-    
-    
+
     public func activate(){
         
         textView.becomeFirstResponder()
@@ -213,12 +303,19 @@ public final class NoteCell: UITableViewCell, Activatable {
             let newPosition = textView.endOfDocument
             textView.selectedTextRange = textView.textRange(from: newPosition, to: newPosition)
         }
+        
+        
+        
     }
 }
 
 extension NoteCell: UITextViewDelegate {
     
     public func textViewShouldBeginEditing(_ textView: UITextView) -> Bool {
+        gen.prepare()
+        if #available(iOS 13.0, *) {
+            gen.impactOccurred(intensity: 0.80)
+        }
         return true
     }
     
@@ -232,11 +329,24 @@ extension NoteCell: UITextViewDelegate {
         sendTextToDelegate()
     }
     
+    
+    
+    
     public func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-        print("Incoming Text: \(text)")
         
-        
-        return true
+        if CharacterSet.noteValue.isSuperset(of: CharacterSet(charactersIn: text)) {
+            return true
+        } else {
+            var newText = ""
+            text.forEach { (char) in
+                if CharacterSet.noteValue.isSuperset(of: CharacterSet(charactersIn: String(char))) {
+                    newText.append(char)
+                }
+            }
+            textView.text = textView.text + newText
+            textView.setCursorLocation(textView.text.count)
+            return false
+        }
         
     }
     
