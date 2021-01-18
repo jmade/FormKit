@@ -416,6 +416,10 @@ open class FormController: UITableViewController, CustomTransitionable {
     // MARK: - Activates Input On Appear -
     public var activatesInputOnAppear: Bool = false
     
+    public var usesSwipeAction: Bool = false
+    
+    public var usesContextMenus: Bool = false
+    
     
     public var allowModalDismissal:Bool = false {
         didSet {
@@ -546,6 +550,8 @@ open class FormController: UITableViewController, CustomTransitionable {
     public func setNewData(_ newData:FormDataSource) {
         DispatchQueue.main.async(execute: { [weak self] in
             guard let self = self else { return }
+            let existingData = self.dataSource
+            newData.updateClosure = existingData.updateClosure
             self.dataSource = newData
         })
     }
@@ -555,8 +561,9 @@ open class FormController: UITableViewController, CustomTransitionable {
     // MARK: - Controller Base Initialize -
     private func controllerInitialize() { }
     
+    // MARK: - setupUI -
     private func setupUI() {
-        print("[FromKit] Form Controller (setupUI)")
+        //print("[FromKit] Form Controller (setupUI)")
         // Header Cell
         
         switch displayStyle {
@@ -603,6 +610,129 @@ open class FormController: UITableViewController, CustomTransitionable {
         
     }
     
+    
+    
+    
+    
+
+    
+    private func handleDataEvaluation(_ eval:FormDataSource.Evaluation) {
+        DispatchQueue.main.async(execute: { [weak self] in
+            guard let self = self else { return }
+            self.tableView.beginUpdates()
+            self.tableView.insertSections(eval.sets.insert, with: .fade)
+            self.tableView.deleteSections(eval.sets.delete, with: .fade)
+            self.tableView.reloadSections(eval.sets.reload, with: .fade)
+            eval.reloads.forEach({
+                if let sectionHeader = self.tableView.headerView(forSection: $0.section) as? FormHeaderCell {
+                    if let formSection = self.dataSource.section(for: $0.section) {
+                        sectionHeader.configureView(formSection.headerValue)
+                    }
+                }
+                if let changes = $0.changes {
+                    self.tableView.reload(
+                        changes: changes,
+                        section: $0.section,
+                        insertionAnimation: .fade,
+                        deletionAnimation:  .fade,
+                        replacementAnimation:  .fade,
+                        completion: nil
+                    )
+                }
+            })
+            self.tableView.endUpdates()
+        })
+    }
+    
+
+    
+    override open func viewDidLoad() {
+        super.viewDidLoad()
+        if didLoad == false {
+            setupUI()
+        }
+    }
+    
+    
+    override open func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if toolbarItems != nil {
+            self.navigationController?.setToolbarHidden(false, animated: false)
+        } else {
+            self.navigationController?.setToolbarHidden(true, animated: false)
+        }
+        if didLoad == false {
+            setupUI()
+        }
+        
+    }
+    
+    
+    override open func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.navigationController?.setToolbarHidden(true, animated: animated)
+    }
+    
+    
+    open override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        checkForActiveInput()
+        runValidation()
+    }
+    
+    
+    private func runValidation() {
+        if !dataSource.isEmpty {
+            validationClosure?(dataSource,self)
+        }
+    }
+    
+    
+    private func checkForActiveInput() {
+        guard hasActivated == false else { return }
+        
+        if activatesInputOnAppear {
+            if let firstInputPath = dataSource.firstInputIndexPath {
+                if let nextCell = tableView.cellForRow(at: firstInputPath) {
+                    if let activatabelCell = nextCell as? Activatable {
+                        activatabelCell.activate()
+                        hasActivated = true
+                    }
+                }
+            }
+        }
+        
+    }
+    
+    
+    
+    public func loadingMode(message:String) {
+        if let loadingView = tableView.tableFooterView as? ItemsLoadingView {
+            loadingView.displayMessage(message)
+        }
+        self.dataSource = FormDataSource()
+    }
+
+    
+}
+
+
+extension FormController {
+    open override var description: String {
+        """
+        
+        FormController: '\(title ?? "-")'
+        Data: \(dataSource.params)
+        Parent: \("\(String(describing: parent))" )
+        
+        """
+    }
+}
+
+
+
+// MARK: - BarItem -
+extension FormController {
     
     private func checkBarItems() {
         
@@ -841,6 +971,8 @@ open class FormController: UITableViewController, CustomTransitionable {
         self.barItems.append(contentsOf: newItems)
     }
     
+    
+    // MARK: - addBarItem -
     public func addBarItem(_ barItem:BarItem) {
        appendBarItem(barItem)
     }
@@ -889,112 +1021,7 @@ open class FormController: UITableViewController, CustomTransitionable {
     }
 
     
-    private func handleDataEvaluation(_ eval:FormDataSource.Evaluation) {
-        DispatchQueue.main.async(execute: { [weak self] in
-            guard let self = self else { return }
-            self.tableView.beginUpdates()
-            self.tableView.insertSections(eval.sets.insert, with: .fade)
-            self.tableView.deleteSections(eval.sets.delete, with: .fade)
-            self.tableView.reloadSections(eval.sets.reload, with: .fade)
-            eval.reloads.forEach({
-                if let sectionHeader = self.tableView.headerView(forSection: $0.section) as? FormHeaderCell {
-                    if let formSection = self.dataSource.section(for: $0.section) {
-                        sectionHeader.configureView(formSection.headerValue)
-                    }
-                }
-                if let changes = $0.changes {
-                    self.tableView.reload(
-                        changes: changes,
-                        section: $0.section,
-                        insertionAnimation: .fade,
-                        deletionAnimation:  .fade,
-                        replacementAnimation:  .fade,
-                        completion: nil
-                    )
-                }
-            })
-            self.tableView.endUpdates()
-        })
-    }
     
-
-    
-    override open func viewDidLoad() {
-        super.viewDidLoad()
-        if didLoad == false {
-            setupUI()
-        }
-    }
-    
-    
-    override open func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        if toolbarItems != nil {
-            self.navigationController?.setToolbarHidden(false, animated: false)
-        } else {
-            self.navigationController?.setToolbarHidden(true, animated: false)
-        }
-        if didLoad == false {
-            setupUI()
-        }
-        
-    }
-    
-    
-    override open func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        self.navigationController?.setToolbarHidden(true, animated: animated)
-    }
-    
-    
-    open override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        checkForActiveInput()
-        runValidation()
-    }
-    
-    
-    private func runValidation() {
-        if !dataSource.isEmpty {
-            validationClosure?(dataSource,self)
-        }
-    }
-    
-    
-    private func checkForActiveInput() {
-        guard hasActivated == false else { return }
-        
-        if activatesInputOnAppear {
-            if let firstInputPath = dataSource.firstInputIndexPath {
-                if let nextCell = tableView.cellForRow(at: firstInputPath) {
-                    if let activatabelCell = nextCell as? Activatable {
-                        activatabelCell.activate()
-                        hasActivated = true
-                    }
-                }
-            }
-        }
-        
-    }
-    
-    
-    
-    public func loadingMode(message:String) {
-        if let loadingView = tableView.tableFooterView as? ItemsLoadingView {
-            loadingView.displayMessage(message)
-        }
-        self.dataSource = FormDataSource()
-    }
-
-    
-}
-
-
-
-
-/// BarItem Methods
-
-extension FormController {
     
     @objc
     private func firstLeadingBarItem() {
@@ -1035,12 +1062,6 @@ extension FormController {
     
     
 }
-
-
-
-
-
-
 
 
 
@@ -1285,6 +1306,138 @@ extension FormController {
 
 
 
+// MARK: - UISwipeActions -
+
+extension FormController {
+
+    open override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        
+        guard usesSwipeAction, let _ = dataSource.itemAt(indexPath) else {
+             return nil
+        }
+        
+        if #available(iOS 13.0, *) {
+            let deleteAction = contextualDeleteAction(forRowAtIndexPath: indexPath)
+            return UISwipeActionsConfiguration(actions: [deleteAction])
+        } else {
+            // Fallback on earlier versions
+            return nil
+        }
+        
+    }
+    
+}
+
+
+extension FormController {
+    
+    open override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            let _ = dataSource.sections[indexPath.section].rows.remove(at: indexPath.row)
+            //objects.remove(at: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: .fade)
+        } else if editingStyle == .insert {
+            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view.
+        }
+    }
+    
+}
+
+
+// MARK: - UIContextMenu -
+
+
+@available(iOS 13.0, *)
+extension FormController {
+    
+    open override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+            
+            guard usesContextMenus, let formItem = dataSource.itemAt(indexPath) else {
+                return nil
+            }
+            
+            
+            let contextMenu = makeContextMenu(formItem)
+            
+            return UIContextMenuConfiguration(
+                identifier: nil,
+                previewProvider: nil,
+                actionProvider: { suggestedActions in
+                    return contextMenu
+            })
+
+        }
+    
+}
+
+
+@available(iOS 13.0, *)
+extension FormController {
+    
+    private func contextualDeleteAction(forRowAtIndexPath indexPath: IndexPath) -> UIContextualAction {
+        generateHapticFeedback(.success)
+        
+        // 2
+        let action =  UIContextualAction(style: .destructive, title: "Delete") { [weak self] (action, view, handler:(Bool) -> Void) in
+            guard let self = self else { return }
+            
+            if self.dataSource.sections[indexPath.section].rows.count == 1 {
+                // Delete the Section
+                let _ = self.dataSource.sections.remove(at: indexPath.section)
+                self.tableView.deleteSections(IndexSet(arrayLiteral: indexPath.section) , with: .fade)
+            } else {
+                let _ = self.dataSource.sections[indexPath.section].rows.remove(at: indexPath.row)
+                self.tableView.deleteRows(at: [indexPath], with: .fade)
+            }
+            
+            
+            
+            self.generateHapticFeedback(.impact)
+            handler(true)
+        }
+        
+        //
+        
+        
+        
+        action.image = UIImage(systemName: "trash.fill")
+        action.backgroundColor = .systemRed
+        
+        return action
+        
+        
+        
+    }
+    
+    
+  
+    
+    
+    /// Context Menu
+    func makeContextMenu(_ formItem:FormItem) -> UIMenu {
+          
+
+    //        // The "title" will show up as an action for opening this menu
+    //        let edit = UIMenu(title: "Edit...", children: [rename, delete])
+
+                // Create a UIAction for sharing
+            let share = UIAction(title: "Share", image: UIImage(systemName: "square.and.arrow.up")) { action in
+                // Show system share sheet
+                
+            }
+        
+            
+
+
+            // Create our menu with both the edit menu and the share action
+            return UIMenu(title: "Main Menu", children: [share])
+        }
+        
+    
+}
+
+
+
 extension FormController {
     
     public func params() -> [String:String] {
@@ -1432,6 +1585,78 @@ extension FormController {
         }
     }
     
+    
+    // MARK: - ListItem Update -
+    public func addListItems(_ listItems:[ListItem],withKeys keys:[String]) {
+        var listItemsData:[String:ListItem] = [:]
+        
+        for value in zip(listItems, keys) {
+            listItemsData.updateValue(value.0, forKey: value.1)
+        }
+        
+        addListItemsData(listItemsData)
+    }
+    
+    
+    public func addListItem(_ listItem:ListItem,toListSelectionWithKey key:String) {
+        addListItemsData([key:listItem])
+    }
+    
+    
+    public func addListItemsWithData(_ data:[String:ListItem]) {
+        addListItemsData(data)
+    }
+    
+    
+    private func addListItemsData(_ data:[String:ListItem]) {
+        
+        var vals:[(IndexPath,FormItem)] = []
+        
+        for (key,listItem) in data {
+            
+            if let lsv = dataSource.getListSelectionValueForKey(key) {
+                let existingList = lsv.0
+                let newItems = [[listItem],existingList.listItems]
+                    .reduce([],+)
+                    .sorted { (a, b) -> Bool in
+                    a.title < b.title
+                }
+                let newLSV = existingList.newWith(newItems)
+                vals.append((lsv.1, newLSV.formItem))
+            }
+            
+        }
+        
+        
+        for item in vals {
+            dataSource.sections[item.0.section].rows[item.0.row] = item.1
+        }
+        
+        tableView.reloadRows(at: vals.map({ $0.0 }), with: .none)
+    }
+    
+    
+    
+    public func addFormItem(_ formItem:FormItem,toBottomOfSection section:Int) {
+        let newRow = tableView.numberOfRows(inSection: section)
+        dataSource.sections[section].rows.append(formItem)
+        tableView.insertRows(at: [IndexPath(row: newRow, section: section)], with: .automatic)
+    }
+    
+    
+    public func addFormItem(_ formItem:FormItem,secondToLastInSection section:Int) {
+        let numRows = tableView.numberOfRows(inSection: section)
+        if let lastRow = dataSource.sections[section].rows.popLast() {
+            tableView.deleteRows(at: [IndexPath(row: numRows-1, section: section)], with: .fade)
+            dataSource.sections[section].rows.append(formItem)
+            dataSource.sections[section].rows.append(lastRow)
+            tableView.insertRows(at: [IndexPath(row: numRows-1, section: section),IndexPath(row: numRows, section: section)], with: .fade)
+        }
+        
+       
+    }
+    
+    
 }
 
 
@@ -1457,7 +1682,7 @@ extension FormController {
             for row in rows {
                 if visiblePaths.contains(row) {
                     if let actionCell = tableView.cellForRow(at: row) as? ActionCell {
-                        print("Changing Action Cell at:\(row) | \(actionCell)")
+                        //print("Changing Action Cell at:\(row) | \(actionCell)")
                         enabled ? actionCell.setEnabled() : actionCell.setDisabled()
                     }
                 }
@@ -1862,6 +2087,12 @@ extension FormController: UpdateFormValueDelegate {
                     if let pickerValue = formValue as? DatePickerValue {
                         if pickerValue != datePickerValue {
                             handleUpdatedFormValue(pickerValue, at: path)
+                        }
+                    }
+                case .push(let push):
+                    if let pushValue = formValue as? PushValue {
+                        if pushValue != push {
+                            handleUpdatedFormValue(pushValue, at: path)
                         }
                     }
                 }

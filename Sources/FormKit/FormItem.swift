@@ -33,6 +33,7 @@ public enum FormItem {
     case input(InputValue)
     case date(DateValue)
     case datePicker(DatePickerValue)
+    case push(PushValue)
     
 }
 
@@ -83,6 +84,8 @@ extension FormItem: FormCellDescriptable {
             return dateValue.cellDescriptor
         case .datePicker(let datePicker):
             return datePicker.cellDescriptor
+        case .push(let pushValue):
+            return pushValue.cellDescriptor
         }
     }
 }
@@ -138,6 +141,8 @@ extension FormItem: Hashable, Equatable {
             return date.hashValue
         case .datePicker(let datePicker):
             return datePicker.hashValue
+        case .push(let pushValue):
+            return pushValue.hashValue
         }
     }
     
@@ -146,6 +151,11 @@ extension FormItem: Hashable, Equatable {
 
 
 extension FormItem {
+    
+    public var encodedKey:String? {
+        return encodedValues.keys.first
+    }
+    
     
     public var encodedValues:[String:String] {
         switch self {
@@ -191,6 +201,8 @@ extension FormItem {
             return date.encodedValue()
         case .datePicker(let datePicker):
             return datePicker.encodedValue()
+        case .push(let pushValue):
+            return pushValue.encodedValue()
         }
         
     }

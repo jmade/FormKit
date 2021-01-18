@@ -231,6 +231,8 @@ public typealias FormValueDisplayable = FormConfigurable & FormCellDescriptable
 // MARK: - EXTENTIONS -
 /// EXTENTIONS
 
+
+
 //: MARK: - UIViewController -
 extension UIViewController {
     
@@ -249,6 +251,22 @@ extension UIViewController {
                 self.navigationController!.navigationBar.backItem!.title = title
             }
         }
+    }
+    
+}
+
+
+public extension UIViewController {
+    
+    var presentedFormController:FormController? {
+        if let parent = self.parent {
+            if let parentPresenter = parent.presentingViewController {
+                if let formController = parentPresenter.children.first as? FormController {
+                    return formController
+                }
+            }
+        }
+        return nil
     }
     
 }

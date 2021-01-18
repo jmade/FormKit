@@ -37,6 +37,10 @@ public class FormDataSource {
         updateClosure?(copy)
     }
     
+    public func setNeedsUpdate() {
+        self.update()
+    }
+    
     public var updateClosure: FormDataSourceUpdateClosure? = nil
     
 }
@@ -486,10 +490,31 @@ extension FormDataSource {
         }
     }
     
+    
+    
     public func containsStoredObjectForKey(_ key:String) -> Bool {
         ( storage.index(forKey: key) != nil )
     }
     
+    
+    
+    public func getListSelectionValueForKey(_ key:String) -> (ListSelectionValue,IndexPath)? {
+        for (sectionIndex,section) in sections.enumerated() {
+            for (rowIndex,row) in section.rows.enumerated() {
+                if let encodedKey = row.encodedKey {
+                    if encodedKey == key {
+                        switch row {
+                        case .listSelection(let ls):
+                            return (ls,IndexPath(row: rowIndex, section: sectionIndex))
+                        default:
+                            break
+                        }
+                    }
+                }
+            }
+        }
+        return nil
+    }
     
    
     
