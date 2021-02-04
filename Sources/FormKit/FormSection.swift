@@ -25,6 +25,8 @@ public class FormSection: Equatable {
     
     public var title:String = ""
     
+    public var subtitle:String?
+    
     public var rows:[FormItem] = [] {
         didSet {
             if oldValue != rows {
@@ -45,6 +47,7 @@ public class FormSection: Equatable {
     public var updateClosure:FormSectionUpdateClosure = { _ in }
     
     
+    
     public var headerValue:HeaderValue {
         return _headerValue
     }
@@ -61,6 +64,7 @@ extension FormSection {
         self.rows = formValues.map({ $0.formItem })
         self._headerValue = header
         self.title = header.title
+        self.subtitle = header.subtitle
     }
     
 }
@@ -84,7 +88,9 @@ extension FormSection {
         self.init()
         self.title = title
         self.rows = formItems
-        self._headerValue = HeaderValue(title: title, section: -1)
+        var h = HeaderValue(title: title, section: -1)
+        h.subtitle = subtitle
+        self._headerValue = h
     }
     
     public convenience init(_ formItems:[FormItem]) {
@@ -96,14 +102,29 @@ extension FormSection {
         self.init()
         self.title = title
         self.rows = []
-        self._headerValue = HeaderValue(title: title, section: -1)
+        var h = HeaderValue(title: title, section: -1)
+        h.subtitle = subtitle
+        self._headerValue = h
     }
+   
+    public convenience init(_ title:String,_ subtitle:String? = nil,_ formValues:[FormValue]) {
+        self.init()
+        self.rows = formValues.map({ $0.formItem })
+        self.title = title
+        self.subtitle = subtitle
+        var h = HeaderValue(title: title, section: -1)
+            h.subtitle = subtitle
+        self._headerValue = h
+    }
+    
     
     public convenience init(_ title:String,_ formItems:[FormItem]) {
         self.init()
         self.title = title
         self.rows = formItems
-        self._headerValue = HeaderValue(title: title, section: -1)
+        var h = HeaderValue(title: title, section: -1)
+        h.subtitle = subtitle
+        self._headerValue = h
     }
     
     

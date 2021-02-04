@@ -8,7 +8,9 @@ public struct DateValue {
     public var customKey:String? = nil
     public var title:String?
     public var date:Date
-    public var dateFormat:String?
+    public var dateFormat = "yyyy-MM-dd"
+    public var exportDateFormat:String?
+    public var displayDateFormat:String?
     /// TableSelectable
     public var isSelectable: Bool = false
     
@@ -23,21 +25,18 @@ extension DateValue {
     public init(_ date:Date = Date()) {
         self.title =  nil
         self.customKey = nil
-        self.dateFormat = nil
         self.date = date
     }
     
     public init(title:String,date:Date) {
         self.title = title
         self.customKey = nil
-        self.dateFormat = nil
         self.date = date
     }
     
     public init(_ title:String,_ date:Date) {
         self.title = title
         self.customKey = nil
-        self.dateFormat = nil
         self.date = date
     }
     
@@ -52,7 +51,6 @@ extension DateValue {
     public init(_ title:String,_ customKey:String) {
         self.title = title
         self.customKey = customKey
-        self.dateFormat = nil
         self.date = Date()
     }
 
@@ -60,7 +58,6 @@ extension DateValue {
     public init(_ title:String,_ customKey:String,_ date:Date?) {
         self.title = title
         self.customKey = customKey
-        self.dateFormat = nil
         self.date = date ?? Date()
     }
     
@@ -68,10 +65,19 @@ extension DateValue {
     public init(_ title:String,_ customKey:String,_ date:Date?,_ minDate:Date?,_ maxDate:Date?) {
         self.title = title
         self.customKey = customKey
-        self.dateFormat = nil
         self.date = date ?? Date()
         self.minDate = minDate
         self.maxDate = maxDate
+    }
+    
+    public init(_ title:String,_ customKey:String,_ displayFormat:String,_ exportFormat:String, _ date:Date?,_ minDate:Date?,_ maxDate:Date?) {
+        self.title = title
+        self.customKey = customKey
+        self.date = date ?? Date()
+        self.minDate = minDate
+        self.maxDate = maxDate
+        self.displayDateFormat = displayFormat
+        self.exportDateFormat = exportFormat
     }
     
 }
@@ -84,6 +90,8 @@ extension DateValue {
                   title: self.title,
                   date: date,
                   dateFormat: self.dateFormat,
+                  exportDateFormat: self.exportDateFormat,
+                  displayDateFormat: self.displayDateFormat,
                   isSelectable: self.isSelectable,
                   minDate: self.minDate,
                   maxDate: self.maxDate
@@ -99,6 +107,18 @@ extension DateValue {
     var formattedValue:String {
         let formatter = DateFormatter()
         formatter.dateFormat = dateFormat ?? "yyyy-MM-dd"
+        return formatter.string(from: date)
+    }
+    
+    var displayValue:String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = displayDateFormat ?? dateFormat
+        return formatter.string(from: date)
+    }
+    
+    var exportValue:String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = exportDateFormat ?? dateFormat
         return formatter.string(from: date)
     }
     
@@ -135,7 +155,7 @@ extension DateValue: FormValue {
     }
 
     public func encodedValue() -> [String : String] {
-        return [ encodedTitle : formattedValue ]
+        return [ encodedTitle : exportValue ]
     }
     
 }

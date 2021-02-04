@@ -52,6 +52,7 @@ public struct NoteValue: TextNumericalInput {
     public var useDirectionButtons:Bool
     
     public var style:NoteStyle = .standard
+    public var title:String?
     
 }
 
@@ -159,7 +160,8 @@ extension NoteValue {
                         placeholderValue: self.placeholderValue,
                         customKey: self.customKey,
                         useDirectionButtons: self.useDirectionButtons,
-                        style: self.style
+                        style: self.style,
+                        title: self.title
         )
     }
 }
@@ -174,12 +176,25 @@ public final class NoteCell: UITableViewCell, Activatable {
     
     private let gen = UIImpactFeedbackGenerator()
     
+    private lazy var titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.preferredFont(forTextStyle: .body)
+        label.textAlignment = .left
+        label.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(label)
+        return label
+    }()
+    
     private lazy var textView: UITextView = {
         let textView = UITextView()
         textView.keyboardType = .alphabet
         textView.returnKeyType = .default
         textView.textAlignment = .left
         textView.font = UIFont.preferredFont(forTextStyle: .headline)
+        textView.backgroundColor = .clear
+        textView.translatesAutoresizingMaskIntoConstraints = false
+        textView.delegate = self
+        contentView.addSubview(textView)
         return textView
     }()
     
@@ -194,7 +209,7 @@ public final class NoteCell: UITableViewCell, Activatable {
                 
                
                 
-                
+                titleLabel.text = val.title
                 
                 let mode = derivedMode()
                 switchToMode(mode)
@@ -217,16 +232,18 @@ public final class NoteCell: UITableViewCell, Activatable {
 
         activateDefaultHeightAnchorConstraint(92)
         
-        textView.translatesAutoresizingMaskIntoConstraints = false
-        textView.backgroundColor = .clear
         
-        textView.delegate = self
-        contentView.addSubview(textView)
+        
+        
         
         NSLayoutConstraint.activate([
+            
+            titleLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            titleLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            
             textView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
             contentView.layoutMarginsGuide.trailingAnchor.constraint(equalTo: textView.trailingAnchor),
-            textView.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            textView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0),
             textView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor),
             ])
     }
@@ -335,7 +352,7 @@ extension NoteCell: UITextViewDelegate {
     public func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
         
         if CharacterSet.noteValue.isSuperset(of: CharacterSet(charactersIn: text)) {
-            return true
+            return (textView.text + text).count < 4000
         } else {
             var newText = ""
             text.forEach { (char) in
@@ -343,8 +360,11 @@ extension NoteCell: UITextViewDelegate {
                     newText.append(char)
                 }
             }
-            textView.text = textView.text + newText
-            textView.setCursorLocation(textView.text.count)
+            
+            if (textView.text + text).count < 4000 {
+                textView.text = textView.text + newText
+                textView.setCursorLocation(textView.text.count)
+            }
             return false
         }
         

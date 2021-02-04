@@ -6,7 +6,7 @@ public struct PickerSelectionValue: Equatable, Hashable {
     public var title:String
     public var values:[String]
     public var selectedIndex: Int = 0
-    public var selectionMessage:String = "Select a value"
+    public var selectionMessage:String?
     public var ids:[Int]?
     
     public enum Mode {
@@ -22,7 +22,7 @@ public struct PickerSelectionValue: Equatable, Hashable {
 // MARK: - Initialization -
 extension PickerSelectionValue {
     
-    public init(title:String,values:[String],_ selectedIndex:Int = 0,_ selectionMessage:String = "Select a Value"){
+    public init(title:String,values:[String],_ selectedIndex:Int = 0,_ selectionMessage:String?){
         self.values = values
         self.selectedIndex = selectedIndex
         self.title = title
@@ -46,7 +46,7 @@ extension PickerSelectionValue {
     }
     
     
-    public init(_ title:String,_ customKey:String,_ values:[String],_ ids:[Int],_ selectionMessage:String = "Select a Value") {
+    public init(_ title:String,_ customKey:String,_ values:[String],_ ids:[Int],_ selectionMessage:String?) {
         self.values = values
         self.customKey = customKey
         self.selectedIndex = 0
@@ -236,6 +236,10 @@ public final class PickerSelectionCell: UITableViewCell {
         label.lineBreakMode = .byWordWrapping
         label.textAlignment = .right
         label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .subheadline).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+        if #available(iOS 13.0, *) {
+            label.textColor = .secondaryLabel
+        }
+
         label.adjustsFontForContentSizeCategory = true
         return label
     }()
@@ -275,7 +279,7 @@ public final class PickerSelectionCell: UITableViewCell {
             }
             
             title.text = formValue.title
-            selectionLabel.text = formValue.selectionMessage
+            selectionLabel.text = formValue.selectionMessage ?? formValue.title
             
             if formValue.values.isEmpty {
                 selectedValue.text = "-"

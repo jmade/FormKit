@@ -16,7 +16,7 @@ public class FormDataSource {
     
     public var storage:[String:Any] = [:]
     
-    public var additionalParameters:[String:String]?
+    public var additionalParameters:[String:String] = [:]
     
     public weak var delegate:FormDataSourceUpdateDelegate?
     
@@ -330,17 +330,16 @@ extension FormDataSource {
         var value:[ [String:String] ] = []
         
         for param in params {
-            if !param.value.isEmpty && (param.value != "-1") && !param.key.isEmpty {
+            if !param.value.isEmpty && (param.value != "-1") && !param.key.isEmpty && (param.value != "-- Please Select --") {
                 value.append([param.key:param.value])
             }
         }
         
-        if let additional = additionalParameters {
-           for param in additional {
-               if !param.value.isEmpty && (param.value != "-1") && !param.key.isEmpty {
-                   value.append([param.key:param.value])
-               }
-           }
+        
+        for param in additionalParameters {
+            if !param.value.isEmpty && (param.value != "-1") && !param.key.isEmpty && (param.value != "-- Please Select --") {
+                value.append([param.key:param.value])
+            }
         }
         
         return value.merged()

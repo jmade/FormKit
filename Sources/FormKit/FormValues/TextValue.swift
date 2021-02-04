@@ -250,6 +250,31 @@ public final class TextCell: UITableViewCell, Activatable {
         return textField
     }()
     
+    
+    private lazy var descriptorLabel:UILabel = {
+        let label = UILabel()
+        label.textAlignment = .left
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        //label.font = UIFont.preferredFont(forTextStyle: subtitleTextStyle)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        //label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
+        if #available(iOS 13.0, *) {
+            label.textColor = .secondaryLabel
+        }
+        contentView.addSubview(label)
+//        label.leadingAnchor.constraint(equalTo: labelContainer.leadingAnchor).isActive = true
+//        label.trailingAnchor.constraint(equalTo: labelContainer.trailingAnchor).isActive = true
+//        label.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8.0).isActive = true
+//        labelContainer.bottomAnchor.constraint(equalTo: label.bottomAnchor).isActive = true
+        return label
+    }()
+    
+    
+    
     var formValue:TextValue? {
         didSet {
             if let textValue = formValue {

@@ -28,6 +28,7 @@ public struct HeaderValue {
     
     public var section:Int
     public var title:String
+    public var subtitle:String?
     public var isInteractable:Bool = false
     public var lastSectionHeight:Double? = nil
 }

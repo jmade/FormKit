@@ -1312,17 +1312,16 @@ extension FormController {
 
     open override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         
-        guard usesSwipeAction, let _ = dataSource.itemAt(indexPath) else {
-             return nil
+        if usesSwipeAction == true {
+            if let _ = dataSource.itemAt(indexPath) {
+                if #available(iOS 13.0, *) {
+                    let deleteAction = contextualDeleteAction(forRowAtIndexPath: indexPath)
+                    return UISwipeActionsConfiguration(actions: [deleteAction])
+                }
+            }
         }
         
-        if #available(iOS 13.0, *) {
-            let deleteAction = contextualDeleteAction(forRowAtIndexPath: indexPath)
-            return UISwipeActionsConfiguration(actions: [deleteAction])
-        } else {
-            // Fallback on earlier versions
-            return nil
-        }
+        return nil
         
     }
     
@@ -2287,6 +2286,7 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
     }
 
     public var textStyle:UIFont.TextStyle = .title2
+    public var subtitleTextStyle:UIFont.TextStyle = .subheadline
     
     private lazy var titleLabel:UILabel = {
         let label = UILabel()
@@ -2305,6 +2305,28 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
         label.leadingAnchor.constraint(equalTo: labelContainer.leadingAnchor).isActive = true
         label.trailingAnchor.constraint(equalTo: labelContainer.trailingAnchor).isActive = true
         label.topAnchor.constraint(equalTo: labelContainer.topAnchor).isActive = true
+        //labelContainer.bottomAnchor.constraint(equalTo: label.bottomAnchor).isActive = true
+        return label
+    }()
+    
+    private lazy var subTitleLabel:UILabel = {
+        let label = UILabel()
+        label.textAlignment = .left
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        label.font = UIFont.preferredFont(forTextStyle: subtitleTextStyle)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        //label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
+        if #available(iOS 13.0, *) {
+            label.textColor = .secondaryLabel
+        }
+        labelContainer.addSubview(label)
+        label.leadingAnchor.constraint(equalTo: labelContainer.leadingAnchor).isActive = true
+        label.trailingAnchor.constraint(equalTo: labelContainer.trailingAnchor).isActive = true
+        label.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8.0).isActive = true
         labelContainer.bottomAnchor.constraint(equalTo: label.bottomAnchor).isActive = true
         return label
     }()
@@ -2373,6 +2395,7 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
         
         let data:(image:UIImage?,color:UIColor?) = getImage(header)
         self.titleLabel.text = header.title
+        self.subTitleLabel.text = header.subtitle
         self.titleLabel.sizeToFit()
         if let color = data.color {
             indicatorView.tintColor = color
@@ -2426,6 +2449,7 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
     public override func prepareForReuse() {
         headerValue = nil
         titleLabel.text = nil
+        subTitleLabel.text = nil
         indicatorView.image = nil
         super.prepareForReuse()
     }

@@ -4,7 +4,7 @@ import UIKit
 public struct ReadOnlyValue: Equatable, Hashable {
     
     public enum ValueDisplayStyle {
-        case code, digit, bold, `default`, valueOnly
+        case code, digit, bold, `default`, valueOnly, centered
     }
     
     public var valueDisplayStyle:ValueDisplayStyle = .default
@@ -17,6 +17,12 @@ public struct ReadOnlyValue: Equatable, Hashable {
 
 
 public extension ReadOnlyValue {
+    
+    init(centeredValue:String) {
+        self.title = String()
+        self.valueDisplayStyle = .centered
+        self.value = centeredValue
+    }
     
     init(title: String, value:String,_ disabled:Bool = true) {
         self.title = title
@@ -74,6 +80,12 @@ public extension ReadOnlyValue {
         
         
         switch valueDisplayStyle {
+        case .centered:
+            mutableAttribString
+                .addAttribute(.font,
+                              value: UIFont(descriptor: UIFont.preferredFont(forTextStyle:  .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0),
+                              range: NSRange(location: 0, length: value.count)
+            )
         case .code, .default, .valueOnly:
              mutableAttribString
                 .addAttribute(.font,
@@ -219,11 +231,19 @@ public final class ReadOnlyCell: UITableViewCell {
                 titleLabel.isHidden = true
                 valueLabel.isHidden = true
                 valueOnlyLabel.isHidden = false
+                valueOnlyLabel.textAlignment = .left
+                valueOnlyLabel.attributedText = readOnlyValue.valueAttributedText
+            case .centered:
+                titleLabel.isHidden = true
+                valueLabel.isHidden = true
+                valueOnlyLabel.isHidden = false
+                valueOnlyLabel.textAlignment = .center
                 valueOnlyLabel.attributedText = readOnlyValue.valueAttributedText
             default:
                 titleLabel.isHidden = false
                 valueLabel.isHidden = false
                 valueOnlyLabel.isHidden = true
+                valueOnlyLabel.textAlignment = .left
                 titleLabel.text = readOnlyValue.title
                 valueLabel.attributedText = readOnlyValue.valueAttributedText
             }
