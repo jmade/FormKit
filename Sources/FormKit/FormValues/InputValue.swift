@@ -11,9 +11,9 @@ import UIKit
 public struct InputValue {
     
     public enum InputType {
-        case zipcode, phoneNumber, password
+        case zipcode, phoneNumber, password, cellPhoneNumber
     }
-    var type: InputType = .zipcode
+    public var type: InputType = .zipcode
     var identifier: UUID = UUID()
     public var value: String? = nil
     /// TableSelectable
@@ -38,6 +38,13 @@ extension InputValue {
             self.value = "\(value)"
         }
     }
+    
+    public init(type: InputType,customKey:String?,value:String?) {
+        self.type = type
+        self.customKey = customKey
+        self.value = value
+    }
+    
     
     public init(_ type: InputType,_ customKey:String?,_ placeholder: String? = nil) {
         self.type = type
@@ -69,6 +76,8 @@ extension InputValue {
         switch type {
         case .phoneNumber:
             return "Phone Number"
+        case .cellPhoneNumber:
+            return "Cell Phone Number"
         case .zipcode:
             return "Zip Code"
         case .password:
@@ -80,7 +89,7 @@ extension InputValue {
     var formatedTextPattern: String {
         guard let pattern = textPattern else {
             switch type {
-            case .phoneNumber:
+            case .phoneNumber, .cellPhoneNumber:
                 return "(###) ###-####"
             case .zipcode:
                 return "#####"
@@ -94,7 +103,7 @@ extension InputValue {
     
     var displayValue:String {
         switch type {
-        case .phoneNumber:
+        case .phoneNumber, .cellPhoneNumber:
             if let val = value {
                 return "\(val)"
             }
@@ -440,7 +449,7 @@ public final class InputValueCell: UITableViewCell, Activatable {
         print(" textFieldTextChanged Firing")
         if let text = textField.text {
             guard let inputValue = formValue else { return }
-            print("TEXT: \(text)")
+            //print("TEXT: \(text)")
             updateFormValueDelegate?.updatedFormValue(inputValue.newWith(text), indexPath)
         }
     }
@@ -471,7 +480,7 @@ extension InputValueCell: UITextFieldDelegate {
         guard let inputValue = formValue else { return false }
         
         switch inputValue.type {
-        case .phoneNumber:
+        case .phoneNumber, .cellPhoneNumber:
             guard CharacterSet.decimalDigits.isSuperset(of: CharacterSet(charactersIn: string)) else {
                 return false
             }
@@ -490,7 +499,6 @@ extension InputValueCell: UITextFieldDelegate {
             let result = formatter.formatInput(currentText: textField.text ?? "", range: range, replacementString: string)
             textField.text = result.formattedText
             textField.setCursorLocation(result.caretBeginOffset)
-            print("InputValue \(textField.text ?? "-")")
             if let newValue = textField.text {
                 let newInputValue = inputValue.newWith(newValue)
                 updateFormValueDelegate?.updatedFormValue(newInputValue, indexPath)

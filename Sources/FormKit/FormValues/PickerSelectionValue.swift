@@ -235,11 +235,10 @@ public final class PickerSelectionCell: UITableViewCell {
         label.text = "-"
         label.lineBreakMode = .byWordWrapping
         label.textAlignment = .right
-        label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .subheadline).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+        label.font = UIFont.preferredFont(forTextStyle: .body)
         if #available(iOS 13.0, *) {
             label.textColor = .secondaryLabel
         }
-
         label.adjustsFontForContentSizeCategory = true
         return label
     }()
