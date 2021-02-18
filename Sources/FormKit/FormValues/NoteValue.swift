@@ -54,6 +54,9 @@ public struct NoteValue: TextNumericalInput {
     public var style:NoteStyle = .standard
     public var title:String?
     
+    public var emptyValuePlaceholder:String?
+    public var characterCount:Int?
+    
 }
 
 
@@ -140,8 +143,25 @@ extension NoteValue: FormValueDisplayable {
 
 extension NoteValue {
     
+    var derivedValue:String {
+        if let v = value {
+            if v.isEmpty || v == "" || v == " " {
+                if let value = emptyValuePlaceholder {
+                    return value
+                } else {
+                    return v
+                }
+            } else {
+                return v
+            }
+        } else {
+            return String()
+        }
+    }
+    
+    
     public func encodedValue() -> [String : String] {
-        return [ customKey ?? "Note" : value ?? "" ]
+        return [ customKey ?? "Note" : derivedValue ]
     }
     
 }
@@ -161,14 +181,25 @@ extension NoteValue {
                         customKey: self.customKey,
                         useDirectionButtons: self.useDirectionButtons,
                         style: self.style,
-                        title: self.title
+                        title: self.title,
+                        emptyValuePlaceholder: self.emptyValuePlaceholder,
+                        characterCount: self.characterCount
         )
     }
 }
 
 
+
+// MARK: - CharacterCountDisplayable -
+public protocol CharacterCountDisplayable: class {
+    var maxCharacterCount:Int { get }
+    var characterCountLabel: UILabel { get }
+    var characterCountBarItem: UIBarButtonItem { get }
+    func updateCharacterCount(_ count:Int)
+}
+
 //: MARK: - NoteCell -
-public final class NoteCell: UITableViewCell, Activatable {
+public final class NoteCell: UITableViewCell, Activatable, CharacterCountDisplayable {
     static let identifier = "com.jmade.FormKit.NoteCell"
     
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
@@ -185,6 +216,8 @@ public final class NoteCell: UITableViewCell, Activatable {
         return label
     }()
     
+    private var textHeightConstaint = NSLayoutConstraint()
+    
     private lazy var textView: UITextView = {
         let textView = UITextView()
         textView.keyboardType = .alphabet
@@ -198,6 +231,22 @@ public final class NoteCell: UITableViewCell, Activatable {
         return textView
     }()
     
+    /// CharacterCountDisplayable
+    public var maxCharacterCount = 100
+    public lazy var characterCountLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.preferredFont(forTextStyle: .body)
+        label.textAlignment = .center
+        label.text  = "0/0"
+        //contentView.addSubview(label)
+        return label
+    }()
+    
+    
+    public lazy var characterCountBarItem: UIBarButtonItem  = {
+        UIBarButtonItem(customView: characterCountLabel)
+    }()
+    
     
     var standardHeightConstraint = NSLayoutConstraint()
     var noteValueConstraint = NSLayoutConstraint()
@@ -206,17 +255,34 @@ public final class NoteCell: UITableViewCell, Activatable {
     var formValue : NoteValue? {
         didSet {
             if let val = formValue {
-                
-               
-                
                 titleLabel.text = val.title
+                
+                if let max = val.characterCount {
+                    maxCharacterCount = max
+                }
+                
+                switch val.style {
+                case .long:
+                    NSLayoutConstraint.deactivate([textHeightConstaint])
+                    textHeightConstaint = textView.heightAnchor.constraint(equalToConstant: 120)
+                    NSLayoutConstraint.activate([textHeightConstaint])
+                case .standard:
+                    break
+                case .custom(let height):
+                    NSLayoutConstraint.deactivate([textHeightConstaint])
+                    textHeightConstaint = textView.heightAnchor.constraint(equalToConstant: height)
+                    NSLayoutConstraint.activate([textHeightConstaint])
+                    break
+                }
                 
                 let mode = derivedMode()
                 switchToMode(mode)
                
                 if val.useDirectionButtons {
-                    evaluateButtonsBar()
+                    evaluateButtonBar()
                 }
+                
+                updateCharacterCount(0)
                 
             }     
         }
@@ -230,12 +296,9 @@ public final class NoteCell: UITableViewCell, Activatable {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
 
+        textHeightConstaint = textView.heightAnchor.constraint(equalToConstant: 92)
         activateDefaultHeightAnchorConstraint(92)
-        
-        
-        
-        
-        
+    
         NSLayoutConstraint.activate([
             
             titleLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
@@ -244,30 +307,49 @@ public final class NoteCell: UITableViewCell, Activatable {
             textView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
             contentView.layoutMarginsGuide.trailingAnchor.constraint(equalTo: textView.trailingAnchor),
             textView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0),
-            textView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor),
+            textHeightConstaint,
+            
+            
+            //textView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor),
+            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: textView.bottomAnchor),
             ])
     }
+
     
-    
-    func evaluateButtonsBar() {
-        guard let formValue = formValue else { return }
-        let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: 44.0)))
-        if formValue.useDirectionButtons {
-            bar.items = [
-                UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction)),
-                UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction)),
-                .Flexible(),
-                UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
-            ]
-        } else {
-            bar.items = [
-                .Flexible(), .Flexible(), .Flexible(),
-                UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
-            ]
+    func evaluateButtonBar() {
+        guard let textValue = formValue else { return }
+        
+        var barItems:[UIBarButtonItem] = []
+        
+        if textValue.useDirectionButtons {
+            
+            barItems.append(
+                UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction))
+            )
+            
+            barItems.append(
+                UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction))
+            )
         }
+        
+        barItems.append(.Flexible())
+        
+        if textValue.characterCount != nil {
+            barItems.append(characterCountBarItem)
+            barItems.append(.Flexible())
+        }
+        
+        barItems.append(
+            UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
+        )
+        
+        let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: 44.0)))
+        bar.items = barItems
         bar.sizeToFit()
         textView.inputAccessoryView = bar
     }
+    
+    
     
     @objc
     func doneAction(){
@@ -290,6 +372,15 @@ public final class NoteCell: UITableViewCell, Activatable {
     }
     
     
+    public func updateCharacterCount(_ count:Int) {
+        characterCountLabel.text = "\(count)/\(maxCharacterCount)"
+        if #available(iOS 13.0, *) {
+            characterCountLabel.textColor = (count == maxCharacterCount) ? .error : .label
+        }
+        characterCountLabel.sizeToFit()
+    }
+
+    
     private func sendTextToDelegate() {
         let mode = derivedMode()
         if mode != .input {
@@ -299,6 +390,11 @@ public final class NoteCell: UITableViewCell, Activatable {
         
         if let newText = textView.text {
             if let existingNoteValue = formValue {
+                
+                if existingNoteValue.characterCount != nil {
+                    updateCharacterCount(newText.count)
+                }
+                
                 updateFormValueDelegate?.updatedFormValue(
                     existingNoteValue.newWith(newText),
                     indexPath
@@ -351,20 +447,55 @@ extension NoteCell: UITextViewDelegate {
     
     public func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
         
+        guard let note = formValue else {
+            return false
+        }
+        
+        let maxChars = note.characterCount ?? Int.max
+        
+        
         if CharacterSet.noteValue.isSuperset(of: CharacterSet(charactersIn: text)) {
-            return (textView.text + text).count < 4000
+            if (textView.text + text).count <= maxChars {
+                return true
+            } else {
+                var newText = ""
+                text.forEach { (char) in
+                   if (textView.text + newText).count+1 <= maxChars {
+                        newText.append(char)
+                    }
+                }
+                
+                if (textView.text + newText).count <= maxChars {
+                    textView.text = textView.text + newText
+                    textView.setCursorLocation(textView.text.count)
+                    updateCharacterCount(textView.text.count)
+                }
+                
+                
+                
+                let gen = UIImpactFeedbackGenerator()
+                gen.prepare()
+                if #available(iOS 13.0, *) {
+                    gen.impactOccurred(intensity: 0.7)
+                }
+                return false
+            }
         } else {
             var newText = ""
             text.forEach { (char) in
                 if CharacterSet.noteValue.isSuperset(of: CharacterSet(charactersIn: String(char))) {
-                    newText.append(char)
+                    if (textView.text + newText).count+1 <= maxChars {
+                        newText.append(char)
+                    }
                 }
             }
             
-            if (textView.text + text).count < 4000 {
+            if (textView.text + newText).count <= maxChars {
                 textView.text = textView.text + newText
                 textView.setCursorLocation(textView.text.count)
+                updateCharacterCount(textView.text.count)
             }
+            
             return false
         }
         

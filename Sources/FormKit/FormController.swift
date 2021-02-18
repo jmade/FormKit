@@ -348,6 +348,10 @@ open class FormController: UITableViewController, CustomTransitionable {
         return dataSource.headerValues()
     }
     
+    private var footers:[FooterValue] {
+        return dataSource.footerValues()
+    }
+    
     private var defaultContentInsets = UIEdgeInsets(top: 20, left: 0, bottom: 30, right: 0)
     
     
@@ -569,6 +573,7 @@ open class FormController: UITableViewController, CustomTransitionable {
         switch displayStyle {
         case .modern:
             tableView.register(FormHeaderCell.self, forHeaderFooterViewReuseIdentifier: FormHeaderCell.identifier)
+            tableView.register(FormHeaderCell.self, forHeaderFooterViewReuseIdentifier: FormHeaderCell.footerIdentifier)
             tableView.contentInset = defaultContentInsets
         default:
             break
@@ -1253,6 +1258,26 @@ extension FormController {
         }
         
         return nil
+    }
+    
+    
+    open override func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
+        
+        guard displayStyle.isModern() else {
+            return nil
+        }
+        
+        if let footer = footers.filter({ $0.section == section }).first {
+            if let footerCell = tableView.dequeueReusableHeaderFooterView(withIdentifier: FormHeaderCell.footerIdentifier) as? FormHeaderCell {
+                footerCell.configureView(footer)
+                //footerCell.delegate = self
+                return footerCell
+            }
+        }
+        
+        
+        return nil
+        
     }
 
     override open func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
@@ -2258,6 +2283,7 @@ extension FormController: UIDocumentInteractionControllerDelegate {
 // MARK: - FormHeaderCell -
 public final class FormHeaderCell: UITableViewHeaderFooterView {
     static let identifier = "com.jmade.FormKit.FormHeaderCell"
+    static let footerIdentifier = "com.jmade.FormKit.FormHeaderCell.Footer"
     
     public weak var delegate:SectionTapDelegate?
     
@@ -2265,6 +2291,14 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
         didSet {
             if let header = headerValue {
                 applyHeader(header)
+            }
+        }
+    }
+    
+    var footerValue: FooterValue? {
+        didSet {
+            if let footer = footerValue {
+                applyFooter(footer)
             }
         }
     }
@@ -2310,7 +2344,7 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
         labelContainer.addSubview(label)
         label.leadingAnchor.constraint(equalTo: labelContainer.leadingAnchor).isActive = true
         label.trailingAnchor.constraint(equalTo: labelContainer.trailingAnchor).isActive = true
-        label.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8.0).isActive = true
+        label.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0).isActive = true
         labelContainer.bottomAnchor.constraint(equalTo: label.bottomAnchor).isActive = true
         return label
     }()
@@ -2374,6 +2408,23 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
         super.init(reuseIdentifier: reuseIdentifier)
     }
     
+    
+    private func applyFooter(_ footer:FooterValue) {
+        titleLabel.text = footer.title.uppercased()
+        if #available(iOS 13.0, *) {
+            titleLabel.textColor = .secondaryLabel
+        }
+        titleLabel.font = .preferredFont(forTextStyle: .footnote)
+        
+        titleLabel.sizeToFit()
+        subTitleLabel.text = nil
+        
+        let views = stackView.arrangedSubviews
+        
+        if !views.containsItem(labelContainer) {
+            stackView.addArrangedSubview(labelContainer)
+        }
+    }
     
     private func applyHeader(_ header:HeaderValue) {
         
@@ -2441,6 +2492,10 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
     
     public func configureView(_ header:HeaderValue) {
         self.headerValue = header
+    }
+    
+    public func configureView(_ footer:FooterValue) {
+        self.footerValue = footer
     }
     
     

@@ -22,6 +22,7 @@ public struct NumericalValue: Equatable, Hashable {
     public var numberType: NumberType = .float
     public var useDirectionButtons:Bool = true
     public var placeholder:String? = nil
+    public var inputDescription:String?
     
 }
 
@@ -81,6 +82,47 @@ public extension NumericalValue {
     
     
 }
+
+
+public extension NumericalValue {
+    
+    static func float(_ title:String,_ value:String,_ customKey:String,_ inputDescription:String) -> NumericalValue {
+        var num = NumericalValue(title: title, value: value)
+        num.customKey = customKey
+        num.inputDescription = inputDescription
+        num.numberType = .float
+        return num
+    }
+    
+    static func float(_ title:String,_ customKey:String,_ inputDescription:String) -> NumericalValue {
+        var num = NumericalValue(title: title, value: "")
+        num.customKey = customKey
+        num.inputDescription = inputDescription
+        num.numberType = .float
+        return num
+    }
+    
+    
+    
+    static func int(_ title:String,_ value:String,_ customKey:String,_ inputDescription:String) -> NumericalValue {
+        var num = NumericalValue(title: title, value: value)
+        num.customKey = customKey
+        num.inputDescription = inputDescription
+        num.numberType = .int
+        return num
+    }
+    
+    
+    static func int(_ title:String,_ customKey:String,_ inputDescription:String) -> NumericalValue {
+        var num = NumericalValue(title: title, value: "")
+        num.customKey = customKey
+        num.inputDescription = inputDescription
+        num.numberType = .int
+        return num
+    }
+    
+}
+
 
 
 extension NumericalValue {
@@ -158,7 +200,8 @@ extension NumericalValue {
                 value: newValue,
                 style: self.style,
                 numberType: self.numberType,
-                useDirectionButtons: self.useDirectionButtons
+                useDirectionButtons: self.useDirectionButtons,
+                inputDescription: self.inputDescription
         )
     }
     
@@ -195,6 +238,28 @@ extension NumericalValue {
 }
 
 
+extension UILabel {
+    static var inputDescription: UILabel {
+        
+        let label = UILabel()
+        label.textAlignment = .left
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        //label.font = UIFont.preferredFont(forTextStyle: .footnote)
+        label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .caption2).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+        
+        
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
+        if #available(iOS 13.0, *) {
+            label.textColor = .secondaryLabel
+        }
+        return label
+    }
+}
+
+
 
 // MARK: NumericalCell
 public final class NumericalCell: UITableViewCell, Activatable {
@@ -219,12 +284,23 @@ public final class NumericalCell: UITableViewCell, Activatable {
         return textField
     }()
     
+    private lazy var inputDescriptionLabel:UILabel = {
+        let label = UILabel.inputDescription
+        contentView.addSubview(label)
+        label.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor).isActive = true
+        label.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor).isActive = true
+        label.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0).isActive = true
+        contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: label.bottomAnchor).isActive = true
+        return label
+    }()
+    
     var formValue : NumericalValue? {
         didSet {
             if let numericalValue = formValue {
                 titleLabel.text = numericalValue.title
                 textField.text = numericalValue.value
                 textField.placeholder = numericalValue.placeholder
+                inputDescriptionLabel.text = numericalValue.inputDescription
                 layout()
             }
         }
@@ -250,6 +326,7 @@ public final class NumericalCell: UITableViewCell, Activatable {
         textField.text = nil
         titleLabel.text = nil
         indexPath = nil
+        inputDescriptionLabel.text = nil
     }
     
     func layout(){
@@ -272,7 +349,8 @@ public final class NumericalCell: UITableViewCell, Activatable {
             
             NSLayoutConstraint.activate([
                 titleLabel.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
-                titleLabel.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
+                titleLabel.topAnchor.constraint(equalTo: margin.topAnchor),
+                //titleLabel.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
                 textField.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
                 textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
                 textField.widthAnchor.constraint(equalTo: margin.widthAnchor, multiplier: 0.5),
@@ -286,7 +364,7 @@ public final class NumericalCell: UITableViewCell, Activatable {
                 textField.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
                 textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
                 textField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4.0),
-                margin.bottomAnchor.constraint(equalTo: textField.bottomAnchor, constant: 4.0)
+                //margin.bottomAnchor.constraint(equalTo: textField.bottomAnchor, constant: 4.0)
                 ])
         case .hoizontalDiscrete:
             activateDefaultHeightAnchorConstraint()
@@ -302,7 +380,8 @@ public final class NumericalCell: UITableViewCell, Activatable {
             }
             NSLayoutConstraint.activate([
                 titleLabel.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
-                titleLabel.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
+                titleLabel.topAnchor.constraint(equalTo: margin.topAnchor),
+                //titleLabel.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
                 textField.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
                 textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
                 textField.widthAnchor.constraint(equalTo: margin.widthAnchor, multiplier: 0.5),

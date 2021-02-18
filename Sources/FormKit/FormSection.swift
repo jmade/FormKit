@@ -47,6 +47,7 @@ public class FormSection: Equatable {
     public var updateClosure:FormSectionUpdateClosure = { _ in }
     
     
+    public var footer:FooterValue?
     
     public var headerValue:HeaderValue {
         return _headerValue
@@ -163,6 +164,27 @@ extension FormSection {
         self.rows = [formValue.formItem]
     }
     
+    
+    
+    
+    public convenience init(_ formValues:[FormValue],_ footer:String) {
+        self.init()
+        self.rows = formValues.map({ $0.formItem })
+        self.footer = FooterValue(footer)
+    }
+    
+    
+    public convenience init(_ title:String,_ subtitle:String,_ formValues:[FormValue],_ footer:String) {
+        self.init()
+        self.rows = formValues.map({ $0.formItem })
+        self.title = title
+        self.subtitle = subtitle
+        var h = HeaderValue(title: title, section: -1)
+        h.subtitle = subtitle
+        self._headerValue = h
+        self.footer = FooterValue(footer)
+    }
+    
 }
 
 
@@ -242,6 +264,7 @@ extension FormSection {
         )
         new._headerValue = self._headerValue
         new.updateClosure = self.updateClosure
+        new.footer = self.footer
         return new
     }
     
@@ -253,6 +276,7 @@ extension FormSection {
         )
         new._headerValue = self._headerValue
         new.updateClosure = self.updateClosure
+        new.footer = self.footer
         return new
     }
     

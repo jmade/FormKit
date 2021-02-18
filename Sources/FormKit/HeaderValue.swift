@@ -3,6 +3,24 @@
 import UIKit
 
 
+// MARK: - FooterValue -
+public struct FooterValue {
+    public var section:Int = -1
+    public var title:String = ""
+    public var isInteractable:Bool = false
+}
+
+
+public extension FooterValue {
+    
+    init(_ title:String) {
+        self.title = title
+    }
+    
+}
+
+
+
 
 // MARK: - HeaderValue -
 public struct HeaderValue {

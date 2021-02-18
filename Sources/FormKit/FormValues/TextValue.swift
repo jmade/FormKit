@@ -3,28 +3,29 @@ import UIKit
 
 public typealias TextFieldConfigurationClosure = ( (UITextField) -> Void )
 
-extension CharacterSet {
-    
-    static var textValue:CharacterSet {
-        let sets:[CharacterSet] = [
-            .alphanumerics,
-            .letters,
-            .capitalizedLetters,
-            .lowercaseLetters,
-            .uppercaseLetters,
-            .decimalDigits,
-            .punctuationCharacters
-        ]
-        
-        var megaSet = CharacterSet()
-        
-        for set in sets {
-            megaSet.formUnion(set)
-        }
-        return megaSet
-    }
-    
-}
+//extension CharacterSet {
+//
+//    static var textValue:CharacterSet {
+//        let sets:[CharacterSet] = [
+//            .alphanumerics,
+//            .letters,
+//            .capitalizedLetters,
+//            .lowercaseLetters,
+//            .uppercaseLetters,
+//            .decimalDigits,
+//            .punctuationCharacters,
+//            CharacterSet(charactersIn: ".:@&/\\-()[]?\"`~!#$%^*=+<>;''")
+//        ]
+//
+//        var megaSet = CharacterSet()
+//
+//        for set in sets {
+//            megaSet.formUnion(set)
+//        }
+//        return megaSet
+//    }
+//
+//}
 
 
 // MARK: - TextValue -
@@ -34,8 +35,9 @@ public struct TextValue {
         case horizontal, vertical, horizontalDiscrete
     }
     
+    
     //TODO: fully implement this
-    public var characterSet = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: " .?!,()[]$*%#-=/:;"))
+    public var characterSet = CharacterSet.noteValue   //CharacterSet.alphanumerics.union(CharacterSet(charactersIn: ".:@&/\\-()[]?\"`~!#$%^*=+<>;''"))
     
     /// TableSelectable
     public var isSelectable: Bool = false
@@ -50,6 +52,9 @@ public struct TextValue {
     public var style:Style = .horizontalDiscrete
     public var useDirectionButtons:Bool = true
     public var uuid:String = UUID().uuidString
+    
+    public var inputDescription:String?
+    public var characterCount:Int?
 }
 
 
@@ -111,6 +116,22 @@ extension TextValue {
         self.customKey = customKey
         self.placeholder = placeholder
     }
+    
+    
+    public init(_ title: String,inputDescription:String) {
+        self.title = title
+        self.value = ""
+        self.inputDescription = inputDescription
+    }
+    
+    
+    public init(_ title: String,_ value:String,_ customKey: String?,_ placeholder:String,inputDescription:String) {
+        self.title = title
+        self.value = value
+        self.customKey = customKey
+        self.placeholder = placeholder
+        self.inputDescription = inputDescription
+    }
 
     
 }
@@ -169,6 +190,7 @@ extension TextValue {
                          useDirectionButtons: self.useDirectionButtons
         )
         newValue.placeholder = self.placeholder
+        newValue.inputDescription = self.inputDescription
         return newValue
         
     }
@@ -250,31 +272,32 @@ public final class TextCell: UITableViewCell, Activatable {
         return textField
     }()
     
-    
-    private lazy var descriptorLabel:UILabel = {
-        let label = UILabel()
-        label.textAlignment = .left
-        label.numberOfLines = 0
-        label.lineBreakMode = .byWordWrapping
-        //label.font = UIFont.preferredFont(forTextStyle: subtitleTextStyle)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        
-        //label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
-        label.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
-        if #available(iOS 13.0, *) {
-            label.textColor = .secondaryLabel
-        }
+    private lazy var inputDescriptionLabel:UILabel = {
+        let label = UILabel.inputDescription
         contentView.addSubview(label)
-//        label.leadingAnchor.constraint(equalTo: labelContainer.leadingAnchor).isActive = true
-//        label.trailingAnchor.constraint(equalTo: labelContainer.trailingAnchor).isActive = true
-//        label.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8.0).isActive = true
-//        labelContainer.bottomAnchor.constraint(equalTo: label.bottomAnchor).isActive = true
+        label.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor).isActive = true
+        label.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor).isActive = true
+        label.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0).isActive = true
+        contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: label.bottomAnchor).isActive = true
         return label
     }()
     
     
+    /// CharacterCountDisplayable
+    public var maxCharacterCount = 100
+    public lazy var characterCountLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.preferredFont(forTextStyle: .body)
+        label.textAlignment = .left
+        label.text  = ""
+        //contentView.addSubview(label)
+        return label
+    }()
     
+    public lazy var characterCountBarItem: UIBarButtonItem  = {
+        UIBarButtonItem(customView: characterCountLabel)
+    }()
+
     var formValue:TextValue? {
         didSet {
             if let textValue = formValue {
@@ -282,6 +305,13 @@ public final class TextCell: UITableViewCell, Activatable {
                 textValue.textConfigurationClosure(textField)
                 textField.text = textValue.value
                 textField.placeholder = textValue.placeholder
+                inputDescriptionLabel.text = textValue.inputDescription
+                if let max = textValue.characterCount {
+                    maxCharacterCount = max
+                }
+                
+                
+              
                 
                 if textValue.isSelectable == false {
                     self.selectionStyle = .none
@@ -312,6 +342,7 @@ public final class TextCell: UITableViewCell, Activatable {
         textField.text = nil
         titleLabel.text = nil
         indexPath = nil
+        inputDescriptionLabel.text = nil
     }
     
     func layout(){
@@ -327,7 +358,8 @@ public final class TextCell: UITableViewCell, Activatable {
             
             NSLayoutConstraint.activate([
                 titleLabel.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
-                titleLabel.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
+                titleLabel.topAnchor.constraint(equalTo: margin.topAnchor),
+                //titleLabel.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
                 textField.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
                 textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
                 textField.widthAnchor.constraint(equalTo: margin.widthAnchor, multiplier: 0.5),
@@ -341,7 +373,7 @@ public final class TextCell: UITableViewCell, Activatable {
                 textField.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
                 textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
                 textField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4.0),
-                margin.bottomAnchor.constraint(equalTo: textField.bottomAnchor, constant: 4.0)
+                //margin.bottomAnchor.constraint(equalTo: textField.bottomAnchor, constant: 4.0)
                 ])
         case .horizontalDiscrete:
             
@@ -349,7 +381,8 @@ public final class TextCell: UITableViewCell, Activatable {
            
             NSLayoutConstraint.activate([
                 titleLabel.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
-                titleLabel.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
+                titleLabel.topAnchor.constraint(equalTo: margin.topAnchor),
+                //titleLabel.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
                 textField.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
                 textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
                 textField.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 8.0),
@@ -368,20 +401,50 @@ public final class TextCell: UITableViewCell, Activatable {
         didLayout = true
     }
     
-    func evaluateButtonBar(){
+    
+    func evaluateButtonBar() {
         guard let textValue = formValue else { return }
+        
+        var barItems:[UIBarButtonItem] = []
+        
         if textValue.useDirectionButtons {
-
-            let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: 44.0)))
-            let previous = UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction))
-            let next = UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction))
-            let done = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
-            bar.items = [previous,next,.Flexible(),done]
             
-            bar.sizeToFit()
-            textField.inputAccessoryView = bar
+            barItems.append(
+                UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction))
+            )
+            
+            barItems.append(
+                UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction))
+            )
         }
+        
+        barItems.append(.Flexible())
+        
+        if textValue.characterCount != nil {
+            barItems.append(characterCountBarItem)
+            barItems.append(.Flexible())
+        }
+        
+        barItems.append(
+            UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
+        )
+        
+        let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: 44.0)))
+        bar.items = barItems
+        bar.sizeToFit()
+        textField.inputAccessoryView = bar
     }
+    
+    public func updateCharacterCount(_ count:Int) {
+        characterCountLabel.text = "\(count)/\(maxCharacterCount)"
+        if #available(iOS 13.0, *) {
+            characterCountLabel.textColor = (count == maxCharacterCount) ? .red : .label
+        }
+        characterCountLabel.sizeToFit()
+    }
+    
+    
+   
 
     
     @objc
@@ -411,6 +474,9 @@ public final class TextCell: UITableViewCell, Activatable {
     func textFieldTextChanged() {
         if let text = textField.text {
             guard let textValue = formValue else { return }
+            if textValue.characterCount != nil {
+                updateCharacterCount(text.count)
+            }
             updateFormValueDelegate?.updatedFormValue(textValue.newWith(text), indexPath)
         }
     }
@@ -434,13 +500,48 @@ extension TextCell: UITextFieldDelegate {
         
         guard let textValue = formValue else { return false }
         
+        let maxChars = textValue.characterCount ?? Int.max
+        
+        let existingText = textField.text ?? ""
+        
+        
         if textValue.characterSet.isSuperset(of: CharacterSet(charactersIn: string)) {
-            if let newText = textField.text {
-                self.formValue = textValue.newWith(newText)
+            
+            if (existingText + string).count <= maxChars {
+                //self.formValue = textValue.newWith(existingText + string)
+                return true
+            } else {
+                var newText = ""
+                string.forEach { (char) in
+                    if (existingText + newText).count+1 <= maxChars {
+                        print("Its Safe: \(String(char))")
+                        newText.append(char)
+                    }
+                }
+                
+                
+                let newString = existingText + newText
+                textField.text = newString
+                textField.setCursorLocation(newString.count)
+                
+                return false
             }
-            return true
         } else {
+            
+            var newText = ""
+            string.forEach { (char) in
+                if textValue.characterSet.isSuperset(of: CharacterSet(charactersIn: String(char))) {
+                    print("Its Safe: \(String(char))")
+                    newText.append(char)
+                }
+            }
+            
+            let newString = existingText + newText
+            textField.text = newString
+            textField.setCursorLocation(newString.count)
             return false
+            
+           
         }
        
     }

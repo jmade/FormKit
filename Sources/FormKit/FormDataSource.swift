@@ -192,6 +192,18 @@ extension FormDataSource {
         return headers
     }
     
+    public func footerValues() -> [FooterValue] {
+        var footers:[FooterValue] = []
+        for (i,section) in sections.enumerated() {
+            if let existingFooter = section.footer {
+                var f = existingFooter
+                f.section = i
+                footers.append(f)
+            }
+        }
+        return footers
+    }
+    
 }
 
 
