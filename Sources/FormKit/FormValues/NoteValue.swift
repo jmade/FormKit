@@ -31,6 +31,29 @@ extension CharacterSet {
         return megaSet
     }
     
+    
+    static func formKit(_ allowedChars:String) -> CharacterSet {
+        
+        let sets:[CharacterSet] = [
+            .alphanumerics,
+            .letters,
+            .capitalizedLetters,
+            .lowercaseLetters,
+            .uppercaseLetters,
+            .decimalDigits,
+            .whitespacesAndNewlines,
+            CharacterSet(charactersIn: allowedChars)
+        ]
+        
+        var megaSet = CharacterSet()
+        
+        for set in sets {
+            megaSet.formUnion(set)
+        }
+        return megaSet
+
+    }
+    
 }
 
 
@@ -56,6 +79,7 @@ public struct NoteValue: TextNumericalInput {
     
     public var emptyValuePlaceholder:String?
     public var characterCount:Int?
+    public var allowedChars:String?
     
 }
 
@@ -131,7 +155,9 @@ extension NoteValue: FormValueDisplayable {
     }
     
     public func didSelect(_ formController: Controller, _ path: IndexPath) {
-
+        if let cell = formController.tableView.cellForRow(at: path) as? NoteCell {
+            cell.activate()
+        }
     }
     
     public var cellDescriptor: FormCellDescriptor {
@@ -183,7 +209,8 @@ extension NoteValue {
                         style: self.style,
                         title: self.title,
                         emptyValuePlaceholder: self.emptyValuePlaceholder,
-                        characterCount: self.characterCount
+                        characterCount: self.characterCount,
+                        allowedChars: self.allowedChars
         )
     }
 }
@@ -453,8 +480,9 @@ extension NoteCell: UITextViewDelegate {
         
         let maxChars = note.characterCount ?? Int.max
         
+        let charSet = CharacterSet.formKit(note.allowedChars ?? FormConstant.ALLOWED_CHARS)
         
-        if CharacterSet.noteValue.isSuperset(of: CharacterSet(charactersIn: text)) {
+        if charSet.isSuperset(of: CharacterSet(charactersIn: text)) {
             if (textView.text + text).count <= maxChars {
                 return true
             } else {
@@ -483,7 +511,7 @@ extension NoteCell: UITextViewDelegate {
         } else {
             var newText = ""
             text.forEach { (char) in
-                if CharacterSet.noteValue.isSuperset(of: CharacterSet(charactersIn: String(char))) {
+                if charSet.isSuperset(of: CharacterSet(charactersIn: String(char))) {
                     if (textView.text + newText).count+1 <= maxChars {
                         newText.append(char)
                     }

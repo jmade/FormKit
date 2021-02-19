@@ -85,8 +85,8 @@ public extension NumericalValue {
 
 
 public extension NumericalValue {
-    
-    static func float(_ title:String,_ value:String,_ customKey:String,_ inputDescription:String) -> NumericalValue {
+
+    static func float(_ title:String,_ customKey:String,_ value:String,_ inputDescription:String) -> NumericalValue {
         var num = NumericalValue(title: title, value: value)
         num.customKey = customKey
         num.inputDescription = inputDescription
@@ -104,7 +104,7 @@ public extension NumericalValue {
     
     
     
-    static func int(_ title:String,_ value:String,_ customKey:String,_ inputDescription:String) -> NumericalValue {
+    static func int(_ title:String,_ customKey:String,_ value:String,_ inputDescription:String) -> NumericalValue {
         var num = NumericalValue(title: title, value: value)
         num.customKey = customKey
         num.inputDescription = inputDescription

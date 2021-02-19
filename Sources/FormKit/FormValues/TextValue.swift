@@ -1,31 +1,25 @@
 import UIKit
 
 
+
+struct TextValueTransportInitialization: Decodable {
+       var title: String
+       var customKey: String?
+       var value: String?
+       var placeholder: String?
+       var inputDescription: String?
+       var characterCount: Int?
+       var allowedChars: String?
+}
+
+
+
+
+
+
+
 public typealias TextFieldConfigurationClosure = ( (UITextField) -> Void )
 
-//extension CharacterSet {
-//
-//    static var textValue:CharacterSet {
-//        let sets:[CharacterSet] = [
-//            .alphanumerics,
-//            .letters,
-//            .capitalizedLetters,
-//            .lowercaseLetters,
-//            .uppercaseLetters,
-//            .decimalDigits,
-//            .punctuationCharacters,
-//            CharacterSet(charactersIn: ".:@&/\\-()[]?\"`~!#$%^*=+<>;''")
-//        ]
-//
-//        var megaSet = CharacterSet()
-//
-//        for set in sets {
-//            megaSet.formUnion(set)
-//        }
-//        return megaSet
-//    }
-//
-//}
 
 
 // MARK: - TextValue -
@@ -35,9 +29,7 @@ public struct TextValue {
         case horizontal, vertical, horizontalDiscrete
     }
     
-    
-    //TODO: fully implement this
-    public var characterSet = CharacterSet.noteValue   //CharacterSet.alphanumerics.union(CharacterSet(charactersIn: ".:@&/\\-()[]?\"`~!#$%^*=+<>;''"))
+    public var characterSet = CharacterSet.noteValue /// Depercated 2/19/21; use `allowedChars`
     
     /// TableSelectable
     public var isSelectable: Bool = false
@@ -55,7 +47,13 @@ public struct TextValue {
     
     public var inputDescription:String?
     public var characterCount:Int?
+    public var allowedChars:String?
 }
+
+
+
+
+
 
 
 
@@ -125,7 +123,7 @@ extension TextValue {
     }
     
     
-    public init(_ title: String,_ value:String,_ customKey: String?,_ placeholder:String,inputDescription:String) {
+    public init(_ title: String,_ value:String,_ customKey: String?,_ placeholder:String, inputDescription:String) {
         self.title = title
         self.value = value
         self.customKey = customKey
@@ -135,6 +133,43 @@ extension TextValue {
 
     
 }
+
+
+
+
+
+extension TextValue {
+    
+    /**
+    Initializes a new FormSection with the optional subtitle and footer strings.
+
+    - Parameters:
+       - title: The *title* of the TextValue
+       - customKey: used as the JSON Key value when using `FormDataSource` params
+       - value: The value in the textfield
+       - placeholder: optional text displayed in textfield, that disappears on input. example: "Required"
+       - allowedChars: optional string of chars that are to be allowed as input in the textfield
+       - inputDescription: displayed under the `title` in a smaller font and secondary color
+       - characterCount: optional max number of characters that should be allowed
+     
+     
+    - Note: Does this work?
+    - Returns: A fully functional form element for Text Input.
+    */
+    
+    public init(_ title: String,_ customKey: String?,_ value:String?,_ placeholder:String? = nil,_ allowedChars: String? = nil,_ inputDescription:String? = nil,_ characterCount: Int? = nil) {
+        self.title = title
+        self.value = value ?? ""
+        self.customKey = customKey
+        self.placeholder = placeholder
+        self.inputDescription = inputDescription
+        self.characterCount = characterCount
+        self.allowedChars = allowedChars
+    }
+    
+}
+
+
 
 
 
@@ -191,6 +226,7 @@ extension TextValue {
         )
         newValue.placeholder = self.placeholder
         newValue.inputDescription = self.inputDescription
+        newValue.allowedChars = self.allowedChars
         return newValue
         
     }
@@ -502,10 +538,12 @@ extension TextCell: UITextFieldDelegate {
         
         let maxChars = textValue.characterCount ?? Int.max
         
+        let charSet = CharacterSet.formKit(textValue.allowedChars ?? FormConstant.ALLOWED_CHARS)
+        
         let existingText = textField.text ?? ""
         
         
-        if textValue.characterSet.isSuperset(of: CharacterSet(charactersIn: string)) {
+        if charSet.isSuperset(of: CharacterSet(charactersIn: string)) {
             
             if (existingText + string).count <= maxChars {
                 //self.formValue = textValue.newWith(existingText + string)
@@ -530,7 +568,7 @@ extension TextCell: UITextFieldDelegate {
             
             var newText = ""
             string.forEach { (char) in
-                if textValue.characterSet.isSuperset(of: CharacterSet(charactersIn: String(char))) {
+                if charSet.isSuperset(of: CharacterSet(charactersIn: String(char))) {
                     print("Its Safe: \(String(char))")
                     newText.append(char)
                 }

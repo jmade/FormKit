@@ -172,7 +172,23 @@ extension FormSection {
         self.rows = formValues.map({ $0.formItem })
         self.footer = FooterValue(footer)
     }
+
     
+    
+    
+    
+    /**
+     Initializes a new FormSection with the optional subtitle and footer strings.
+
+     - Parameters:
+        - title: The title of the section
+        - subtitle: The subtitle (this text is renderd in a smaller font and secondary color)
+        - formValues: An array of `FormValues`
+        - footer: The section footer (this text is capitalized and renderd on the bottom of the ssection in a smaller font and secondary color)
+
+     - Returns: A beautiful, informative,
+                well packed Section to be displayed by `FormController`.
+     */
     
     public convenience init(_ title:String,_ subtitle:String,_ formValues:[FormValue],_ footer:String) {
         self.init()

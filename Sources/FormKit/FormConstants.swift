@@ -159,6 +159,7 @@ public struct FormConstant {
         return .clear
     }
     
+    static let ALLOWED_CHARS = ".?!,()[]$*%#-=/:;"
 }
 
 
