@@ -1544,6 +1544,15 @@ extension FormController {
     }
     
     
+    public func updateValue(_ formValue:FormValue, at path:IndexPath) {
+        if let section = dataSource.section(for: path.section) {
+            if let _ = section.itemForRowAt(path.row) {
+                dataSource.sections[path.section].rows[path.row] = formValue.formItem
+                tableView.reloadRows(at: [path], with: .fade)
+            }
+        }
+    }
+    
     
     public func updateSection(_ newSection:FormSection, at path:IndexPath,_ activateInputs:Bool = true) {
         self.update(newSection, path: path, activateInputs: activateInputs, preservingTitle: false)

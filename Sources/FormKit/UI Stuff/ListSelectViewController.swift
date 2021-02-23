@@ -258,7 +258,13 @@ public final class ListSelectViewController: UITableViewController {
 
     
     public var jsonPayload: [String:Any]? = nil
-    private var sectionTitles = [""]
+    private var sectionTitles = [""] {
+        didSet {
+            if let header = tableView.headerView(forSection: 0) {
+                header.textLabel?.text = sectionTitles.first
+            }
+        }
+    }
     
 
     // ***
@@ -300,7 +306,7 @@ public final class ListSelectViewController: UITableViewController {
     
     
     var isSeachBarAnimationCompleted: Bool = false
-    
+    private var setupWasCalled:Bool = false
     
     // MARK: - Init -
     required init?(coder aDecoder: NSCoder) {fatalError()}
@@ -321,8 +327,14 @@ public final class ListSelectViewController: UITableViewController {
         self._formValue = listSelectValue
         dataSource = listSelectValue.listItems
         completeDataSource = listSelectValue.listItems
+        //tableView.tableFooterView = nil
         tableView.tableFooterView = nil
-        tableView.insertSections(IndexSet(integersIn: 0...0), with: .top)
+        if tableView.numberOfSections == 0 {
+            tableView.insertSections(IndexSet(integer: 0), with: .top)
+        } else {
+            tableView.insertRows(at: Array(0..<dataSource.count).map({ IndexPath(row: $0, section: 0) }), with: .top)
+        }
+
     }
     
     
@@ -334,17 +346,23 @@ public final class ListSelectViewController: UITableViewController {
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        setup()
+        if setupWasCalled == false {
+            setup()
+        }
+        
     }
     
     
     
     
     private func setup() {
+        setupWasCalled = true
         
+        /*
         if navigationItem.largeTitleDisplayMode != .never {
             tableView.contentInset = UIEdgeInsets(top: 20, left: 0, bottom: 20, right: 0)
         }
+        */
         
         if let listSelectValue = _formValue {
             
@@ -388,13 +406,14 @@ public final class ListSelectViewController: UITableViewController {
     private func prepareTableForLoading() {
         dataSource = []
         sectionTitles = [""]
-        tableView.tableFooterView = ItemsLoadingView()
+        //tableView.tableFooterView = ItemsLoadingView()
         
-        guard tableView.numberOfSections > 0 else {
-            return
+        if tableView.numberOfSections == 1 {
+            //tableView.deleteSections(IndexSet.init(integer: 0), with: .top)
+            tableView.tableFooterView = ItemsLoadingView()
         }
         
-        tableView.deleteSections(IndexSet(integersIn: 0..<tableView.numberOfSections), with: .top)
+       // tableView.deleteSections(IndexSet(integersIn: 0..<tableView.numberOfSections), with: .top)
     }
     
     
@@ -408,6 +427,19 @@ public final class ListSelectViewController: UITableViewController {
     }
     
     
+    
+    public func setSectionTitles(_ titles:[String]) {
+        self.sectionTitles = titles
+    }
+    
+    
+    private func firstSectionTitle() -> String? {
+        if allowsMultipleSelection {
+            return "\(dataSource.filter({ $0.selected }).count) Selected".uppercased()
+        } else {
+            return sectionTitles.first?.uppercased()
+        }
+    }
   
     
     
@@ -451,7 +483,7 @@ public final class ListSelectViewController: UITableViewController {
     
     
     public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return nil
+       return firstSectionTitle()
     }
     
     
@@ -575,6 +607,10 @@ public final class ListSelectViewController: UITableViewController {
             crawlDelegate(newListSelectValue)
         }
         
+        tableView.beginUpdates()
+        tableView.headerView(forSection: 0)?.textLabel?.text = firstSectionTitle()
+        tableView.endUpdates()
+       
         
     }
     

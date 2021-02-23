@@ -82,7 +82,7 @@ public struct ListSelectionValue {
     public var values:[String]
     public var selectedIndicies: [Int]
     
-    var title:String
+    public var title:String
     var selectionMessage:String = "Select a Value"
     var color:UIColor? = nil
     var valueIdentifiers:[String]? = nil
@@ -99,6 +99,7 @@ public struct ListSelectionValue {
     public var underlyingObjects:[Any] = []
     public var listItemSelection: ListItemSelectionClosure?
     public var valueChangeClosure: ListSelectValueChangeClosure?
+    public var storageValue:Codable?
     
 }
 
@@ -424,7 +425,7 @@ extension ListSelectionValue: FormValue {
     }
     
     
-    private var selectedValue:String? {
+    public var selectedValue:String? {
         listItems.filter({ $0.selected }).first?.title
     }
     

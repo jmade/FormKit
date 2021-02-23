@@ -1,16 +1,26 @@
 import UIKit
 import MapKit
 
-// needs section inits too
 
+public typealias MapKitOverlayRendererClosure = ((MKMapView,MKOverlay) -> MKOverlayRenderer)
 
 // MARK: - MapValue -
-public struct MapValue: Codable {
+public struct MapValue {
     var identifier: UUID = UUID()
     public var customKey:String? = "MapValue"
     var lat: Double? = nil
     var lng: Double? = nil
     var radius: Double? = nil
+    
+    struct MapData {
+        var polygon:MKPolygon?
+        var overlay:MKOverlay?
+        var annotation:MKAnnotation?
+        var region:MKCoordinateRegion?
+        var overlayRendererClosure: MapKitOverlayRendererClosure?
+    }
+    
+    var mapData: MapData?
 }
 
 public typealias MapValueChangeClosure = (MapValue) -> ()
@@ -128,10 +138,6 @@ public extension MapValue {
 }
 
 
-// extend the frameworks to take in my types
-// ( reverse injection ) 
-//: MARK: MapValueCell
-
 
 public final class MapValueCell: UITableViewCell {
     
@@ -193,7 +199,38 @@ public final class MapValueCell: UITableViewCell {
 
 extension MapValueCell {
     
+    private func handleMapData(_ mapValue:MapValue) {
+        guard let mapView = mapView else {return}
+        
+        if let mapData = mapValue.mapData {
+            
+            if let an = mapData.annotation {
+                mapView.addAnnotation(an)
+            }
+            
+            if let an = mapData.overlay {
+                mapView.addOverlay(an)
+            }
+            
+            /*
+            if let an = mapData.polygon {
+                
+            }
+            */
+            
+            
+        }
+        
+    }
+    
     private func handleMapValue(_ mapValue:MapValue) {
+        
+        guard mapValue.mapData == nil else {
+            handleMapData(mapValue)
+            return
+        }
+        
+
         
         guard
             let coordinate = mapValue.coordinate,
@@ -242,7 +279,18 @@ extension MapValueCell {
 
 extension MapValueCell: MKMapViewDelegate  {
     
+    typealias MapKitOverlayRendererClosure = ((MKMapView,MKOverlay) -> MKOverlayRenderer)
+    
+    
     public func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+        
+        if let mapValue = formValue {
+            if let closure = mapValue.mapData?.overlayRendererClosure {
+                return closure(mapView,overlay)
+            }
+        }
+        
+        
 
         if overlay is MKCircle {
             let renderer = MKCircleRenderer(overlay: overlay)
@@ -261,7 +309,6 @@ extension MapValueCell: MKMapViewDelegate  {
     }
     
     public func mapViewDidFinishLoadingMap(_ mapView: MKMapView) {
-        print("[MapValueCell] mapViewDidFinishLoadingMap")
         DispatchQueue.main.async(execute: { [weak self] in
             guard let self = self else { return }
             UIViewPropertyAnimator(duration: 0.3, curve: .easeIn) { [weak self] in
@@ -270,7 +317,6 @@ extension MapValueCell: MKMapViewDelegate  {
                 if let mapView = self.mapView {
                     self.contentView.bringSubviewToFront(mapView)
                 }
-                
             }.startAnimation()
         })
         

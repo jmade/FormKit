@@ -106,7 +106,7 @@ extension DateValue {
     
     var formattedValue:String {
         let formatter = DateFormatter()
-        formatter.dateFormat = dateFormat ?? "yyyy-MM-dd"
+        formatter.dateFormat = dateFormat
         return formatter.string(from: date)
     }
     

@@ -3,7 +3,7 @@ import MapKit
 
 
 // MARK: - MapActionValue -
-public struct MapActionValue: Codable {
+public struct MapActionValue {
     var identifier: UUID = UUID()
     
     public var customKey:String? = "MapActionValue"
