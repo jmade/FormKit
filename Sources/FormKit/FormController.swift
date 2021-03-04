@@ -6,6 +6,8 @@ import UIKit
 public typealias FormValidationClosure = ( (FormDataSource,FormController) -> Void )
 
 
+
+
 extension UITableView {
     
     public func indexPathOfFirstResponder() -> IndexPath? {
@@ -246,10 +248,12 @@ extension BarItem {
 
 
 
-
+public typealias FormDismissalClosure = ( () -> Void )
 
 // MARK: - FormController -
 open class FormController: UITableViewController, CustomTransitionable {
+    
+    public var dismissalClosure: FormDismissalClosure?
     
     private var contentSizeObserver : NSKeyValueObservation?
     
@@ -1153,11 +1157,13 @@ extension FormController {
     // Navigation Bar Buttons
     @objc
     func cancelPressed(){
+        dismissalClosure?()
         dismiss(animated: true, completion: nil)
     }
     
     @objc
     func donePressed(){
+        dismissalClosure?()
         dismiss(animated: true, completion: nil)
     }
     

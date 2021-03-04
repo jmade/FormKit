@@ -3,6 +3,7 @@ import MapKit
 
 
 public typealias MapKitOverlayRendererClosure = ((MKMapView,MKOverlay) -> MKOverlayRenderer)
+public typealias MapKitAnnotationViewClosure = ((MKMapView,MKAnnotation) -> MKAnnotationView?)
 
 // MARK: - MapValue -
 public struct MapValue {
@@ -12,18 +13,38 @@ public struct MapValue {
     var lng: Double? = nil
     var radius: Double? = nil
     
-    struct MapData {
-        var polygon:MKPolygon?
-        var overlay:MKOverlay?
-        var annotation:MKAnnotation?
-        var region:MKCoordinateRegion?
-        var overlayRendererClosure: MapKitOverlayRendererClosure?
+    public struct MapData {
+        public var polygon:MKPolygon?
+        public var overlay:MKOverlay?
+        public var annotation:MKAnnotation?
+        public var region:MKCoordinateRegion?
+        public var mapRect:MKMapRect?
+        public var overlayRendererClosure: MapKitOverlayRendererClosure?
+        public var annotationViewClosure: MapKitAnnotationViewClosure?
+        
+        public init(polygon:MKPolygon?,overlay:MKOverlay?,annotation:MKAnnotation?,region:MKCoordinateRegion?,mapRect:MKMapRect?,overlayRendererClosure: MapKitOverlayRendererClosure?,annotationViewClosure: MapKitAnnotationViewClosure?) {
+            self.polygon = polygon
+            self.overlay = overlay
+            self.annotation = annotation
+            self.region = region
+            self.mapRect = mapRect
+            self.overlayRendererClosure = overlayRendererClosure
+            self.annotationViewClosure = annotationViewClosure
+        }
     }
     
-    var mapData: MapData?
+    
+    public var mapData: MapData?
 }
 
 public typealias MapValueChangeClosure = (MapValue) -> ()
+
+
+public extension MapValue {
+    init(_ mapData:MapData) {
+        self.mapData = mapData
+    }
+}
 
 
 
@@ -66,6 +87,9 @@ extension MapValue: FormValueDisplayable {
 public extension MapValue {
     
     var coordinate: CLLocationCoordinate2D? {
+
+        
+        
         guard let lat = lat, let lng = lng else {
             return nil
         }
@@ -139,6 +163,9 @@ public extension MapValue {
 
 
 
+
+
+// MARK: - MapValueCell -
 public final class MapValueCell: UITableViewCell {
     
     static let identifier = "com.jmade.FormKit.MapValueCell.identifier"
@@ -147,11 +174,17 @@ public final class MapValueCell: UITableViewCell {
     var formValue : MapValue? {
         didSet {
             guard let mapValue = formValue else { return }
+            
             if mapView == nil {
                 self.mapView = createMapView()
             }
             
-            handleMapValue(mapValue)
+            if let data = mapValue.mapData {
+                handleMapData(data)
+            } else {
+                handleMapValue(mapValue)
+            }
+            
             self.selectionStyle = .none
         }
     }
@@ -199,38 +232,46 @@ public final class MapValueCell: UITableViewCell {
 
 extension MapValueCell {
     
-    private func handleMapData(_ mapValue:MapValue) {
+    private func handleMapData(_ data:MapValue.MapData) {
         guard let mapView = mapView else {return}
         
-        if let mapData = mapValue.mapData {
-            
-            if let an = mapData.annotation {
-                mapView.addAnnotation(an)
-            }
-            
-            if let an = mapData.overlay {
-                mapView.addOverlay(an)
-            }
-            
-            /*
-            if let an = mapData.polygon {
-                
-            }
-            */
-            
-            
+        if !mapView.annotations.isEmpty {
+            mapView.removeAnnotations(mapView.annotations)
+        }
+        
+        if !mapView.overlays.isEmpty {
+            mapView.removeOverlays(mapView.overlays)
+        }
+        
+        
+        if let polygon = data.polygon {
+            mapView.addOverlay(polygon)
+        }
+        
+        if let annotation = data.annotation {
+            mapView.addAnnotation(annotation)
+        }
+        
+        if let overlay = data.overlay {
+            mapView.addOverlay(overlay)
+        }
+        
+        if let rect = data.mapRect {
+            let edgePadding = UIEdgeInsets(top: 16, left: 8, bottom: 16, right: 8)
+            mapView.setVisibleMapRect(
+                mapView.mapRectThatFits(rect, edgePadding: edgePadding),
+                edgePadding: edgePadding,
+                animated: true
+            )
+        }
+        
+        if let region = data.region {
+            mapView.setRegion(region, animated: true)
         }
         
     }
     
     private func handleMapValue(_ mapValue:MapValue) {
-        
-        guard mapValue.mapData == nil else {
-            handleMapData(mapValue)
-            return
-        }
-        
-
         
         guard
             let coordinate = mapValue.coordinate,
@@ -279,7 +320,23 @@ extension MapValueCell {
 
 extension MapValueCell: MKMapViewDelegate  {
     
-    typealias MapKitOverlayRendererClosure = ((MKMapView,MKOverlay) -> MKOverlayRenderer)
+    public func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        
+    }
+    
+    
+    public func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        
+        if let mapValue = formValue {
+            if let closure = mapValue.mapData?.annotationViewClosure {
+                return closure(mapView,annotation)
+            }
+        }
+        
+           return nil
+       }
+    
+    
     
     
     public func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
@@ -289,6 +346,21 @@ extension MapValueCell: MKMapViewDelegate  {
                 return closure(mapView,overlay)
             }
         }
+        
+        
+        if overlay is MKPolygon {
+            let renderer = MKPolygonRenderer(polygon: (overlay as! MKPolygon))
+            renderer.lineWidth = 4.0
+            if #available(iOS 13.0, *) {
+                renderer.strokeColor = .systemBlue
+                renderer.fillColor = UIColor.systemRed.withAlphaComponent(0.3)
+            } else {
+                renderer.strokeColor = .blue
+                renderer.fillColor = UIColor.blue.withAlphaComponent(0.3)
+            }
+            return renderer
+        }
+        
         
         
 
