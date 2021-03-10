@@ -482,16 +482,28 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     
     
-    public init(_ data: FormDataSource, validation: @escaping FormValidationClosure) {
+    public init(_ title:String,_ data: FormDataSource) {
         if #available(iOS 13.0, *) {
             super.init(style: .insetGrouped)
         } else {
             super.init(style: .grouped)
         }
         self.dataSource = data
-        self.title = dataSource.title
-        self.validationClosure = validation
+        self.title = title
     }
+    
+    
+    
+    public init(_ data: FormDataSource, validation: @escaping FormValidationClosure) {
+           if #available(iOS 13.0, *) {
+               super.init(style: .insetGrouped)
+           } else {
+               super.init(style: .grouped)
+           }
+           self.dataSource = data
+           self.title = dataSource.title
+           self.validationClosure = validation
+       }
     
     
     
