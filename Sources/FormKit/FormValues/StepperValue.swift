@@ -173,9 +173,12 @@ public final class StepperCell: UITableViewCell {
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: .body)
+        label.adjustsFontForContentSizeCategory = true
         label.textAlignment = .left
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         contentView.addSubview(label)
         return label
     }()
@@ -207,6 +210,12 @@ public final class StepperCell: UITableViewCell {
                 stepperLabel.text = String(Int(stepperValue.value))
                 titleLabel.text = stepperValue.title
                 infoLabel.text = stepperValue.info
+                
+                print(" contentView.bounds.width -> \(contentView.bounds.width) ")
+                
+//                if contentView.bounds.width < 500 {
+//                    titleLabel.preferredMaxLayoutWidth = contentView.bounds.width * 0.5
+//                }
                 if stepperValue.isSelectable == false {
                     self.selectionStyle = .none
                 }
@@ -220,19 +229,25 @@ public final class StepperCell: UITableViewCell {
         
         activateDefaultHeightAnchorConstraint()
         
+        let stepperTrailingConstraint = stepper.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor)
+        stepperTrailingConstraint.priority = UILayoutPriority(900.0)
+        
         NSLayoutConstraint.activate([
             titleLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
-            stepperLabel.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 12.0),
+            titleLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            titleLabel.trailingAnchor.constraint(equalTo: stepperLabel.leadingAnchor, constant: -8.0),
+            
+            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: titleLabel.bottomAnchor),
+            stepperLabel.trailingAnchor.constraint(equalTo: stepper.leadingAnchor, constant: -8.0),
+            
             stepperLabel.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
             
-            infoLabel.leadingAnchor.constraint(equalTo: stepperLabel.trailingAnchor, constant: 12.0),
+            infoLabel.leadingAnchor.constraint(equalTo: stepperLabel.trailingAnchor, constant: 8.0),
             infoLabel.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
-            infoLabel.trailingAnchor.constraint(equalTo: stepper.leadingAnchor, constant: -8.0),
+            infoLabel.trailingAnchor.constraint(equalTo: stepper.leadingAnchor, constant: -4.0),
             
-            stepper.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor, constant: -4.0),
+            stepperTrailingConstraint,
             stepper.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
-            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: stepper.bottomAnchor, constant: 2.0)
             ])
     }
     
