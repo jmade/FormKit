@@ -1527,6 +1527,24 @@ extension FormController {
     }
     
     
+    public func invalidateDatePickerValue(_ value:DatePickerValue, at path:IndexPath) {
+        
+    }
+    
+    
+    public func validateDatePickerValue(_ value:DatePickerValue, at path:IndexPath) {
+        
+    }
+    
+    public func setNewDatePickerValue(_ value:DatePickerValue, at path:IndexPath) {
+        dataSource.updateWith(formValue: value, at: path)
+        if let cell = tableView.cellForRow(at: path) as? DatePickerValueCell {
+            print("[FormKit] setNewDatePickerValue isValid: \(value.isValid)")
+            cell.setNewDatePickerValue(value)
+        }
+    }
+    
+    
     
     public func updateActionValue(_ value:ActionValue, at path:IndexPath) {
         
@@ -2144,7 +2162,9 @@ extension FormController: UpdateFormValueDelegate {
         switch direction {
         case .previous:
             if let previousIndexPath = dataSource.previousIndexPath(from) {
-                tableView.scrollToRow(at: previousIndexPath, at: .none, animated: true)
+                if tableView.isScrollEnabled {
+                    tableView.scrollToRow(at: previousIndexPath, at: .none, animated: true)
+                }
                 if let previousCell = tableView.cellForRow(at: previousIndexPath) {
                     if let activatabelCell = previousCell as? Activatable {
                         activatabelCell.activate()
@@ -2153,7 +2173,9 @@ extension FormController: UpdateFormValueDelegate {
             }
         case .next:
             if let nextIndexPath = dataSource.nextIndexPath(from) {
-                tableView.scrollToRow(at: nextIndexPath, at: .none, animated: true)
+                if tableView.isScrollEnabled {
+                    tableView.scrollToRow(at: nextIndexPath, at: .none, animated: true)
+                }
                 if let nextCell = tableView.cellForRow(at: nextIndexPath) {
                     if let activatabelCell = nextCell as? Activatable {
                         activatabelCell.activate()
@@ -2168,6 +2190,10 @@ extension FormController: UpdateFormValueDelegate {
 
 
 extension FormController {
+    
+    public func updateFormValue(_ formValue: FormValue, at path: IndexPath) {
+        handleUpdatedFormValue(formValue, at: path)
+    }
     
     private func handleUpdatedFormValue(_ formValue: FormValue, at path: IndexPath) {
         dataSource.updateWith(formValue: formValue, at: path)
@@ -2256,7 +2282,7 @@ extension FormController: UIDocumentInteractionControllerDelegate {
     
     
     public func documentInteractionControllerViewControllerForPreview(_ controller: UIDocumentInteractionController) -> UIViewController {
-          return self
+        return self
     }
     
     

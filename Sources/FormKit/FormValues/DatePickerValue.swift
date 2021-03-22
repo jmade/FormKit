@@ -12,12 +12,15 @@ public struct DatePickerValue {
     public var exportDateFormat:String?
     public var displayDateFormat:String?
     /// TableSelectable
-    public var isSelectable: Bool = false
+    public var isSelectable: Bool = true
     public var customKey:String? = "Date"
     public var useDirectionButtons:Bool = true
     
     public var minDate:Date?
     public var maxDate:Date?
+    public var isValid = true
+    public var highlightWhenSelected = false
+    
 }
 
 
@@ -70,7 +73,7 @@ extension DatePickerValue {
         self.maxDate = maxDate
     }
     
-    public init(_ title:String,_ customKey:String,_ displayFormat:String,_ exportFormat:String, _ date:Date?,_ minDate:Date?,_ maxDate:Date?) {
+    public init(_ title:String,_ customKey:String,_ displayFormat:String,_ exportFormat:String, _ date:Date?,_ minDate:Date?,_ maxDate:Date?,_ highlightWhenSelected:Bool = false) {
         self.title = title
         self.customKey = customKey
         self.date = date ?? Date()
@@ -78,6 +81,7 @@ extension DatePickerValue {
         self.maxDate = maxDate
         self.displayDateFormat = displayFormat
         self.exportDateFormat = exportFormat
+        self.highlightWhenSelected = highlightWhenSelected
     }
     
     
@@ -99,9 +103,49 @@ extension DatePickerValue {
             customKey: self.customKey,
             useDirectionButtons: self.useDirectionButtons,
             minDate: self.minDate,
-            maxDate: self.maxDate
+            maxDate: self.maxDate,
+            isValid: self.isValid,
+            highlightWhenSelected:  self.highlightWhenSelected
         )
     }
+    
+    
+    public func invalidated() -> DatePickerValue {
+        DatePickerValue(
+            title: self.title,
+            date: self.date,
+            dateFormat: self.dateFormat,
+            exportDateFormat: self.exportDateFormat,
+            displayDateFormat: self.displayDateFormat,
+            isSelectable: self.isSelectable,
+            customKey: self.customKey,
+            useDirectionButtons: self.useDirectionButtons,
+            minDate: self.minDate,
+            maxDate: self.maxDate,
+            isValid: false,
+            highlightWhenSelected:  self.highlightWhenSelected
+        )
+    }
+    
+    
+    public func validated() -> DatePickerValue {
+        DatePickerValue(
+            title: self.title,
+            date: self.date,
+            dateFormat: self.dateFormat,
+            exportDateFormat: self.exportDateFormat,
+            displayDateFormat: self.displayDateFormat,
+            isSelectable: self.isSelectable,
+            customKey: self.customKey,
+            useDirectionButtons: self.useDirectionButtons,
+            minDate: self.minDate,
+            maxDate: self.maxDate,
+            isValid: true,
+            highlightWhenSelected: self.highlightWhenSelected
+        )
+    }
+    
+    
 }
 
 
@@ -139,12 +183,16 @@ extension DatePickerValue {
         return formatter.string(from: date)
     }
     
+    public var isInvalid:Bool {
+        !isValid
+    }
+    
 }
 
 
 extension DatePickerValue {
     
-    var encodedTitle:String {
+   public var encodedTitle:String {
         if let key = customKey {
             return key
         }
@@ -209,6 +257,13 @@ extension DatePickerValue {
             )
         )
     }
+    
+    
+    public func dataMatches(_ dpv:DatePickerValue) -> Bool {
+        customKey == dpv.customKey && date == dpv.date && title == dpv.title
+    }
+    
+    
 }
 
 
@@ -279,8 +334,8 @@ class DateInputKeyboard: UIInputView {
     
     
     override func willMove(toSuperview newSuperview: UIView?) {
-        self.datePicker.setDate(self.date, animated: true)
         super.willMove(toSuperview: newSuperview)
+        //self.datePicker.setDate(self.date, animated: true)
     }
     
     
@@ -300,7 +355,7 @@ extension DateInputKeyboard: UIInputViewAudioFeedback {
 extension DateInputKeyboard {
     
     @objc private func dateChanged(sender:UIDatePicker) {
-        observer?.newDate(date: sender.date)
+       observer?.newDate(date: sender.date)
     }
     
 }
@@ -338,7 +393,6 @@ public final class DatePickerValueCell: UITableViewCell, Activatable {
         } else {
             textField.textColor = .lightText
         }
-        textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
         textField.delegate = self
         textField.inputView = dateInputView
         textField.translatesAutoresizingMaskIntoConstraints = false
@@ -354,20 +408,43 @@ public final class DatePickerValueCell: UITableViewCell, Activatable {
     var indexPath:IndexPath?
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
     
+    
     var formValue:DatePickerValue? {
         didSet {
+            if oldValue == nil {
+                evaluateButtonBar()
+            }
             if let dateValue = formValue {
-                if oldValue == nil {
-                    evaluateButtonBar()
-                }
-                titleLabel.text = dateValue.title
-                textField.text = dateValue.displayValue
                 dateInputView.date = dateValue.date
-                dateInputView.minDate  = dateValue.minDate ?? dateValue.date
+                titleLabel.text = dateValue.title
+                textField.attributedText = attributedStringAdapter(dateValue,textField.isFirstResponder)
             } else {
                 titleLabel.text = nil
                 textField.text = nil
+                textField.attributedText = nil
             }
+        }
+    }
+    
+    
+    private func attributedStringAdapter(_ dateValue:DatePickerValue,_ sel:Bool = false) -> NSAttributedString {
+        
+        let selected = dateValue.highlightWhenSelected ? sel : false
+        
+        if dateValue.isValid {
+            return NSAttributedString(string: dateValue.displayValue, attributes: [
+                .font : UIFont.preferredFont(forTextStyle: .body),
+                .foregroundColor : selected ? UIColor.FormKit.inputSelected : UIColor.FormKit.valueText,
+                .strikethroughStyle : NSNumber(integerLiteral: 0),
+                .strikethroughColor : UIColor.clear
+            ])
+        } else {
+            return NSAttributedString(string: dateValue.displayValue, attributes: [
+                .font : UIFont.preferredFont(forTextStyle: .body),
+                .foregroundColor : selected ? UIColor.FormKit.inputSelected : UIColor.FormKit.valueText,
+                .strikethroughStyle : NSUnderlineStyle.single.rawValue,
+                .strikethroughColor : UIColor.FormKit.delete
+            ])
         }
     }
 
@@ -382,23 +459,29 @@ public final class DatePickerValueCell: UITableViewCell, Activatable {
     }
     
     public override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
         if selected {
             guard let dateValue = formValue else { return }
             if let input = textField.inputView as? DateInputKeyboard {
+                input.minDate = dateValue.minDate ?? .distantPast
+                input.maxDate = dateValue.maxDate ?? .distantFuture
                 input.date = dateValue.date
             } else {
                 textField.inputView = dateInputView
+                dateInputView.minDate = dateValue.minDate ?? .distantPast
+                dateInputView.maxDate = dateValue.maxDate ?? .distantFuture
                 dateInputView.date = dateValue.date
             }
             textField.becomeFirstResponder()
         }
+        super.setSelected(selected, animated: animated)
     }
     
     
     public override  func prepareForReuse() {
         super.prepareForReuse()
-        formValue = nil
+        titleLabel.text = nil
+        textField.text = nil
+        textField.attributedText = nil
     }
     
     
@@ -410,7 +493,11 @@ extension DatePickerValueCell: DateInputKeyboardObserver {
     func newDate(date: Date) {
         guard let dateValue = formValue else { return }
         let newValue = dateValue.newWith(date)
+        self.formValue = newValue
         updateFormValueDelegate?.updatedFormValue(newValue, indexPath)
+    }
+    
+    public func setNewDatePickerValue(_ newValue:DatePickerValue) {
         self.formValue = newValue
     }
     
@@ -423,33 +510,36 @@ extension DatePickerValueCell: DateInputKeyboardObserver {
 extension DatePickerValueCell {
 
     
-      func evaluateButtonBar(){
-          
-          guard let datePickerValue = formValue else { return }
+    func evaluateButtonBar(){
         
-          if datePickerValue.useDirectionButtons {
-              let inputBarHeight: CGFloat = 32.0
-              let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: inputBarHeight)))
-              let inputLabel = UILabel(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width * 0.60, height: inputBarHeight)))
-              inputLabel.text =  datePickerValue.title ?? "Input Date"
-              inputLabel.font = .preferredFont(forTextStyle: .body)
-              inputLabel.textAlignment = .center
-              if #available(iOS 13.0, *) {
-                  inputLabel.textColor = .tertiaryLabel
-              } else {
-                  inputLabel.textColor = .gray
-              }
-              let exp = UIBarButtonItem(customView: inputLabel)
-              
-              let previous = UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction))
-              let next = UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction))
-              let done = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
-              bar.items = [previous,next,.Flexible(),exp,.Flexible(),done]
-              
-              bar.sizeToFit()
-              textField.inputAccessoryView = bar
-          }
-      }
+        guard let datePickerValue = formValue, datePickerValue.useDirectionButtons else { return }
+        
+        
+        let inputBarHeight: CGFloat = 32.0
+        let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: inputBarHeight)))
+        let inputLabel = UILabel(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width * 0.60, height: inputBarHeight)))
+        inputLabel.text =  datePickerValue.title ?? "Input Date"
+        inputLabel.font = .preferredFont(forTextStyle: .body)
+        inputLabel.textAlignment = .center
+        if #available(iOS 13.0, *) {
+            inputLabel.textColor = .tertiaryLabel
+        } else {
+            inputLabel.textColor = .gray
+        }
+        let exp = UIBarButtonItem(customView: inputLabel)
+        
+        
+        let previous = UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction))
+        let next = UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction))
+        let done = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
+        bar.items = [previous,next,.Flexible(),exp,.Flexible(),done]
+        
+        bar.sizeToFit()
+        textField.inputAccessoryView = bar
+        
+        
+        
+    }
 
       
     @objc
@@ -457,7 +547,7 @@ extension DatePickerValueCell {
         if let value = formValue {
             updateFormValueDelegate?.updatedFormValue(value, self.indexPath)
         }
-        endTextEditing()
+        textField.resignFirstResponder()
     }
       
       @objc
@@ -478,43 +568,76 @@ extension DatePickerValueCell {
         guard let dateValue = formValue else { return }
         FormConstant.makeSelectionFeedback()
         if let input = textField.inputView as? DateInputKeyboard {
+            input.minDate = dateValue.minDate ?? .distantPast
+            input.maxDate = dateValue.maxDate ?? .distantFuture
             input.date = dateValue.date
         }
         textField.becomeFirstResponder()
     }
-      
-      @objc
-      func textFieldTextChanged() {
-        
-      }
-      
-      private func endTextEditing(){
-          textField.resignFirstResponder()
-      }
-
-      
     
 }
 
 
+
+extension UITextField {
+    
+    public func strikeContent() {
+        guard let currentText = text else { return }
+        self.attributedText = NSAttributedString(string: currentText, attributes: [
+            .font : self.font ?? UIFont.preferredFont(forTextStyle: .body),
+            .foregroundColor : self.textColor ?? UIColor.FormKit.text,
+            .strikethroughStyle : NSUnderlineStyle.single.rawValue,
+            .strikethroughColor : UIColor.FormKit.delete
+        ])
+    }
+    
+    
+    public func unstikeContent() {
+        guard let attributedString = self.attributedText else { return }
+        self.attributedText = nil
+        self.text = attributedString.string
+        self.font = UIFont.preferredFont(forTextStyle: .body)
+        self.tintColor = .clear
+        self.textColor = UIColor.FormKit.valueText
+
+    }
+    
+}
 
 
 
 extension DatePickerValueCell: UITextFieldDelegate {
     
     public func textFieldDidEndEditing(_ textField: UITextField) {
-        endTextEditing()
+        textField.resignFirstResponder()
     }
     
     public func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
-        //animateTitleForSelection(isSelected: false)
+        if let date = formValue {
+            if date.highlightWhenSelected {
+                animateTitleForSelection(isSelected: false)
+            }
+        }
         return true
     }
     
     
     public func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
-        //animateTitleForSelection(isSelected: true)
+        if let date = formValue {
+            if date.highlightWhenSelected {
+                animateTitleForSelection(isSelected: true)
+            }
+        }
         return true
+    }
+    
+    
+    func animateTitleForSelection(isSelected:Bool) {
+        guard let date = formValue else { return }
+        let newAttributedString = attributedStringAdapter(date,isSelected)
+        UIViewPropertyAnimator(duration: 1.0, dampingRatio: 0.21) { [weak self] in
+            guard let self = self else { return }
+            self.textField.attributedText = newAttributedString
+        }.startAnimation()
     }
 }

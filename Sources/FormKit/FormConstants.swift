@@ -18,6 +18,22 @@ public extension UIColor {
             }
         }
         
+        static var titleText:UIColor {
+            if #available(iOS 13.0, *) {
+                return .label
+            } else {
+                return .black
+            }
+        }
+        
+        static var valueText:UIColor {
+            if #available(iOS 13.0, *) {
+                return .secondaryLabel
+            } else {
+                return .lightGray
+            }
+        }
+        
         static var actionText:UIColor {
             if #available(iOS 13.0, *) {
                 return .systemYellow

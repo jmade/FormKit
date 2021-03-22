@@ -619,6 +619,9 @@ extension FormDataSource {
         
     }
     
+    
+    
+    
 }
 
 
@@ -692,6 +695,24 @@ extension FormDataSource {
     
     public func item(for row:Int,in sectionIndex:Int) -> FormItem? {
         return self.section(for: sectionIndex)?.row(for: row)
+    }
+    
+    
+    
+    
+    public var allItems:[(item:FormItem,path:IndexPath)] {
+        var all:[(item:FormItem,path:IndexPath)] = []
+        
+        for (section,s) in sections.enumerated() {
+            for (row,item) in s.rows.enumerated() {
+                all.append(
+                    (item,IndexPath(row: row, section: section))
+                )
+            }
+        }
+        
+        return all
+        
     }
     
 }

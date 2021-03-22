@@ -261,6 +261,34 @@ extension FormItem {
     }
     
     
+    public func isDatePickerValue(_ datePickerValue:DatePickerValue? = nil) -> Bool {
+        var isDatePickerValue:Bool = false
+        switch self {
+        case .datePicker(let dpv):
+            if let inquiring = datePickerValue {
+                isDatePickerValue = inquiring.dataMatches(dpv)
+            } else {
+                isDatePickerValue = true
+            }
+            break
+        default:
+            break
+        }
+        return isDatePickerValue
+    }
+    
+    
+    public func asDatePickerValue() -> DatePickerValue? {
+        switch self {
+        case .datePicker(let dpv):
+            return dpv
+        default:
+            break
+        }
+        return nil
+    }
+    
+    
     
     public func isValid() -> Bool {
         switch self {
@@ -270,6 +298,8 @@ extension FormItem {
             } else {
                 return true
             }
+        case .datePicker(let dpv):
+            return dpv.isValid
         default:
            return false
         }
