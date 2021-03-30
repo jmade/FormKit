@@ -18,7 +18,7 @@ extension PropertySearchable {
         guard let style = mirror.displayStyle, style == .struct || style == .class else {
             throw NSError()
         }
-        
+         
         for (property,value) in mirror.children {
             if let prop = property {
                 result.append((prop,String(describing: value)))

@@ -300,6 +300,8 @@ extension FormItem {
             }
         case .datePicker(let dpv):
             return dpv.isValid
+        case .timeInput(let tiv):
+            return tiv.isValid
         default:
            return false
         }

@@ -259,6 +259,8 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     var customTransitioningDelegate = PresentationTransitioningDelegate()
     
+    public var transitionManager: UIViewControllerTransitioningDelegate?
+    
     var bottomBarItems:[BottomBarActionItem] = []
     var leadingToolBarButtonTitle:String?
     var trailingToolBarButtonTitle:String?
@@ -429,6 +431,8 @@ open class FormController: UITableViewController, CustomTransitionable {
     public var usesContextMenus: Bool = false
     
     
+    
+   
     public var allowModalDismissal:Bool = false {
         didSet {
             if #available(iOS 13.0, *) {
@@ -543,6 +547,7 @@ open class FormController: UITableViewController, CustomTransitionable {
     }
     
     
+    
     public init(data: FormDataSource,style: FormDisplayStyle) {
         switch style {
         case .modern:
@@ -632,6 +637,16 @@ open class FormController: UITableViewController, CustomTransitionable {
     }
     
     
+    @available(iOS 13.0, *)
+    public func addBlurEffect(_ blurStyle: UIBlurEffect.Style = .systemThinMaterial) {
+        self.tableView.backgroundColor = .clear
+        let blurEffect = UIBlurEffect(style: blurStyle)
+        let blurEffectView = UIVisualEffectView(effect: blurEffect)
+        blurEffectView.frame = self.tableView.frame
+        self.tableView.backgroundView = blurEffectView
+        self.tableView.separatorEffect = UIVibrancyEffect(blurEffect: blurEffect)
+    }
+    
     
     
     
@@ -672,11 +687,28 @@ open class FormController: UITableViewController, CustomTransitionable {
         if didLoad == false {
             setupUI()
         }
+        
+        contentSizeObserver = tableView.observe(\.contentSize) { [weak self] tv, _ in
+            guard let self = self else { return }
+            
+
+            
+            let newContentSize = CGSize(width: tv.contentSize.width + tv.contentInset.left + tv.contentInset.right,
+                   height: tv.contentSize.height + tv.contentInset.top + tv.contentInset.bottom)
+            
+            
+            //let newContentSize = tableView.contentSize
+            if self.preferredContentSize != newContentSize {
+                self.preferredContentSize = newContentSize
+            }
+        }
     }
     
     
     override open func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
+        
         if toolbarItems != nil {
             self.navigationController?.setToolbarHidden(false, animated: false)
         } else {
@@ -686,12 +718,15 @@ open class FormController: UITableViewController, CustomTransitionable {
             setupUI()
         }
         
+        
     }
     
     
     override open func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.navigationController?.setToolbarHidden(true, animated: animated)
+        contentSizeObserver?.invalidate()
+        contentSizeObserver = nil
     }
     
     
@@ -1415,9 +1450,6 @@ extension FormController {
                 let _ = self.dataSource.sections[indexPath.section].rows.remove(at: indexPath.row)
                 self.tableView.deleteRows(at: [indexPath], with: .fade)
             }
-            
-            
-            
             self.generateHapticFeedback(.impact)
             handler(true)
         }
@@ -1473,6 +1505,45 @@ extension FormController {
 }
 
 
+// MARK: - Update/Invalidation -
+
+extension FormController {
+    
+    // MARK: - DatePickerValue -
+    
+    /*
+    public func invalidateDatePickerValue(_ value:DatePickerValue, at path:IndexPath) {
+        
+    }
+    
+    
+    public func validateDatePickerValue(_ value:DatePickerValue, at path:IndexPath) {
+        
+    }
+    */
+    
+    
+    public func setNewDatePickerValue(_ value:DatePickerValue, at path:IndexPath) {
+        dataSource.updateWith(formValue: value, at: path)
+        if let cell = tableView.cellForRow(at: path) as? DatePickerValueCell {
+            cell.setNewDatePickerValue(value)
+        }
+    }
+    
+    
+    
+    // MARK: - TimeInputValue -
+    
+    public func setNewTimeInputValue(_ value:TimeInputValue, at path:IndexPath) {
+        dataSource.updateWith(formValue: value, at: path)
+        if let cell = tableView.cellForRow(at: path) as? TimeInputCell {
+            cell.setTimeInputValue(value)
+        }
+    }
+    
+    
+}
+
 
 
 // MARK: - Update FormSection -
@@ -1527,22 +1598,10 @@ extension FormController {
     }
     
     
-    public func invalidateDatePickerValue(_ value:DatePickerValue, at path:IndexPath) {
-        
-    }
     
     
-    public func validateDatePickerValue(_ value:DatePickerValue, at path:IndexPath) {
-        
-    }
     
-    public func setNewDatePickerValue(_ value:DatePickerValue, at path:IndexPath) {
-        dataSource.updateWith(formValue: value, at: path)
-        if let cell = tableView.cellForRow(at: path) as? DatePickerValueCell {
-            print("[FormKit] setNewDatePickerValue isValid: \(value.isValid)")
-            cell.setNewDatePickerValue(value)
-        }
-    }
+    
     
     
     
@@ -2089,6 +2148,7 @@ extension FormController: UpdateFormValueDelegate {
                 case .timeInput(let time):
                     if let timeInputValue = formValue as? TimeInputValue {
                         if timeInputValue != time {
+                            runValidation()
                             handleUpdatedFormValue(timeInputValue , at: path)
                         }
                     }
@@ -2196,6 +2256,7 @@ extension FormController {
     }
     
     private func handleUpdatedFormValue(_ formValue: FormValue, at path: IndexPath) {
+        print("[FormKit](handleUpdatedFormValue) ")
         dataSource.updateWith(formValue: formValue, at: path)
         runValidation()
     }

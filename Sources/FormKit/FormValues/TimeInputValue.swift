@@ -1,14 +1,119 @@
 import UIKit
 
 
+extension FormItem {
+    
+    public func isTimeInputValue(_ timeInputValue:TimeInputValue? = nil) -> Bool {
+           var isTimeInputValue:Bool = false
+           switch self {
+           case .timeInput(let tiv):
+               if let inquiring = timeInputValue {
+                   isTimeInputValue = inquiring.dataMatches(tiv)
+               } else {
+                   isTimeInputValue = true
+               }
+               break
+           default:
+               break
+           }
+           return isTimeInputValue
+       }
+       
+       
+       public func asTimeInputValue() -> TimeInputValue? {
+           switch self {
+           case .timeInput(let tiv):
+               return tiv
+           default:
+               break
+           }
+           return nil
+       }
+    
+}
+
+
+
+
+
+
 // MARK: - TimeValue -
 public struct TimeInputValue {
+    
+    public enum TimeFormat: String {
+        case simple = "h:mm a"
+        case simplehh = "hh:mm a"
+        case simpleSS = "h:mm:ss a"
+        case simplehhSS = "hh:mm:ss a"
+        case military = "HH:mm"
+        case militarySS = "HH:mm:ss"
+    }
+    
     var identifier: UUID = UUID()
     public let title:String
     public let time:String
     public var useDirectionButtons:Bool = true
-    public var customKey:String? = nil
-    public var formatString:String = "HH:mm"
+    public var customKey:String?
+    
+    public var displayTimeFormat:TimeFormat = .simple
+    public var exportTimeFormat:TimeFormat = .military
+    
+    public var isValid = true
+    public var highlightWhenSelected = true
+    
+}
+
+
+extension TimeInputValue {
+    
+    var isTwelveHourFormatted:Bool {
+        time.contains("m") || time.contains("M")
+    }
+    
+    var upperMeridian:Bool {
+        time.contains("M")
+    }
+    
+    var isMilitary:Bool {
+        !isTwelveHourFormatted
+    }
+    
+    var includesSeconds:Bool {
+        time.filter({ $0 == ":" }).count > 1
+    }
+    
+    var hourFormatString:String {
+        time.first == "0" ? "%02d" : "%d"
+    }
+        
+    public func log() {
+        print(
+        """
+        --
+        TimeValue: '\(title)': \(time)
+        [ isTwelveHourFormatted: \(isTwelveHourFormatted) | isMilitary: \(isMilitary) | includesSeconds: \(includesSeconds) ]
+        \(components)
+        --
+        \(durationLog)
+        """
+        )
+    }
+    
+    
+    var durationLog:String {
+        """
+        Duration ⏱:
+        Total Hours: \(String(format: "%.2f", decodedDuration.converted(to: .hours).value))
+        Total Mins: \(String(format: "%.2f", decodedDuration.converted(to:  .minutes).value))
+        Total Seconds: \(Int(decodedDuration.converted(to: .seconds).value))
+        Days: \(  String(format: "%.6f",decodedDuration.converted(to: .hours).value/Measurement(value: 24.0, unit: UnitDuration.hours).value ) )
+        """
+    }
+    
+    var seconds:Int {
+        Int(decodedDuration.converted(to: .seconds).value)
+    }
+    
 }
 
 
@@ -26,12 +131,57 @@ extension TimeInputValue {
         self.customKey = customKey
     }
     
+    
+    public init(_ title:String,_ customKey:String,_ displayTimeFormat:TimeFormat,_ exportTimeFormat:TimeFormat,_ time:String) {
+        self.title = title
+        self.time = time
+        self.customKey = customKey
+        self.displayTimeFormat = displayTimeFormat
+        self.exportTimeFormat = exportTimeFormat
+    }
+
+    
 }
+
+
+
+extension TimeInputValue {
+    
+    public func isBefore(_ tiv:TimeInputValue) -> Bool {
+        seconds < tiv.seconds
+    }
+    
+    public func isEarlierThan(_ tiv:TimeInputValue) -> Bool {
+        seconds < tiv.seconds
+    }
+    
+    
+    
+    public func isAfter(_ tiv:TimeInputValue) -> Bool {
+        seconds > tiv.seconds
+    }
+    
+    public func isLaterThan(_ tiv:TimeInputValue) -> Bool {
+        seconds > tiv.seconds
+    }
+    
+}
+
+
 
 extension TimeInputValue {
     
     public func newWith(_ timeString:String) -> TimeInputValue {
-        TimeInputValue(identifier: UUID(), title: self.title, time: timeString, useDirectionButtons: self.useDirectionButtons, customKey: self.customKey)
+        TimeInputValue(identifier: UUID(),
+                       title: self.title,
+                       time: timeString,
+                       useDirectionButtons: self.useDirectionButtons,
+                       customKey: self.customKey,
+                       displayTimeFormat: self.displayTimeFormat,
+                       exportTimeFormat: self.exportTimeFormat,
+                       isValid: self.isValid,
+                       highlightWhenSelected: self.highlightWhenSelected
+        )
     }
     
     
@@ -40,8 +190,45 @@ extension TimeInputValue {
                        title: self.title,
                        time: self.timeIncrementBy(mins: mins),
                        useDirectionButtons: self.useDirectionButtons,
-                       customKey: self.customKey
+                       customKey: self.customKey,
+                       displayTimeFormat: self.displayTimeFormat,
+                       exportTimeFormat: self.exportTimeFormat,
+                       isValid: self.isValid,
+                       highlightWhenSelected: self.highlightWhenSelected
         )
+    }
+    
+    
+    public func invalidated() -> TimeInputValue {
+        TimeInputValue(identifier: UUID(),
+                       title: self.title,
+                       time: self.time,
+                       useDirectionButtons: self.useDirectionButtons,
+                       customKey: self.customKey,
+                       displayTimeFormat: self.displayTimeFormat,
+                       exportTimeFormat: self.exportTimeFormat,
+                       isValid: false,
+                       highlightWhenSelected: self.highlightWhenSelected
+        )
+    }
+    
+    
+    public func validated() -> TimeInputValue {
+        TimeInputValue(identifier: UUID(),
+                       title: self.title,
+                       time: self.time,
+                       useDirectionButtons: self.useDirectionButtons,
+                       customKey: self.customKey,
+                       displayTimeFormat: self.displayTimeFormat,
+                       exportTimeFormat: self.exportTimeFormat,
+                       isValid: true,
+                       highlightWhenSelected: self.highlightWhenSelected
+        )
+    }
+    
+    
+    public func dataMatches(_ tiv:TimeInputValue) -> Bool {
+        customKey == tiv.customKey && time == tiv.time && title == tiv.title
     }
     
     
@@ -61,6 +248,248 @@ extension TimeInputValue: Hashable, Equatable {
 
 
 extension TimeInputValue {
+    
+    struct Components: CustomStringConvertible {
+        let hours:Int
+        let minutes:Int
+        let seconds:Int
+        enum Format {
+            case am, pm, none
+        }
+        var format:Format = .none
+        
+        init(_ hours:Int,_ minutes:Int,_ seconds:Int? = nil,_ format:Format? = nil) {
+            self.hours = hours
+            self.minutes = minutes
+            self.seconds = seconds ?? 0
+            self.format = format ?? .none
+        }
+        
+        
+        var description: String {
+            "Hours: \(hours) | Minutes: \(minutes) | Seconds: \(seconds) | Format: \(format)"
+        }
+        
+        
+        public func adding(_ comp:Components) -> Components {
+            let newSeconds = self.seconds + comp.seconds
+            let additionalMins = newSeconds/60
+            
+            let newMins = self.minutes + comp.minutes + additionalMins
+            let additionalHours = newMins/60
+            
+            let newHours = self.hours + comp.hours + additionalHours
+            
+            return Components(newHours, newMins, newSeconds)
+        }
+    }
+    
+    
+    var componentFormat:Components.Format {
+        if time.contains("m") || time.contains("M") {
+            if time.contains("a") || time.contains("A") {
+                return .am
+            } else {
+                return .pm
+            }
+        } else {
+            return .none
+        }
+    }
+    
+    
+    var components:Components {
+        
+        var numericPortion = time
+        if time.contains("m") || time.contains("M") {
+            if let value = time.split(" ").first {
+                numericPortion = value
+            }
+        }
+        
+        var h:Int = 0, m:Int = 0, s:Int = 0
+        
+        let decodedTimes = numericPortion.split(separator: ":").compactMap({ Int($0) })
+        switch decodedTimes.count {
+        case 3:
+            for (i,v) in decodedTimes.enumerated() {
+                switch i {
+                case 0:
+                    h = v
+                case 1:
+                    m = v
+                default:
+                    s = v
+                }
+            }
+        case 2:
+            for (i,v) in decodedTimes.enumerated() {
+                switch i {
+                case 0:
+                    h = v
+                default:
+                    m = v
+                }
+            }
+        default:
+            break
+        }
+        
+        return Components(h, m, s, componentFormat)
+    }
+    
+    
+    
+    
+    
+}
+
+
+
+extension TimeInputValue {
+    
+    public var decodedDuration:Measurement<UnitDuration> {
+        var duration = Measurement(value: 0.0, unit: UnitDuration.hours)
+        
+        var numericPortion = time
+        
+        var hourModifer = 0
+        
+        switch componentFormat {
+        case .am:
+            if let val = time.split(" ").first {
+                numericPortion = val
+            }
+        case .pm:
+            if let val = time.split(" ").first {
+                numericPortion = val
+            }
+            hourModifer = 12
+        case .none:
+            break
+        }
+        
+        
+        let decodedTimes = numericPortion.split(separator: ":").compactMap({ Double($0) })
+        switch decodedTimes.count {
+        case 3:
+            for (i,v) in decodedTimes.enumerated() {
+                switch i {
+                case 0:
+                    let measuredHours = Int(Measurement(value: v, unit: UnitDuration.hours).value)
+                    if componentFormat == .am {
+                        if measuredHours == 12 {
+                            hourModifer = -12
+                        }
+                    }
+                    
+                    if componentFormat == .pm {
+                        if measuredHours == 12 {
+                            hourModifer = 0
+                        }
+                    }
+                    
+                    duration = duration + Measurement(value: v, unit: UnitDuration.hours) + Measurement(value: Double(hourModifer), unit: UnitDuration.hours)
+                case 1:
+                    duration = duration + Measurement(value: v, unit: UnitDuration.minutes)
+                default:
+                    duration = duration + Measurement(value: v, unit: UnitDuration.seconds)
+                }
+            }
+        case 2:
+            for (i,v) in decodedTimes.enumerated() {
+                switch i {
+                case 0:
+                    let measuredHours = Int(Measurement(value: v, unit: UnitDuration.hours).value)
+                    if componentFormat == .am {
+                        if measuredHours == 12 {
+                            hourModifer = -12
+                        }
+                    }
+                    
+                    if componentFormat == .pm {
+                        if measuredHours == 12 {
+                            hourModifer = 0
+                        }
+                    }
+                    duration = duration + Measurement(value: v, unit: UnitDuration.hours) + Measurement(value: Double(hourModifer), unit: UnitDuration.hours)
+                default:
+                    duration = duration + Measurement(value: v, unit: UnitDuration.minutes)
+                }
+            }
+        default:
+            break
+        }
+        
+        return duration
+    }
+    
+    
+}
+
+
+
+
+
+extension TimeInputValue {
+   
+    var exportValue:String {
+        
+        switch exportTimeFormat {
+        case .military:
+            var hrs = 0
+            var modifier = 0
+            if componentFormat == .pm && components.hours != 12 {
+                modifier = 12
+            }
+            
+            hrs = (components.hours + modifier)
+            
+            if hrs == 24 || (componentFormat == .am && components.hours == 12) {
+                hrs = 0
+            }
+            
+            return "\(String(format: "%02d", hrs )):\(String(format: "%02d", components.minutes))"
+        case .militarySS:
+            var hrs = 0
+            var modifier = 0
+            if componentFormat == .pm && components.hours != 12 {
+                modifier = 12
+            }
+            
+            hrs = (components.hours + modifier)
+            
+            if hrs == 24 || (componentFormat == .am && components.hours == 12) {
+                hrs = 0
+            }
+            return "\(String(format: "%02d", hrs)):\(String(format: "%02d", components.minutes)):\(String(format: "%02d", components.seconds))"
+        case .simple:
+            return "\(components.hours):\(String(format: "%02d", components.minutes)) \((componentFormat == .pm) ? "PM" : "AM")"
+        case .simplehh:
+            return "\(String(format: "%02d", components.hours)):\(String(format: "%02d", components.minutes)) \((componentFormat == .pm) ? "PM" : "AM")"
+        case .simplehhSS:
+            return "\(String(format: "%02d", components.hours)):\(String(format: "%02d", components.minutes)):\(String(format: "%02d", components.seconds)) \((componentFormat == .pm) ? "PM" : "AM")"
+        case .simpleSS:
+            return "\(components.hours):\(String(format: "%02d", components.minutes)):\(String(format: "%02d", components.seconds)) \((componentFormat == .pm) ? "PM" : "AM")"
+            
+        }
+        
+        
+    }
+   
+    
+    
+    public var encodedTitle:String {
+        customKey ?? title
+    }
+    
+    public var isInvalid:Bool {
+        !isValid
+    }
+
+   
+    
+    /// Converts to Military Time/24 hour time from
     
     private func convertTimeValue(_ newTime:String) -> String {
            if newTime.contains("PM") {
@@ -103,7 +532,7 @@ extension TimeInputValue: FormValue {
     
     
     public func encodedValue() -> [String : String] {
-        return [customKey ?? title : convertTimeValue(time) ]
+        return [customKey ?? title : exportValue /*convertTimeValue(time)*/ ]
     }
     
 }
@@ -111,6 +540,7 @@ extension TimeInputValue: FormValue {
 
 
 extension TimeInputValue {
+    
     internal func timeIncrementBy(mins:Int) -> String {
         var hour = 0
         var minute = 0
@@ -141,6 +571,7 @@ extension TimeInputValue {
         }
         
     }
+    
 }
 
 
@@ -197,8 +628,13 @@ public final class TimeInputCell: UITableViewCell, Activatable {
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: .body)
-        label.textAlignment = .center
+        label.textAlignment = .left
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        label.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        label.setContentHuggingPriority(.defaultLow, for: .vertical)
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.isUserInteractionEnabled = true
         contentView.addSubview(label)
         return label
     }()
@@ -209,8 +645,8 @@ public final class TimeInputCell: UITableViewCell, Activatable {
         textField.textAlignment = .right
         textField.font = UIFont.preferredFont(forTextStyle: .body)
         textField.tintColor = .clear
-        textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
         textField.delegate = self
+        textField.isUserInteractionEnabled = true
         if #available(iOS 13.0, *) {
             textField.textColor = .secondaryLabel
         } else {
@@ -219,11 +655,7 @@ public final class TimeInputCell: UITableViewCell, Activatable {
         textField.newTimeStringClosure = { [weak self] (timeString) in
             self?.newTimeString(timeString)
         }
-        
-        let inputView = TimeInputKeyboard(timeString:formValue?.time ?? "12:34 PM")
-        textField.inputView = inputView
-        inputView.observer = textField
-        
+        textField.setContentHuggingPriority(.defaultLow, for: .horizontal)
         textField.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(textField)
         return textField
@@ -235,12 +667,16 @@ public final class TimeInputCell: UITableViewCell, Activatable {
             if let timeValue = formValue {
                 if oldValue == nil {
                     evaluateButtonBar()
+                    let inputView = TimeInputKeyboard(timeValue)
+                    textField.inputView = inputView
+                    inputView.observer = textField
                 }
+                textField.attributedText = attributedStringAdapter(timeValue,textField.isFirstResponder)
                 titleLabel.text = timeValue.title
-                textField.text = timeValue.time
             } else {
                 titleLabel.text = nil
                 textField.text = nil
+                textField.attributedText = nil
             }
         }
     }
@@ -252,8 +688,9 @@ public final class TimeInputCell: UITableViewCell, Activatable {
         activateDefaultHeightAnchorConstraint()
         NSLayoutConstraint.activate([
             titleLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
-            textField.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
+            titleLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: titleLabel.bottomAnchor),
+            textField.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
             textField.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
             ])
         accessoryType = .disclosureIndicator
@@ -262,18 +699,19 @@ public final class TimeInputCell: UITableViewCell, Activatable {
     
     
     public override func setSelected(_ selected: Bool, animated: Bool) {
+        guard let timeValue = formValue else { return }
+        
         if selected {
             if let input = textField.inputView as? TimeInputKeyboard {
-                if let timeValue = formValue {
-                    input.timeValue = timeValue
-                }
+                input.timeValue = timeValue
             } else {
-                if let timeValue = formValue {
-                    textField.inputView = TimeInputKeyboard(timeString: timeValue.time)
-                }
+                let inputView = TimeInputKeyboard(timeValue)
+                textField.inputView = inputView
+                inputView.observer = textField
             }
             textField.becomeFirstResponder()
         }
+        
         super.setSelected(selected, animated: animated)
     }
     
@@ -292,13 +730,12 @@ public final class TimeInputCell: UITableViewCell, Activatable {
             
             let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: inputBarHeight)))
             
-            
             let inputLabel = UILabel(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width * 0.60, height: inputBarHeight)))
             inputLabel.text =  timeInputValue.title
             inputLabel.font = .preferredFont(forTextStyle: .body)
             inputLabel.textAlignment = .center
             if #available(iOS 13.0, *) {
-                inputLabel.textColor = .tertiaryLabel
+                inputLabel.textColor = .secondaryLabel
             } else {
                 inputLabel.textColor = .gray
             }
@@ -317,7 +754,7 @@ public final class TimeInputCell: UITableViewCell, Activatable {
     
     @objc
     func doneAction(){
-        endTextEditing()
+        textField.resignFirstResponder()
     }
     
     @objc
@@ -342,22 +779,18 @@ public final class TimeInputCell: UITableViewCell, Activatable {
         textField.becomeFirstResponder()
     }
     
-    @objc
-    func textFieldTextChanged() {
-        // do something
-    }
-    
-    private func endTextEditing(){
-        textField.resignFirstResponder()
-    }
-
-    
+  
     private func newTimeString(_ timeString:String) {
         if let timeInputValue = formValue {
             let newTimeInputValue = timeInputValue.newWith(timeString)
-            updateFormValueDelegate?.updatedFormValue(newTimeInputValue, indexPath)
             self.formValue = newTimeInputValue
+            updateFormValueDelegate?.updatedFormValue(newTimeInputValue, indexPath)
+            
         }
+    }
+    
+    public func setTimeInputValue(_ newValue:TimeInputValue) {
+        self.formValue = newValue
     }
     
 }
@@ -366,11 +799,10 @@ public final class TimeInputCell: UITableViewCell, Activatable {
 extension TimeInputCell: UITextFieldDelegate {
     
     public func textFieldDidEndEditing(_ textField: UITextField) {
-        endTextEditing()
+        textField.resignFirstResponder()
     }
     
     public func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
         animateTitleForSelection(isSelected: false)
         return true
     }
@@ -388,23 +820,35 @@ extension TimeInputCell: UITextFieldDelegate {
 
 extension TimeInputCell {
     
-    func animateTitleForSelection(isSelected:Bool) {
-        /*
-        if isSelected {
-            UIViewPropertyAnimator(duration: 1.0, dampingRatio: 0.21) { [weak self] in
-                guard let self = self else { return }
-                //self.titleLabel.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .headline).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
-                self.titleLabel.textColor = UIColor.FormKit.inputSelected
-            }.startAnimation()
-        } else {
-            UIViewPropertyAnimator(duration: 1.0, dampingRatio: 0.89) { [weak self] in
-                guard let self = self else { return }
-                //self.titleLabel.font = .preferredFont(forTextStyle: .body)
-                self.titleLabel.textColor = UIColor.FormKit.text
-            }.startAnimation()
-        }
-        */
+    private func attributedStringAdapter(_ timeValue:TimeInputValue,_ sel:Bool = false) -> NSAttributedString {
         
+        let selected = timeValue.highlightWhenSelected ? sel : false
+        
+        if timeValue.isValid {
+            return NSAttributedString(string: timeValue.time, attributes: [
+                .font : UIFont.preferredFont(forTextStyle: .body),
+                .foregroundColor : selected ? UIColor.FormKit.inputSelected : UIColor.FormKit.valueText,
+                .strikethroughStyle : NSNumber(integerLiteral: 0),
+                .strikethroughColor : UIColor.clear
+            ])
+        } else {
+            return NSAttributedString(string: timeValue.time, attributes: [
+                .font : UIFont.preferredFont(forTextStyle: .body),
+                .foregroundColor : selected ? UIColor.FormKit.inputSelected : UIColor.FormKit.valueText,
+                .strikethroughStyle : NSUnderlineStyle.single.rawValue,
+                .strikethroughColor : UIColor.FormKit.delete
+            ])
+        }
+    }
+    
+    
+    func animateTitleForSelection(isSelected:Bool) {
+        guard let time = formValue else { return }
+        let newAttributedString = attributedStringAdapter(time,isSelected)
+        UIViewPropertyAnimator(duration: 1.0, dampingRatio: 0.21) { [weak self] in
+            guard let self = self else { return }
+            self.textField.attributedText = newAttributedString
+        }.startAnimation()
     }
     
 }
@@ -442,24 +886,16 @@ class TimeInputKeyboard: UIInputView {
     /// Time Setup?
     public var timeValue:TimeInputValue? {
         didSet {
-            if let timeValue = timeValue {
-                startingTime = timeValue.time
-            }
-        }
-    }
-    
-    
-    var startingTime:String? = nil {
-        didSet {
-            if let timeString = startingTime {
-                setPickersToTimeString(timeString)
+            if let _ = timeValue {
+                if dataSource.isEmpty {
+                    dataSource = generateDataSource()
+                }
             }
         }
     }
     
     var minIncrement: Int = 1
-    
-
+    var secondIncrement: Int = 1
     
     private lazy var picker: UIPickerView = {
         let pickerView = UIPickerView()
@@ -467,22 +903,14 @@ class TimeInputKeyboard: UIInputView {
         addSubview(pickerView)
         pickerView.delegate = self
         pickerView.dataSource = self
-        
-//        pickerView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor, constant: 8.0).isActive = true
-//        pickerView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor, constant: 8.0).isActive = true
-//
         pickerView.centerXAnchor.constraint(equalTo: centerXAnchor, constant: 0).isActive = true
-        
         pickerView.topAnchor.constraint(equalTo: topAnchor).isActive = true
         layoutMarginsGuide.bottomAnchor.constraint(equalTo: pickerView.bottomAnchor).isActive = true
         return pickerView
     }()
     
-    private var dataSource: [[String]] = [
-        ["1","2","3","4","5","6","7","8","9","10","11","12"],
-        ["00","05","10","15","20","25","30","35","40","45","50","55"],
-        ["AM","PM"]
-    ]
+    
+    private var dataSource: [[String]] = []
     
     private lazy var feedbackGenerator: UIImpactFeedbackGenerator = {
         let f = UIImpactFeedbackGenerator()
@@ -491,44 +919,22 @@ class TimeInputKeyboard: UIInputView {
     }()
 
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    required init?(coder: NSCoder) { fatalError() }
     
-    init(timeString:String) {
+    init(_ timeInputValue:TimeInputValue) {
         super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 230), inputViewStyle: .keyboard)
-
+        self.timeValue = timeInputValue
         dataSource = generateDataSource()
-        //self.allowsSelfSizing = true
-        defer {
-            self.startingTime = timeString
-        }
     }
-    
+
     
     override func willMove(toSuperview newSuperview: UIView?) {
-        setTime()
-        
-        if let newsuper = newSuperview {
-            print(newsuper)
-        }
-            
         if UIDevice.current.userInterfaceIdiom == .pad {
-            print("Setting Width")
             picker.widthAnchor.constraint(equalToConstant: 320).isActive = true
-        } else {
-            
         }
-        
-        
         super.willMove(toSuperview: newSuperview)
+        loadPickers()
     }
-    
-    override func didMoveToSuperview() {
-        super.didMoveToSuperview()
-        setTime()
-    }
-    
     
     
     
@@ -538,26 +944,38 @@ class TimeInputKeyboard: UIInputView {
 extension TimeInputKeyboard {
     
     private func generateDataSource() -> [[String]] {
-        return [
-            ["1","2","3","4","5","6","7","8","9","10","11","12"],
-            stride(from: 0, to: 60, by: minIncrement).map({String(format: "%02d", $0)}),
-            ["AM","PM"]
-        ]
-    }
-    
-    
-    private func setTime() {
-        if let startingTime = startingTime {
-            setPickersToTimeString(startingTime)
-            //feedbackGenerator.impactOccurred()
+        
+        guard let timeValue = timeValue else { return [] }
+        var data:[[String]] = []
+        
+        if timeValue.isMilitary {
+            data = [
+                stride(from: 0, to: 24, by: 1).map({String(format: "%02d", $0)}),
+                stride(from: 0, to: 60, by: minIncrement).map({String(format: "%02d", $0)}),
+            ]
+            if timeValue.includesSeconds {
+                data.append(
+                    stride(from: 0, to: 60, by: secondIncrement).map({String(format: "%02d", $0)})
+                )
+            }
         } else {
-            setToCurrentTime()
-            //feedbackGenerator.impactOccurred()
+            data = [
+                stride(from: 1, to: 13, by: 1).map({String(format: timeValue.hourFormatString, $0)}),
+                stride(from: 0, to: 60, by: minIncrement).map({String(format: "%02d", $0)}),
+            ]
+            if timeValue.includesSeconds {
+                data.append(
+                    stride(from: 0, to: 60, by: secondIncrement).map({String(format: "%02d", $0)})
+                )
+            }
+            
+            timeValue.upperMeridian ? data.append(["AM","PM"]) : data.append(["am","pm"])
         }
         
+        return data
     }
-    
 }
+
 
 
 
@@ -583,16 +1001,45 @@ extension TimeInputKeyboard: UIPickerViewDelegate {
     }
     
     public func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-        /* do something cool here ??... */
         resolvePicker()
     }
     
+    
     func resolvePicker() {
-        let selectedHour = dataSource[0][picker.selectedRow(inComponent: 0)]
-        let selectedMins = dataSource[1][picker.selectedRow(inComponent: 1)]
-        let period = dataSource[2][picker.selectedRow(inComponent: 2)]
-        let resolvedTime = "\(selectedHour):\(selectedMins) \(period)"
-        observer?.add(resolvedTime)
+        guard let timeValue = timeValue else { return }
+        
+        var time = ""
+        
+        for (i,_) in dataSource.enumerated() {
+            
+            if !timeValue.includesSeconds && timeValue.isTwelveHourFormatted {
+                if i == 2 {
+                    time += " "
+                }
+            }
+            
+            time += dataSource[i][picker.selectedRow(inComponent: i)]
+            
+            if i == 0 {
+                time += ":"
+            }
+            
+            if timeValue.includesSeconds {
+                if i == 1 {
+                    time += ":"
+                }
+            }
+            
+            if timeValue.includesSeconds && timeValue.isTwelveHourFormatted {
+                if i == 2 {
+                    time += " "
+                }
+            }
+            
+        }
+        
+        observer?.add(time)
+
     }
     
 }
@@ -607,83 +1054,42 @@ extension TimeInputKeyboard: UIInputViewAudioFeedback {
 
 
 
-/// TODO: round current time to nearest 5 mins...
-
-
 // MARK: - Setting Pickers -
 extension TimeInputKeyboard {
-
-    // MARK: - TimeString -
-    private func setPickersToTimeString(_ timeString:String) {
-        var pickerRowStore: (hour:Int,mins:Int,meridan:Int) = (0,0,0)
+    
+    private func loadPickers() {
+        guard let timeValue = timeValue, !dataSource.isEmpty else { return }
+        let picker = self.picker
+        let animated = false
         
-        let hourSplit = timeString.split(":")
-        
-        if let hour = hourSplit.first {
-            if let index = dataSource[0].indexOf(hour) {
-                pickerRowStore.hour = index
-            }
-        }
-        
-        
-        if let nextSplit = hourSplit.last {
-            
-            let minSplit = nextSplit.split(" ")
-            
-            if let mins = minSplit.first {
-                if let index = dataSource[1].indexOf(mins) {
-                    pickerRowStore.mins = index
+        UIViewPropertyAnimator(duration: 0.5, dampingRatio: 0.76) {
+            if timeValue.isMilitary {
+                picker.selectRow(timeValue.components.hours, inComponent: 0, animated: animated)
+                picker.selectRow(timeValue.components.minutes, inComponent: 1, animated: animated)
+                if timeValue.includesSeconds {
+                    picker.selectRow(timeValue.components.seconds, inComponent: 2, animated: animated)
+                }
+            } else {
+                picker.selectRow(timeValue.components.hours-1, inComponent: 0, animated: animated)
+                picker.selectRow(timeValue.components.minutes, inComponent: 1, animated: animated)
+                
+                if timeValue.includesSeconds {
+                    picker.selectRow(timeValue.components.seconds, inComponent: 2, animated: animated)
+                    
+                    picker.selectRow(
+                        (timeValue.componentFormat == .pm) ? 1 : 0,
+                        inComponent: 3,
+                        animated: animated
+                    )
+                } else {
+                    picker.selectRow(
+                        (timeValue.componentFormat == .pm) ? 1 : 0,
+                        inComponent: 2,
+                        animated: animated
+                    )
                 }
             }
-            
-            if let meridan = minSplit.last {
-                if let index = dataSource[2].indexOf(meridan) {
-                    pickerRowStore.meridan = index
-                }
-            }
-        }
-        
-        picker.selectRow(pickerRowStore.hour, inComponent: 0, animated: true)
-        picker.selectRow(pickerRowStore.mins, inComponent: 1, animated: true)
-        picker.selectRow(pickerRowStore.meridan, inComponent: 2, animated: true)
-        
+        }.startAnimation()
     }
-    
-    // MARK: - Date -
-    private func setPickersToDate(_ date:Date = Date()) {
-        
-        func findIndexOf(_ value:String,in strings:[String]) -> Int {
-            for (i, str) in strings.enumerated() {
-                if value == str {
-                    return i
-                }
-            }
-            return 0
-        }
-        
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "h:mm a"
-        let dateString = dateFormatter.string(from: date)
-        
-        let dateTimeString = dateString.split(separator: " ").first!
-        let hourString = String(dateTimeString.split(separator: ":").first!)
-        let minString = String(dateTimeString.split(separator: ":").last!)
-        let periodString = String(dateString.split(separator: " ").last!)
-        
-        let hourColumnIndex = findIndexOf(hourString, in: dataSource[0])
-        let minColumnIndex = findIndexOf(minString, in: dataSource[1])
-        let periodColumnIndex = findIndexOf(periodString, in: dataSource[2])
-        
-        picker.selectRow(hourColumnIndex, inComponent: 0, animated: true)
-        picker.selectRow(minColumnIndex, inComponent: 1, animated: true)
-        picker.selectRow(periodColumnIndex, inComponent: 2, animated: true)
-        
-    }
-    
-    
-    private func setToCurrentTime() {
-        setPickersToDate()
-    }
-    
     
 }

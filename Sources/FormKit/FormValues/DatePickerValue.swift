@@ -85,6 +85,40 @@ extension DatePickerValue {
     }
     
     
+    /**
+    Initializes a new DatePickerValue.
+
+    - Parameters:
+       - title: The title of the value
+       - customKey: the json key to use for export
+       - dateString: the date formatted string (`"yyyy-MM-dd"`).
+
+    - Returns: A beautiful, brand-new `DatePickerValue`,
+               custom-built just for you.
+     
+    - Attention: thanks for your attention :)
+     
+    - Note: if the Date Conversion fails, the current `Date` will be used.
+     
+     
+    */
+    
+    public init(_ title:String,_ customKey:String,_ dateString:String) {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let date = formatter.date(from: dateString) ?? Date()
+        
+        self.title = title
+        self.customKey = customKey
+        self.date = date
+        self.minDate = .distantPast
+        self.maxDate = Date()
+        self.displayDateFormat = "MMM dd, yyyy"
+        self.exportDateFormat = "yyyy-MM-dd"
+        self.highlightWhenSelected = true
+    }
+    
+    
    
 }
 
