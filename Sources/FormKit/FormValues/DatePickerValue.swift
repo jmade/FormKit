@@ -99,8 +99,6 @@ extension DatePickerValue {
     - Attention: thanks for your attention :)
      
     - Note: if the Date Conversion fails, the current `Date` will be used.
-     
-     
     */
     
     public init(_ title:String,_ customKey:String,_ dateString:String) {
@@ -369,13 +367,12 @@ class DateInputKeyboard: UIInputView {
     
     override func willMove(toSuperview newSuperview: UIView?) {
         super.willMove(toSuperview: newSuperview)
-        //self.datePicker.setDate(self.date, animated: true)
     }
     
     
     override func didMoveToSuperview() {
-        super.didMoveToSuperview()
         self.datePicker.setDate(self.date, animated: true)
+        super.didMoveToSuperview()
     }
     
 }

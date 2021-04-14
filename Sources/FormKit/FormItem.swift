@@ -34,7 +34,7 @@ public enum FormItem {
     case date(DateValue)
     case datePicker(DatePickerValue)
     case push(PushValue)
-    
+    case dateTime(DateTimeValue)
 }
 
 // MARK: - CellDescriptable -
@@ -86,6 +86,8 @@ extension FormItem: FormCellDescriptable {
             return datePicker.cellDescriptor
         case .push(let pushValue):
             return pushValue.cellDescriptor
+        case .dateTime(let dateTimeValue):
+            return dateTimeValue.cellDescriptor
         }
     }
 }
@@ -143,6 +145,8 @@ extension FormItem: Hashable, Equatable {
             return datePicker.hashValue
         case .push(let pushValue):
             return pushValue.hashValue
+        case .dateTime(let dateTimeValue):
+            return dateTimeValue.hashValue
         }
     }
     
@@ -203,6 +207,8 @@ extension FormItem {
             return datePicker.encodedValue()
         case .push(let pushValue):
             return pushValue.encodedValue()
+        case .dateTime(let dateTimeValue):
+            return dateTimeValue.encodedValue()
         }
         
     }
@@ -289,6 +295,17 @@ extension FormItem {
     }
     
     
+    public func asDateTimeValue() -> DateTimeValue? {
+        switch self {
+        case .dateTime(let dtv):
+            return dtv
+        default:
+            break
+        }
+        return nil
+    }
+    
+    
     
     public func isValid() -> Bool {
         switch self {
@@ -302,6 +319,8 @@ extension FormItem {
             return dpv.isValid
         case .timeInput(let tiv):
             return tiv.isValid
+        case .dateTime(let dtv):
+            return dtv.isValid
         default:
            return false
         }

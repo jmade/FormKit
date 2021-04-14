@@ -2208,6 +2208,12 @@ extension FormController: UpdateFormValueDelegate {
                             handleUpdatedFormValue(pushValue, at: path)
                         }
                     }
+                case .dateTime(let dateTime):
+                    if let dateTimeValue = formValue as? DateTimeValue {
+                        if dateTimeValue != dateTime {
+                            handleUpdatedFormValue(dateTimeValue, at: path)
+                        }
+                    }
                 }
             }
         }

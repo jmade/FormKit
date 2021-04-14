@@ -11,10 +11,13 @@ public struct PushValue {
     public var secondary: String? = nil
     
     public typealias PushValueSelectionClosure = ( (PushValue,FormController,IndexPath) -> Void )
-    var selectionClosure: PushValueSelectionClosure? = nil
-    var model:Any? = nil
-    var params:[String:String]? = nil
+    public typealias PushValueActionClosure = ( (PushValue) -> Void )
     
+    public var selectionClosure: PushValueSelectionClosure? = nil
+    public var actionClosure: PushValueActionClosure? = nil
+    public var model:Any? = nil
+    public var params:[String:String]? = nil
+    public var cellAccessoryType: UITableViewCell.AccessoryType = .disclosureIndicator
 }
 
 
@@ -46,6 +49,34 @@ public extension PushValue {
         self.params = params
         self.selectionClosure = selectionClosure
     }
+    
+    
+    init(_ primary:String, actionClosure: @escaping PushValueActionClosure) {
+        self.primary = primary
+        self.actionClosure = actionClosure
+        self.cellAccessoryType = .none
+    }
+    
+    
+    init(_ primary:String,_ secondary: String? = nil,_ cellAccessoryType: UITableViewCell.AccessoryType,actionClosure: @escaping PushValueActionClosure) {
+        self.primary = primary
+        self.secondary = secondary
+        self.actionClosure = actionClosure
+        self.cellAccessoryType = cellAccessoryType
+    }
+    
+    
+    
+    init(_ primary:String,_ model:Any,_ cellAccessoryType: UITableViewCell.AccessoryType ,actionClosure: @escaping PushValueActionClosure) {
+        self.primary = primary
+        self.model = model
+        self.actionClosure = actionClosure
+        self.cellAccessoryType = cellAccessoryType
+    }
+    
+    
+   
+    
 }
 
 
@@ -90,6 +121,7 @@ extension PushValue: FormValueDisplayable {
             switch selectedFormItem {
             case .push(let pushValue):
                 selectionClosure?(pushValue,formController,path)
+                actionClosure?(pushValue)
             default:
                 break
             }
@@ -112,8 +144,15 @@ final public class PushValueCell: UITableViewCell {
     
     var formValue: PushValue? {
         didSet {
+            
             primaryTextLabel.text = formValue?.primary
             secondaryTextLabel.text = formValue?.secondary
+            
+            if let push = formValue {
+                accessoryType = push.cellAccessoryType
+            }
+            
+            
             
         }
     }
@@ -167,14 +206,13 @@ final public class PushValueCell: UITableViewCell {
                
            ])
         
-        
-        accessoryType = .disclosureIndicator
            
        }
     
     
     public override func prepareForReuse() {
         super.prepareForReuse()
+        accessoryType = .none
         primaryTextLabel.text = nil
         secondaryTextLabel.text = nil
     }
