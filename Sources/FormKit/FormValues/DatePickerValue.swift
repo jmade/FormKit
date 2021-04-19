@@ -447,6 +447,8 @@ public final class DatePickerValueCell: UITableViewCell, Activatable {
             }
             if let dateValue = formValue {
                 dateInputView.date = dateValue.date
+                dateInputView.minDate = dateValue.minDate
+                dateInputView.maxDate = dateValue.maxDate
                 titleLabel.text = dateValue.title
                 textField.attributedText = attributedStringAdapter(dateValue,textField.isFirstResponder)
             } else {
@@ -493,13 +495,13 @@ public final class DatePickerValueCell: UITableViewCell, Activatable {
         if selected {
             guard let dateValue = formValue else { return }
             if let input = textField.inputView as? DateInputKeyboard {
-                input.minDate = dateValue.minDate ?? .distantPast
-                input.maxDate = dateValue.maxDate ?? .distantFuture
+                input.minDate = dateValue.minDate
+                input.maxDate = dateValue.maxDate
                 input.date = dateValue.date
             } else {
                 textField.inputView = dateInputView
-                dateInputView.minDate = dateValue.minDate ?? .distantPast
-                dateInputView.maxDate = dateValue.maxDate ?? .distantFuture
+                dateInputView.minDate = dateValue.minDate
+                dateInputView.maxDate = dateValue.maxDate
                 dateInputView.date = dateValue.date
             }
             textField.becomeFirstResponder()

@@ -2262,7 +2262,6 @@ extension FormController {
     }
     
     private func handleUpdatedFormValue(_ formValue: FormValue, at path: IndexPath) {
-        print("[FormKit](handleUpdatedFormValue) ")
         dataSource.updateWith(formValue: formValue, at: path)
         runValidation()
     }
