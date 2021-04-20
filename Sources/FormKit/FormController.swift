@@ -690,15 +690,13 @@ open class FormController: UITableViewController, CustomTransitionable {
         
         contentSizeObserver = tableView.observe(\.contentSize) { [weak self] tv, _ in
             guard let self = self else { return }
-            
-
-            
+        
             let newContentSize = CGSize(width: tv.contentSize.width + tv.contentInset.left + tv.contentInset.right,
                    height: tv.contentSize.height + tv.contentInset.top + tv.contentInset.bottom)
             
             
             //let newContentSize = tableView.contentSize
-            if self.preferredContentSize != newContentSize {
+            if self.preferredContentSize.height != newContentSize.height {
                 self.preferredContentSize = newContentSize
             }
         }
