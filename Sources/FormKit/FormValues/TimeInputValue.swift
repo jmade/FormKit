@@ -486,6 +486,15 @@ extension TimeInputValue {
     public var isInvalid:Bool {
         !isValid
     }
+    
+    
+    public func setTimeToDate(_ date:Date) -> Date? {
+        let comp = self.components
+        if let newDate = Calendar.current.date(bySettingHour: comp.hours, minute: comp.minutes, second: comp.seconds, of: date) {
+            return newDate
+        }
+        return nil
+    }
 
    
     
