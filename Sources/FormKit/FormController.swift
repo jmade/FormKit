@@ -2147,6 +2147,7 @@ extension FormController: UpdateFormValueDelegate {
                     if let noteValue = formValue as? NoteValue {
                         if noteValue != note {
                             handleUpdatedFormValue(noteValue, at: path)
+                            //tableView.reloadRows(at: [path], with: .none)
                         }
                     }
                 case .segment(let segment):
