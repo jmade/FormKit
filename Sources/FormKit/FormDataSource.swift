@@ -662,6 +662,11 @@ extension FormDataSource {
 
 extension FormDataSource {
     
+    public var lastSection:FormSection? {
+        return sections.last
+    }
+    
+    
     public func section(for index: Int) -> FormSection? {
         guard index >= 0, index < sections.endIndex else {
             return nil

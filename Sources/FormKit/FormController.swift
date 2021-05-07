@@ -339,13 +339,13 @@ open class FormController: UITableViewController, CustomTransitionable {
                         )
                     }
                 })
-                runValidation()
             } else {
                 handleDataEvaluation(
                     FormDataSource.evaluate(oldValue, new: dataSource)
                 )
             }
-
+            
+            runValidation()
         }
     }
     
@@ -1696,6 +1696,60 @@ extension FormController {
     }
     
     
+    
+    public func updateSections(_ newSections:[FormSection]) {
+        setNewData(dataSource.newWith(newSections))
+        
+        
+        
+        
+//        if let currentSection = dataSource.section(for: path) {
+//
+//            let changes = diff(old: currentSection.rows, new: newSection.rows)
+//            dataSource.sections[path.section] = newSection
+//
+//            if newSection.hasOnlyActionValues {
+//                 let changingRows = Array(0..<newSection.rows.count).map({ IndexPath(row: $0, section: path.section) })
+//
+//                if currentSection.isEnabled && !newSection.isEnabled {
+//                    handleActionCellChanging(for: changingRows, enabled: false)
+//                } else if !currentSection.isEnabled && newSection.isEnabled  {
+//                    handleActionCellChanging(for: changingRows, enabled: true)
+//                }
+//            } else {
+//                tableView.reload(changes: changes,
+//                                 section: path.section,
+//                                 insertionAnimation: animation,
+//                                 deletionAnimation: animation,
+//                                 replacementAnimation: animation,
+//                                 completion: activateInput ? myCompletion : nil
+//                )
+//            }
+//        }
+        
+       
+        
+        //IndexSet(arrayLiteral: 0...newSections.count-1)
+        var sections:[Int] = []
+        for (i,_) in newSections.enumerated() {
+            sections.append(i)
+        }
+        
+        
+        
+        
+        
+        
+//        dataSource.sections = newSections
+//        tableView.reloadSections(IndexSet(sections), with: .fade)
+        
+    }
+    
+    
+    
+    
+    
+    
     // MARK: - ListItem Update -
     public func addListItems(_ listItems:[ListItem],withKeys keys:[String]) {
         var listItemsData:[String:ListItem] = [:]
@@ -1827,9 +1881,9 @@ extension FormController {
     }
     
     
-    public func changeSection(_ newSection:FormSection,at path:IndexPath,_ activate:Bool = false) {
+    public func changeSection(_ newSection:FormSection,at path:IndexPath,_ activate:Bool = false,_ animation:UITableView.RowAnimation = .fade) {
         guard !dataSource.sections.isEmpty else { return }
-        _changeSection(newSection,at: path, activateInput: activate)
+        _changeSection(newSection,at: path, activateInput: activate, animation)
     }
     
     
