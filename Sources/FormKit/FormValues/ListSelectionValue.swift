@@ -471,7 +471,7 @@ extension ListSelectionValue: FormValue {
     }
     
     
-    var selectedListItem:ListItem? {
+    public var selectedListItem:ListItem? {
         return listItems.filter({ $0.selected }).first
     }
 }
