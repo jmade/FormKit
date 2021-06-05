@@ -10,19 +10,54 @@ struct FormKit {
 
 import Foundation
 
-//
-//public enum Validations {
-//    case date(FormValidationClosure)
-//}
-//
+
+fileprivate extension Collection {
+    func anySatisfy(_ p: (Element) -> Bool) -> Bool {
+        return !self.allSatisfy { !p($0) }
+    }
+}
 
 
 
+// MARK: - FormValidation -
+public struct FormValidation { }
 
-public struct FormValidation {
+
+
+// MARK: - SelectionList -
+public extension FormValidation {
     
+    static var SelectionList: FormValidationClosure = { (data,form) in
+        
+        let isValid = form.dataSource.activeParams.values.anySatisfy({ $0 == "selected" })
+        
+        if let section = data.sections.last {
+            if !section.isEnabled && isValid {
+                let newItems: [FormItem] = [
+                    section.actionValue(for: 0)
+                    ].compactMap({ $0 })
+                    .map({ $0.readyVersion() })
+                    .map({ FormItem.action($0) })
+                form.changeLastSection(FormSection(newItems))
+            } else if section.isEnabled && !isValid {
+                let newItems: [FormItem] = [
+                    section.actionValue(for: 0),
+                    ].compactMap({ $0 })
+                    .map({ $0.disabled() })
+                    .map({ FormItem.action($0) })
+                form.changeLastSection(FormSection(newItems))
+            }
+        }
+        
+    }
+}
+
+
+
+// MARK: - DateRange -
+public extension FormValidation {
     
-    public static var DateRange:FormValidationClosure = { (data,form) in
+    static var DateRange:FormValidationClosure = { (data,form) in
         
         var invalidKeys:[String] = []
 
@@ -79,10 +114,14 @@ public struct FormValidation {
         }
     }
     
+}
+
+
+
+// MARK: - DateTimeRange -
+public extension FormValidation {
     
-    
-    
-    public static var DateTimeRange:FormValidationClosure = { (data,form) in
+    static var DateTimeRange:FormValidationClosure = { (data,form) in
            
         var invalidKeys:[String] = []
         
@@ -170,5 +209,5 @@ public struct FormValidation {
         }
     }
     
-    
 }
+

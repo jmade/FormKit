@@ -693,12 +693,22 @@ open class FormController: UITableViewController, CustomTransitionable {
         
             let newContentSize = CGSize(width: tv.contentSize.width + tv.contentInset.left + tv.contentInset.right,
                    height: tv.contentSize.height + tv.contentInset.top + tv.contentInset.bottom)
+           
+           
+            print("ContentSizeIncomingHeight: \(tv.contentSize.height) | Inset Height:\(tv.contentInset.top + tv.contentInset.bottom)")
             
+    
+            if newContentSize.height < self.preferredContentSize.height {
+                // ignore
+            } else {
+                self.preferredContentSize = newContentSize
+            }
             
-            //let newContentSize = tableView.contentSize
+            /*
             if self.preferredContentSize.height != newContentSize.height {
                 self.preferredContentSize = newContentSize
             }
+            */
         }
     }
     
@@ -1199,18 +1209,20 @@ extension FormController {
     }
     
     
+    
+    
+    
     // Navigation Bar Buttons
     @objc
     func cancelPressed(){
-        dismissalClosure?()
-        dismiss(animated: true, completion: nil)
+        closeController()
     }
     
     @objc
     func donePressed(){
-        dismissalClosure?()
-        dismiss(animated: true, completion: nil)
+        closeController()
     }
+    
     
     @objc func refresh(_ refreshControl: UIRefreshControl) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {  [weak self] in
@@ -1228,6 +1240,28 @@ extension FormController {
     }
     
 }
+
+
+extension FormController {
+    
+    
+    private func closeController() {
+        dismissalClosure?()
+        dismiss(animated: true, completion: nil)
+    }
+    
+    
+    public func end() {
+        closeController()
+    }
+    
+    public func close() {
+        closeController()
+    }
+    
+    
+}
+    
 
 
 
@@ -1837,7 +1871,7 @@ extension FormController {
     }
     
     
-    public func changeSection(_ newSection:FormSection,at path:IndexPath,_ activate:Bool = false,_ animation:UITableView.RowAnimation = .fade) {
+    public func changeSection(_ newSection:FormSection,at path:IndexPath,_ activate:Bool = false,_ animation:UITableView.RowAnimation = .none) {
         guard !dataSource.sections.isEmpty else { return }
         _changeSection(newSection,at: path, activateInput: activate, animation)
     }

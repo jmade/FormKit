@@ -17,6 +17,16 @@ public struct PushValue {
     public var actionClosure: PushValueActionClosure? = nil
     public var model:Any? = nil
     public var params:[String:String]? = nil
+    
+    public enum State {
+        case selected, notSelected
+    }
+    public var state:State = .notSelected
+    
+    public enum Style {
+        case standard, selectable
+    }
+    public var style:Style = .standard
     public var cellAccessoryType: UITableViewCell.AccessoryType = .disclosureIndicator
 }
 
@@ -74,6 +84,35 @@ public extension PushValue {
         self.cellAccessoryType = cellAccessoryType
     }
     
+    /// Selectable
+    init(_ primary:String,_ secondary:String,_ state:State,actionClosure: @escaping PushValueActionClosure) {
+        self.primary = primary
+        self.secondary = secondary
+        self.state = state
+        self.actionClosure = actionClosure
+        self.cellAccessoryType = .none
+        self.style = .selectable
+    }
+    
+    init(_ primary:String,_ state:State,actionClosure: @escaping PushValueActionClosure) {
+        self.primary = primary
+        self.secondary = nil
+        self.state = state
+        self.actionClosure = actionClosure
+        self.cellAccessoryType = .none
+        self.style = .selectable
+    }
+    
+    
+    init(_ title:String,_ isSelected:Bool,_ subTitle:String? = nil,_ model:Any? = nil) {
+        self.primary = title
+        self.secondary = subTitle
+        self.state = isSelected ? .selected : .notSelected
+        self.model = model
+        self.cellAccessoryType = .none
+        self.style = .selectable
+    }
+    
     
    
     
@@ -85,17 +124,44 @@ extension PushValue: FormValue {
     
     var idKey: String {
         return "\(identifier.uuidString.split(separator: "-")[1])"
-       }
+    }
     
     public var formItem: FormItem {
         .push(self)
     }
     
     public func encodedValue() -> [String : String] {
-        return params ?? [:]
+        switch self.style {
+        case .selectable:
+            switch self.state {
+            case .notSelected:
+                return [primary ?? "PushValue_\(idKey)" : "notSelected" ]
+            case .selected:
+                return [primary ?? "PushValue_\(idKey)" : "selected" ]
+            }
+        case .standard:
+            return params ?? [:]
+        }
     }
     
 }
+
+
+public extension PushValue {
+    
+    func toggledState() -> PushValue {
+        var copy = self
+        switch self.state {
+        case .notSelected:
+            copy.state = .selected
+        case .selected:
+            copy.state = .notSelected
+        }
+        return copy
+    }
+    
+}
+
 
 
 
@@ -120,8 +186,21 @@ extension PushValue: FormValueDisplayable {
         if let selectedFormItem = formController.dataSource.itemAt(path) {
             switch selectedFormItem {
             case .push(let pushValue):
+                
                 selectionClosure?(pushValue,formController,path)
                 actionClosure?(pushValue)
+                
+                if pushValue.style == .selectable {
+                    //formController.updatedFormValue(self.toggledState(), path)
+                    
+                    formController.updateFormValue(self.toggledState(), at: path)
+                    formController.tableView.reloadRows(at: [path], with: .none)
+                    formController.dataSource.setNeedsUpdate()
+                    
+                    //formController.dataSource.sections[path.section].rows[path.row] = self.toggledState().formItem
+                    //formController.tableView.reloadRows(at: [path], with: .none)
+                    
+                }
             default:
                 break
             }
@@ -141,19 +220,27 @@ final public class PushValueCell: UITableViewCell {
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
     var indexPath: IndexPath?
     
-    
     var formValue: PushValue? {
         didSet {
-            
+            if let push = formValue {
+                switch push.style {
+                case .selectable:
+                    switch push.state {
+                    case .selected:
+                        indicatorView.image = HeaderValue.Image.checkmarkFilled
+                        indicatorView.tintColor = .success
+                    case .notSelected:
+                        indicatorView.image = HeaderValue.Image.checkmark
+                        indicatorView.tintColor = UIColor.FormKit.valueText
+                    }
+                case .standard:
+                    indicatorView.image = nil
+                    indicatorView.tintColor = nil
+                    accessoryType = push.cellAccessoryType
+                }
+            }
             primaryTextLabel.text = formValue?.primary
             secondaryTextLabel.text = formValue?.secondary
-            
-            if let push = formValue {
-                accessoryType = push.cellAccessoryType
-            }
-            
-            
-            
         }
     }
     
@@ -182,6 +269,27 @@ final public class PushValueCell: UITableViewCell {
     }()
     
     
+    private lazy var indicatorView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentMode = .scaleAspectFit
+        imageView.tintColor = UIColor.FormKit.text
+        if #available(iOS 13.0, *) {
+            imageView.preferredSymbolConfiguration = .init(textStyle: .title2, scale: .medium)
+        } else {
+            imageView.heightAnchor.constraint(lessThanOrEqualToConstant: 36.0).isActive = true
+        }
+        imageView.setContentHuggingPriority(.required, for: .horizontal)
+        imageView.setContentHuggingPriority(.required, for: .vertical)
+        contentView.addSubview(imageView)
+        //imageView.leadingAnchor.constraint(equalTo: primaryTextLabel.trailingAnchor).isActive = true
+        imageView.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor).isActive = true
+        imageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
+        return imageView
+    }()
+    
+    
+    
     required init?(coder aDecoder: NSCoder) {fatalError()}
        
        override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -195,11 +303,14 @@ final public class PushValueCell: UITableViewCell {
                
                primaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
                primaryTextLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-               primaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+               //primaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
                
                secondaryTextLabel.topAnchor.constraint(equalTo: primaryTextLabel.bottomAnchor),
                secondaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-               secondaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+               //secondaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+               
+               secondaryTextLabel.trailingAnchor.constraint(equalTo: indicatorView.leadingAnchor),
+               primaryTextLabel.trailingAnchor.constraint(equalTo: indicatorView.leadingAnchor),
                
                contentView.bottomAnchor.constraint(equalTo: secondaryTextLabel.bottomAnchor, constant: 8.0),
               
@@ -215,9 +326,10 @@ final public class PushValueCell: UITableViewCell {
         accessoryType = .none
         primaryTextLabel.text = nil
         secondaryTextLabel.text = nil
+        indicatorView.image = nil
     }
     
-       
+    
     public func configureCell(_ pushValue:PushValue) {
         formValue = pushValue
     }

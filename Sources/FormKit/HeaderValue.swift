@@ -210,6 +210,30 @@ extension HeaderValue {
             }()
             
             
+            static let checkmark:UIImage = {
+                if #available(iOS 13.0, *) {
+                    guard let img = UIImage(systemName:"checkmark.circle" ) else {
+                        return UIImage()
+                    }
+                    return img
+                } else {
+                    return UIImage()
+                }
+            }()
+            
+            static let checkmarkFilled:UIImage = {
+                if #available(iOS 13.0, *) {
+                    guard let img = UIImage(systemName:"checkmark.circle.fill" ) else {
+                        return UIImage()
+                    }
+                    return img
+                } else {
+                    return UIImage()
+                }
+            }()
+            
+            
+            
         }
         
 

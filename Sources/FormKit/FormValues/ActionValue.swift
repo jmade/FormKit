@@ -193,9 +193,25 @@ extension ActionValue {
         self.state = .disabled
     }
     
+    /*
+    public init(submitValueDisabled title:String,_ formClosure: @escaping ActionValueFormClosure) {
+        self.title = title
+        self.customKey = "\(title.uppercased())-\(UUID().uuidString.split("-").first ?? "!!")"
+        self.formClosure = formClosure
+        self.color = UIColor.FormKit.save
+        self.style = .moderate
+        self.state = .disabled
+    }
+    */
 
     public static func Submit(_ formClosure: @escaping ActionValueFormClosure) -> ActionValue {
         ActionValue(submitValueDisabled: formClosure)
+    }
+    
+    public static func Submit(_ title:String,_ formClosure: @escaping ActionValueFormClosure) -> ActionValue {
+        var value = ActionValue(submitValueDisabled: formClosure)
+        value.title = title
+        return value
     }
     
 }
