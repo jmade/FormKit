@@ -84,7 +84,7 @@ extension ButtonValue {
 
 
 //: MARK: ButtonActionDelegate
-public protocol ButtonActionDelegate: class {
+public protocol ButtonActionDelegate: AnyObject {
     func performAction(_ action:String)
 }
 

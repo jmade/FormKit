@@ -101,7 +101,84 @@ public struct ListSelectionValue {
     public var valueChangeClosure: ListSelectValueChangeClosure?
     public var storageValue:Codable?
     
+    
+    public struct WriteInConfiguration {
+        
+        public enum Placement {
+            case topSection, topRow, bottomSection
+        }
+        
+        public let allowsWriteIn:Bool = true
+        public var preventValueUpdate:Bool = false
+        public var textValue:TextValue?
+        public var placement: Placement = .topRow
+        
+    }
+    public var writeInConfiguration: WriteInConfiguration?
+    
+    //public var allowsWriteIn:Bool = false
+    //public var preventValueUpdate:Bool = false // if true, the selected value wont appear. rare use case.
+    
 }
+
+
+extension ListSelectionValue {
+    
+    public var allowsWriteIn:Bool {
+        if let _ = writeInConfiguration {
+            return true
+        }
+        return false
+    }
+    
+    public var preventValueUpdate:Bool {
+        if let config = writeInConfiguration {
+            return config.preventValueUpdate
+        }
+        return false
+    }
+    
+}
+
+
+extension ListSelectionValue.WriteInConfiguration {
+    
+    
+    public init(_ textValue:TextValue,_ preventValueUpdate:Bool = false) {
+        self.preventValueUpdate = preventValueUpdate
+        self.textValue = textValue
+    }
+    
+    
+    public init(_ placeholder:String?,_ preventValueUpdate:Bool = false) {
+        self.preventValueUpdate = preventValueUpdate
+        if let p = placeholder {
+            self.textValue = TextValue("", nil, p)
+        }
+    }
+    
+    public init(_ placeholder:String?,_ placement: Placement) {
+        self.placement = placement
+        if let p = placeholder {
+            self.textValue = TextValue("", nil, p)
+        }
+    }
+    
+    public init(_ textValue:TextValue? = nil,_ placement: Placement) {
+        self.textValue = textValue
+        self.placement = placement
+    }
+    
+    public init(_ textValue:TextValue) {
+        self.textValue = textValue
+        self.placement = .topRow
+    }
+    
+    
+    
+}
+
+
 
 extension ListSelectionValue: CustomStringConvertible {
     public var description: String {
@@ -140,6 +217,14 @@ extension ListSelectionValue {
     public var selectionRows:[ListSelectViewController.SelectionRow] {
         return listItems
     }
+    
+    public mutating func removeSelection() {
+        self.selectedIndicies = []
+        for (i,item) in self.listItems.enumerated() {
+            self.listItems[i] = item.unselected()
+        }
+    }
+    
 
 }
 
@@ -364,10 +449,20 @@ extension ListSelectionValue {
         self.underlyingObjects = underlyingObjects
     }
     
-    
-    
-    
-    
+    public init(_ title:String,_ customKey:String,_ listItems:[ListSelectViewController.ListItem],_ writeInConfig:ListSelectionValue.WriteInConfiguration) {
+        self.values = []
+        self.selectedIndicies = []
+        self.title = title
+        self.selectionMessage = "Select a Value"
+        self.selectionType = .single
+        self.loadingClosure = nil
+        self.color = nil
+        self.loading = nil
+        self.listItems = listItems
+        self.customKey = customKey
+        self.underlyingObjects = []
+        self.writeInConfiguration = writeInConfig
+    }
     
 }
 
@@ -479,8 +574,6 @@ extension ListSelectionValue: FormValue {
 extension ListSelectionValue {
     
     
-    
-    
     func makeDescriptor(_ changeClosure: @escaping ListSelectionChangeClosure = DefaultChangeClosure) -> ListSelectionControllerDescriptor {
         return
             .init(
@@ -492,6 +585,9 @@ extension ListSelectionValue {
                 changeClosure: changeClosure
         )
     }
+    
+    
+    
     
     func newWith(_ selectedValues:[String]) -> ListSelectionValue {
         
@@ -518,6 +614,9 @@ extension ListSelectionValue {
         new.underlyingObjects = self.underlyingObjects
         new.listItemSelection = self.listItemSelection
         new.valueChangeClosure = self.valueChangeClosure
+        new.writeInConfiguration = self.writeInConfiguration
+        //new.allowsWriteIn = self.allowsWriteIn
+        //new.preventValueUpdate = self.preventValueUpdate
         return new
     }
 
@@ -573,6 +672,9 @@ extension ListSelectionValue {
         newValue.underlyingObjects = self.underlyingObjects
         newValue.listItemSelection = self.listItemSelection
         newValue.valueChangeClosure = self.valueChangeClosure
+        newValue.writeInConfiguration = self.writeInConfiguration
+        //newValue.allowsWriteIn = self.allowsWriteIn
+        //newValue.preventValueUpdate = self.preventValueUpdate
         return newValue
             
     }
@@ -642,6 +744,9 @@ extension ListSelectionValue {
         newValue.underlyingObjects = underlyingObjects
         newValue.listItemSelection = self.listItemSelection
         newValue.valueChangeClosure = self.valueChangeClosure
+        newValue.writeInConfiguration = self.writeInConfiguration
+        //newValue.allowsWriteIn = self.allowsWriteIn
+        //newValue.preventValueUpdate = self.preventValueUpdate
           return newValue
               
       }

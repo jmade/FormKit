@@ -16,7 +16,7 @@ struct TextValueTransportInitialization: Decodable {
 
 
 
-
+public typealias TextValueReturnPressedClosure = ( (TextValue) -> Void )
 
 public typealias TextFieldConfigurationClosure = ( (UITextField) -> Void )
 
@@ -37,6 +37,7 @@ public struct TextValue {
     public var customKey: String? = nil
     
     public var textConfigurationClosure: TextFieldConfigurationClosure = { _ in }
+    public var returnPressedClosure: TextValueReturnPressedClosure?
     
     public var placeholder:String? = nil
     public let title:String
@@ -48,6 +49,39 @@ public struct TextValue {
     public var inputDescription:String?
     public var characterCount:Int?
     public var allowedChars:String?
+    
+    public var inputConfiguration: InputConfiguration?
+}
+
+
+extension TextValue {
+    
+    public struct InputConfiguration {
+        public var returnPressedClosure: TextValueReturnPressedClosure?
+        public var useDirectionButtons:Bool = true
+        public var displaysInputBar:Bool = true
+        public var returnKeyType: UIReturnKeyType = .done
+    }
+    
+}
+
+
+extension TextValue.InputConfiguration {
+    
+    public init(_ returnKeyType: UIReturnKeyType = .done,_ returnPressedClosure: @escaping TextValueReturnPressedClosure) {
+        self.returnPressedClosure = returnPressedClosure
+        self.returnKeyType = returnKeyType
+        self.useDirectionButtons = false
+        self.displaysInputBar = false
+    }
+    
+    public init(_ displaysInputBar:Bool,_ useDirectionButtons:Bool,_ returnKeyType: UIReturnKeyType = .done,_ returnPressedClosure: @escaping TextValueReturnPressedClosure) {
+        self.returnPressedClosure = returnPressedClosure
+        self.returnKeyType = returnKeyType
+        self.useDirectionButtons = useDirectionButtons
+        self.displaysInputBar = displaysInputBar
+    }
+    
 }
 
 
@@ -227,6 +261,7 @@ extension TextValue {
         newValue.placeholder = self.placeholder
         newValue.inputDescription = self.inputDescription
         newValue.allowedChars = self.allowedChars
+        newValue.inputConfiguration = self.inputConfiguration
         return newValue
         
     }
@@ -284,6 +319,7 @@ extension TextValue {
 // MARK: TextCell
 public final class TextCell: UITableViewCell, Activatable {
     static let identifier = "textCell"
+    static let ReuseID = "com.jmade.FormKit.TextCell"
     
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
     public lazy var indexPath: IndexPath? = nil
@@ -346,8 +382,9 @@ public final class TextCell: UITableViewCell, Activatable {
                     maxCharacterCount = max
                 }
                 
-                
-              
+                if let config = textValue.inputConfiguration {
+                    textField.returnKeyType = config.returnKeyType
+                }
                 
                 if textValue.isSelectable == false {
                     self.selectionStyle = .none
@@ -441,34 +478,76 @@ public final class TextCell: UITableViewCell, Activatable {
     func evaluateButtonBar() {
         guard let textValue = formValue else { return }
         
-        var barItems:[UIBarButtonItem] = []
-        
-        if textValue.useDirectionButtons {
+        if let config = textValue.inputConfiguration {
             
-            barItems.append(
-                UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction))
-            )
+            if config.displaysInputBar {
+                
+                var barItems:[UIBarButtonItem] = []
+                
+                if config.useDirectionButtons {
+                    
+                    barItems.append(
+                        UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction))
+                    )
+                    
+                    barItems.append(
+                        UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction))
+                    )
+                    
+                    barItems.append(.Flexible())
+                    
+                    barItems.append(
+                        UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
+                    )
+                    
+                }
+                
+                
+                if textValue.characterCount != nil {
+                    barItems.append(characterCountBarItem)
+                    barItems.append(.Flexible())
+                }
+                            
+                let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: 44.0)))
+                bar.items = barItems
+                bar.sizeToFit()
+                
+            } else {
+                textField.inputAccessoryView = nil
+            }
             
-            barItems.append(
-                UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction))
-            )
-        }
-        
-        barItems.append(.Flexible())
-        
-        if textValue.characterCount != nil {
-            barItems.append(characterCountBarItem)
+        } else {
+            var barItems:[UIBarButtonItem] = []
+            
+            if textValue.useDirectionButtons {
+                
+                barItems.append(
+                    UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction))
+                )
+                
+                barItems.append(
+                    UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction))
+                )
+            }
+            
             barItems.append(.Flexible())
+            
+            if textValue.characterCount != nil {
+                barItems.append(characterCountBarItem)
+                barItems.append(.Flexible())
+            }
+            
+            barItems.append(
+                UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
+            )
+            
+            let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: 44.0)))
+            bar.items = barItems
+            bar.sizeToFit()
+            
+            textField.inputAccessoryView = bar
         }
-        
-        barItems.append(
-            UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
-        )
-        
-        let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: 44.0)))
-        bar.items = barItems
-        bar.sizeToFit()
-        textField.inputAccessoryView = bar
+    
     }
     
     public func updateCharacterCount(_ count:Int) {
@@ -478,10 +557,6 @@ public final class TextCell: UITableViewCell, Activatable {
         }
         characterCountLabel.sizeToFit()
     }
-    
-    
-   
-
     
     @objc
     func doneAction(){
@@ -527,6 +602,13 @@ public final class TextCell: UITableViewCell, Activatable {
 extension TextCell: UITextFieldDelegate {
     
     public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        if let textValue = formValue {
+            if let config = textValue.inputConfiguration {
+                config.returnPressedClosure?(textValue)
+            } else {
+                textValue.returnPressedClosure?(textValue)
+            }
+        }
         endTextEditing()
         return true
     }

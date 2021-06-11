@@ -3,7 +3,7 @@ import UIKit
 
 
 // MARK: - ListSelectionDelegate -
-public protocol ListSelectionDelegate: class {
+public protocol ListSelectionDelegate: AnyObject {
     func selectionUpdated(values: [String])
     
 }
@@ -183,13 +183,18 @@ public final class ListSelectViewController: UITableViewController {
             self.identifier = valueIdentifier
         }
 
-        
         public init(title:String,detail:String?,selected:Bool, underlyingObject:Any?, valueExtractionClosure: ValueExtractionClosure?) {
             self.title = title
             self.detail = detail
             self.selected = selected
             self.underlyingObject = underlyingObject
             self.valueExtractionClosure = valueExtractionClosure
+        }
+        
+        public func unselected() -> ListItem {
+            var copy = self
+            copy.selected = false
+            return copy
         }
         
     }
@@ -199,14 +204,13 @@ public final class ListSelectViewController: UITableViewController {
     
     static let ReuseID = "com.jmade.FormKit.ListSelectionCell"
     
+   
+    
     /// Closure
     var listSelectionChangeClosure: ListSelectionChangeClosure = { _ in }
     
     /// Delegation
     weak var delegate:ListSelectionDelegate?
-    
-    
-    
     
     // MARK: - ListSelectionValue -
     
@@ -233,6 +237,102 @@ public final class ListSelectViewController: UITableViewController {
     
     
     private var _formValue:ListSelectionValue? = nil
+    
+    
+     
+    // MARK: - WriteIn -
+    private var allowsWriteIn:Bool {
+        if let listSelection = _formValue {
+            return listSelection.allowsWriteIn
+        }
+        return false
+    }
+    
+    enum WriteInState {
+        case display, input
+    }
+    
+    private var writeInState:WriteInState = .input
+    
+    
+    private var textValue:TextValue?
+    
+    
+    private var loadedTextValue:TextValue? {
+        return _formValue?.writeInConfiguration?.textValue
+    }
+    
+    
+    private lazy var textV:TextValue = {
+        
+        if let loaded = loadedTextValue {
+            if let loadedConfifg = loaded.inputConfiguration {
+                let newConfig = TextValue.InputConfiguration(loadedConfifg.displaysInputBar,
+                                                             loadedConfifg.useDirectionButtons,
+                                                             loadedConfifg.returnKeyType) { [weak self] in
+                    loadedConfifg.returnPressedClosure?($0)
+                    self?.returnPressed($0.value)
+                }
+                var value = loaded
+                value.inputConfiguration = newConfig
+                return value
+            } else {
+                var value = loaded
+                value.inputConfiguration = TextValue.InputConfiguration(false, false, .done, { [weak self] in
+                    self?.returnPressed($0.value)
+                })
+                return value
+            }
+        }
+        
+        
+        var tv = TextValue("", "✍🏻", "Material Name")
+        tv.inputConfiguration = TextValue.InputConfiguration(false, false, .done, { [weak self] in
+            self?.returnPressed($0.value)
+        })
+        /*
+        tv.useDirectionButtons = false
+        tv.returnPressedClosure = { [weak self] in
+            self?.returnPressed($0.value)
+        }
+        */
+        
+        return tv
+    }()
+    
+    
+    enum WriteInStyle {
+        case topSection, bottomSection, firstRow
+    }
+    
+    
+    private var writeInStyle:WriteInStyle {
+        if let placement = _formValue?.writeInConfiguration?.placement {
+            switch placement {
+            case .topSection:
+                return .topSection
+            case .topRow:
+                return .firstRow
+            case .bottomSection:
+                return .bottomSection
+            }
+        }
+        return .firstRow
+    }
+    
+
+    
+    //private var writeInStyle:WriteInStyle = .topSection
+    
+    
+    private var preventValueUpdate:Bool {
+        if let listSelection = _formValue {
+            return listSelection.preventValueUpdate
+        }
+        return false
+    }
+    
+    
     
     private var formIndexPath: IndexPath? = nil
     
@@ -293,6 +393,23 @@ public final class ListSelectViewController: UITableViewController {
     }
     
     
+    private var writeInSection:Int {
+        switch writeInStyle {
+        case .topSection:
+            return 0
+        case .bottomSection:
+            return 1
+        case .firstRow:
+            return 0
+        }
+    }
+    
+    private var writeInPath:IndexPath {
+        IndexPath(row: 0, section: writeInSection)
+    }
+    
+    
+    
     
     
     
@@ -315,6 +432,10 @@ public final class ListSelectViewController: UITableViewController {
     public init(_ listSelectValue:ListSelectionValue,at path:IndexPath) {
         super.init(style: listSelectValue.makeDescriptor().tableViewStyle)
         tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
+        tableView.register(WriteInCell.self, forCellReuseIdentifier: WriteInCell.ReuseID)
+        
+        tableView.register(TextCell.self, forCellReuseIdentifier: TextCell.ReuseID)
+        
         self.title = listSelectValue.title
         self.allowsMultipleSelection = listSelectValue.selectionType == .multiple
         self.sectionTitles = [listSelectValue.selectionTitle]
@@ -325,16 +446,21 @@ public final class ListSelectViewController: UITableViewController {
     
     public func setValue(_ listSelectValue:ListSelectionValue) {
         self._formValue = listSelectValue
-        dataSource = listSelectValue.listItems
         completeDataSource = listSelectValue.listItems
-        //tableView.tableFooterView = nil
-        tableView.tableFooterView = nil
-        if tableView.numberOfSections == 0 {
-            tableView.insertSections(IndexSet(integer: 0), with: .top)
-        } else {
-            tableView.insertRows(at: Array(0..<dataSource.count).map({ IndexPath(row: $0, section: 0) }), with: .top)
-        }
+        self.dataSource = listSelectValue.listItems
 
+        if allowsWriteIn {
+            tableView.reloadData()
+            tableView.tableFooterView = nil
+        } else {
+            tableView.tableFooterView = nil
+            if tableView.numberOfSections == 0 {
+                tableView.insertSections(IndexSet(integer: 0), with: .top)
+            } else {
+                tableView.insertRows(at: Array(0..<dataSource.count).map({ IndexPath(row: $0, section: 0) }), with: .top)
+            }
+        }
+        
     }
     
     
@@ -353,6 +479,41 @@ public final class ListSelectViewController: UITableViewController {
     }
     
     
+    private func returnPressed(_ value:String?) {
+        
+        guard let listSelctionValue = formValue else {
+            return
+        }
+        
+        if let t = textValue {
+            print("Value: \(t.value)")
+            
+            var writeItem = ListItem(t.value)
+            writeItem.selected = true
+            
+            if !allowsMultipleSelection {
+                var nonSelected:[ListItem] = listSelctionValue.listItems
+                for (i,_) in nonSelected.enumerated() {
+                    nonSelected[i].selected = false
+                }
+
+                let newItems = [ [writeItem], nonSelected ].reduce([],+)
+              
+                crawlDelegate(listSelctionValue.newWith(newItems))
+            } else {
+                crawlDelegate(
+                    listSelctionValue.newWith(
+                        [ [writeItem], listSelctionValue.listItems ].reduce([],+)
+                    )
+                )
+            }
+            
+        }
+        
+
+       
+        print("Return Presed!")
+    }
     
     
     private func setup() {
@@ -403,17 +564,22 @@ public final class ListSelectViewController: UITableViewController {
     }
     
     
+    
     private func prepareTableForLoading() {
         dataSource = []
         sectionTitles = [""]
-        //tableView.tableFooterView = ItemsLoadingView()
         
-        if tableView.numberOfSections == 1 {
-            //tableView.deleteSections(IndexSet.init(integer: 0), with: .top)
-            tableView.tableFooterView = ItemsLoadingView()
+        if allowsWriteIn {
+            if tableView.numberOfSections == 2 {
+                tableView.tableFooterView = ItemsLoadingView()
+            }
+        } else {
+            if tableView.numberOfSections == 1 {
+                tableView.tableFooterView = ItemsLoadingView()
+            }
         }
         
-       // tableView.deleteSections(IndexSet(integersIn: 0..<tableView.numberOfSections), with: .top)
+       
     }
     
     
@@ -424,6 +590,25 @@ public final class ListSelectViewController: UITableViewController {
                    )
         alert.addAction(UIAlertAction(title: "Ok", style: .default) { _ in })
         present(alert, animated: true, completion: nil)
+    }
+    
+    
+    private func writeInTapped() {
+        switch writeInState {
+        case .display:
+            self.writeInState = .input
+            tableView.reloadRows(at: [IndexPath(row: 0, section: 0)], with: .fade)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.10) { [weak self] in
+                    guard let self = self else { return }
+                    if let textCell = self.tableView.cellForRow(at: IndexPath(row: 0, section: 0)) as? TextCell {
+                        textCell.activate()
+                    }
+            }
+        case .input:
+            if let textCell = tableView.cellForRow(at: IndexPath(row: 0, section: 0)) as? TextCell {
+                textCell.activate()
+            }
+        }
     }
     
     
@@ -473,33 +658,97 @@ public final class ListSelectViewController: UITableViewController {
 
     
 
-    
+    private var numberOfSections:Int {
+        if allowsWriteIn {
+            if writeInStyle == .firstRow {
+                return 1
+            } else {
+                return 2
+            }
+        } else {
+            return 1
+        }
+    }
 
     // MARK: - TableView functions -
     public override func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
+        return numberOfSections
+        //return allowsWriteIn ? 2 : 1
+        
+        //return 1
         //return dataSource.isEmpty ? 0 : sectionTitles.count
     }
     
     
     public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-       return firstSectionTitle()
+        if allowsWriteIn {
+            switch writeInStyle {
+            case .topSection:
+                if section == 1 {
+                    return firstSectionTitle()
+                } else {
+                    return nil
+                }
+            case .bottomSection:
+                if section == 0 {
+                    return firstSectionTitle()
+                } else {
+                    return nil
+                }
+            case .firstRow:
+                if section == 0 {
+                    return firstSectionTitle()
+                } else {
+                    return nil
+                }
+            }
+        } else {
+            return firstSectionTitle()
+        }
     }
     
     
     public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return dataSource.count
+        if allowsWriteIn {
+            switch writeInStyle {
+                case .topSection:
+                    if section == 0 {
+                        return 1
+                    } else {
+                        return dataSource.count
+                    }
+                case .bottomSection:
+                    if section == 0 {
+                        return dataSource.count
+                    } else {
+                        return 1
+                    }
+            case .firstRow:
+                if section == 0 {
+                    return dataSource.count + 1
+                } else {
+                    return dataSource.count
+                }
+            }
+        } else {
+            return dataSource.count
+        }
     }
     
+    
     public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        newDidSelect(indexPath)
+        if allowsWriteIn {
+            if indexPath == writeInPath {
+                writeInTapped()
+            } else {
+                _newDidSelect(indexPath)
+            }
+        } else {
+            newDidSelect(indexPath)
+        }
     }
     
 
-    
-   
-    
-    
     private func newDidSelect(_ indexPath: IndexPath) {
        
         var uncheckedRows:[ListItem] = []
@@ -554,8 +803,10 @@ public final class ListSelectViewController: UITableViewController {
                     
                     
                     dataSource[indexPath.row].selected = true
+                    
+                    let section = allowsWriteIn ? 1 : 0
                    
-                    if let selectedCell = tableView.cellForRow(at: IndexPath(row: selectedRow, section: 0)) {
+                    if let selectedCell = tableView.cellForRow(at: IndexPath(row: selectedRow, section: section)) {
                         selectedCell.accessoryType = .none
                     }
                     if let cell = tableView.cellForRow(at: indexPath) {
@@ -568,12 +819,8 @@ public final class ListSelectViewController: UITableViewController {
             
         }
         
-        
         let selectedItems = dataSource.filter({ $0.selected })
-        
-        //print("Selected Items: (\(selectedItems.count))")
-        //selectedItems.forEach({ print(" \($0.title)") })
-        
+
         if !allowsMultipleSelection {
             for (i,item) in completeDataSource.enumerated() {
                 if let lastItem = selectedItems.last {
@@ -581,7 +828,6 @@ public final class ListSelectViewController: UITableViewController {
                 }
             }
         } else {
-            //print("Unchecked Rows: (\(uncheckedRows.count))")
             for (i,item) in completeDataSource.enumerated() {
                 if selectedItems.contains(item) {
                     completeDataSource[i].selected = true
@@ -599,7 +845,6 @@ public final class ListSelectViewController: UITableViewController {
             }
         }
         
-
         
         
         if let currentListSelectValue = _formValue {
@@ -608,10 +853,136 @@ public final class ListSelectViewController: UITableViewController {
         }
         
         tableView.beginUpdates()
-        tableView.headerView(forSection: 0)?.textLabel?.text = firstSectionTitle()
+        tableView.headerView(forSection: allowsWriteIn ? 1 : 0)?.textLabel?.text = firstSectionTitle()
         tableView.endUpdates()
-       
+    }
+    
+    
+    
+    private func _newDidSelect(_ indexPath: IndexPath) {
+        print("_newDidSelect")
+        print(" indexPath -> \(indexPath) ")
         
+        var dataPath = indexPath
+        
+        switch writeInStyle {
+        case .firstRow:
+            dataPath = IndexPath(row: indexPath.row-1, section: indexPath.section)
+        case .bottomSection:
+            dataPath = indexPath
+        case .topSection:
+            dataPath = indexPath
+        }
+        
+        let dataRow = dataPath.row
+        print(" dataRow -> \(dataRow) ")
+       
+        var uncheckedRows:[ListItem] = []
+        if allowsMultipleSelection {
+            
+            if dataSource[dataRow].selected {
+                uncheckedRows.append(dataSource[indexPath.row])
+            }
+           
+            dataSource[dataRow].selected.toggle()
+            if let cell = tableView.cellForRow(at: indexPath) {
+                cell.accessoryType = dataSource[dataRow].selected ? .checkmark : .none
+                tableView.deselectRow(at: indexPath, animated: true)
+            }
+        } else { /// Single Selection Mode
+            let selectedIndicies = getFilteredSelectedIndicies(removingIndex: nil)
+            print(" selectedIndicies -> \(selectedIndicies) ")
+            
+            if selectedIndicies.isEmpty {
+                /// No Selection
+                dataSource[dataRow].selected = true
+                if let cell = tableView.cellForRow(at: indexPath) {
+                    cell.accessoryType = .checkmark
+                    tableView.deselectRow(at: indexPath, animated: true)
+                }
+            } else {
+                // Has Selection
+                let selectedRow = selectedIndicies[0]
+
+                if selectedRow+1 == indexPath.row {
+                    // Tapping The Selected Row
+                    dataSource[dataRow].selected = false
+                    if let cell = tableView.cellForRow(at: indexPath) {
+                        cell.accessoryType = .none
+                        tableView.deselectRow(at: indexPath, animated: true)
+                    }
+                
+                } else {
+                    
+                    for (i,_) in dataSource.enumerated() {
+                        dataSource[i].selected = false
+                    }
+                    
+                    
+                    /// does not remove the last selected one...
+                    if (dataSource.count-1) >= selectedRow {
+                        dataSource[selectedRow].selected = false
+                    } else {
+                        /// remove the currently selected on in the completed datra source
+                        for (i,_) in completeDataSource.enumerated() {
+                            completeDataSource[i].selected = false
+                        }
+                    }
+                    
+                    
+                    dataSource[dataRow].selected = true
+                    
+                    let section = allowsWriteIn ? writeInSection : 0
+                   
+                    if let selectedCell = tableView.cellForRow(at: IndexPath(row: selectedRow, section: section)) {
+                        selectedCell.accessoryType = .none
+                    }
+                    if let cell = tableView.cellForRow(at: indexPath) {
+                        cell.accessoryType = .checkmark
+                    }
+                    tableView.deselectRow(at: indexPath, animated: true)
+                    
+                }
+            }
+            
+        }
+        
+        let selectedItems = dataSource.filter({ $0.selected })
+
+        if !allowsMultipleSelection {
+            for (i,item) in completeDataSource.enumerated() {
+                if let lastItem = selectedItems.last {
+                    completeDataSource[i].selected = (lastItem == item)
+                }
+            }
+        } else {
+            for (i,item) in completeDataSource.enumerated() {
+                if selectedItems.contains(item) {
+                    completeDataSource[i].selected = true
+                }
+                if uncheckedRows.contains(item) {
+                    completeDataSource[i].selected = false
+                }
+            }
+        }
+        
+        
+        if !allowsMultipleSelection && selectedItems.isEmpty {
+            for (i,_) in completeDataSource.enumerated() {
+                completeDataSource[i].selected = false
+            }
+        }
+        
+        
+        
+        if let currentListSelectValue = _formValue {
+            let newListSelectValue = currentListSelectValue.newWith(completeDataSource)
+            crawlDelegate(newListSelectValue)
+        }
+        
+        tableView.beginUpdates()
+        tableView.headerView(forSection: allowsWriteIn ? 1 : 0)?.textLabel?.text = firstSectionTitle()
+        tableView.endUpdates()
     }
     
     
@@ -643,8 +1014,16 @@ public final class ListSelectViewController: UITableViewController {
                                     } else {
                                         print("about to call 'new.valueChangeClosure?(new,form,path)'")
                                         new.valueChangeClosure?(new,form,path)
-                                        form.dataSource.updateWith(formValue: new, at: path)
-                                        form.tableView.reloadRows(at: [path], with: .none)
+                                        
+                                        if preventValueUpdate {
+                                            var deselected = new
+                                            deselected.removeSelection()
+                                            form.dataSource.updateWith(formValue: deselected, at: path)
+                                        } else {
+                                            form.dataSource.updateWith(formValue: new, at: path)
+                                        }
+                                        
+                                        form.tableView.reloadRows(at: [path], with: .fade)
                                     }
                                     
                                     performPop()
@@ -675,7 +1054,7 @@ public final class ListSelectViewController: UITableViewController {
     private func performPop() {
         guard !allowsMultipleSelection else { return }
         if let nav = navigationController {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.10) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
                 nav.popViewController(animated: true)
             }
         }
@@ -683,10 +1062,94 @@ public final class ListSelectViewController: UITableViewController {
 
     
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if let cell = tableView.dequeueReusableCell(withIdentifier: ListItemCell.ReuseID, for: indexPath) as? ListItemCell {
-            cell.configureCell(dataSource[indexPath.row])
-            return cell
+        
+        if allowsWriteIn {
+            
+            if indexPath == writeInPath {
+                switch writeInState {
+                case .display:
+                    if let cell = tableView.dequeueReusableCell(withIdentifier: WriteInCell.ReuseID, for: indexPath) as? WriteInCell {
+                        return cell
+                    }
+                case .input:
+                    if let cell = tableView.dequeueReusableCell(withIdentifier: TextCell.ReuseID, for: indexPath) as? TextCell {
+                        
+                        if textValue == nil {
+                            self.textValue = self.textV
+                        }
+                        
+                        cell.formValue = self.textValue
+                        cell.updateFormValueDelegate = self
+                        cell.indexPath = indexPath
+                        return cell
+                    }
+                }
+            } else {
+                
+                switch writeInStyle {
+                case .topSection:
+                    if indexPath.section == 1 {
+                        if let cell = tableView.dequeueReusableCell(withIdentifier: ListItemCell.ReuseID, for: indexPath) as? ListItemCell {
+                            cell.configureCell(dataSource[indexPath.row])
+                            return cell
+                        }
+                    }
+                case .firstRow:
+                    if let cell = tableView.dequeueReusableCell(withIdentifier: ListItemCell.ReuseID, for: indexPath) as? ListItemCell {
+                        cell.configureCell(dataSource[indexPath.row-1])
+                        return cell
+                    }
+                case .bottomSection:
+                    if indexPath.section == 0 {
+                        if let cell = tableView.dequeueReusableCell(withIdentifier: ListItemCell.ReuseID, for: indexPath) as? ListItemCell {
+                            cell.configureCell(dataSource[indexPath.row])
+                            return cell
+                        }
+                    }
+                }
+                
+               
+            }
+            
+            
+            /*
+            switch indexPath.section {
+            case 0:
+                switch writeInState {
+                case .display:
+                    if let cell = tableView.dequeueReusableCell(withIdentifier: WriteInCell.ReuseID, for: indexPath) as? WriteInCell {
+                        return cell
+                    }
+                case .input:
+                    if let cell = tableView.dequeueReusableCell(withIdentifier: TextCell.ReuseID, for: indexPath) as? TextCell {
+                        
+                        if textValue == nil {
+                            self.textValue = TextValue("", "writeIn", "Add Material")
+                        }
+                        
+                        cell.formValue = self.textValue
+                        cell.updateFormValueDelegate = self
+                        cell.indexPath = indexPath
+                        return cell
+                    }
+                }
+            case 1:
+                if let cell = tableView.dequeueReusableCell(withIdentifier: ListItemCell.ReuseID, for: indexPath) as? ListItemCell {
+                    cell.configureCell(dataSource[indexPath.row])
+                    return cell
+                }
+            default:
+                break
+            }
+            */
+        } else {
+            if let cell = tableView.dequeueReusableCell(withIdentifier: ListItemCell.ReuseID, for: indexPath) as? ListItemCell {
+                cell.configureCell(dataSource[indexPath.row])
+                return cell
+            }
         }
+        
+       
         return .init()
     }
     
@@ -717,27 +1180,27 @@ public final class ListSelectViewController: UITableViewController {
     
     
     private func getFilteredSelectedIndicies(removingIndex:Int?) -> [Int] {
-           var selectedPaths: [Int] = []
-           
-           for (row,value) in dataSource.enumerated() {
-               if value.selected {
-                   if let indexToSkip = removingIndex {
-                       if row != indexToSkip {
-                           selectedPaths.append(
-                               row
-                           )
-                       }
-                   } else {
-                       selectedPaths.append(
-                           row
-                       )
-                   }
-               }
-           }
-           
-           
-           return selectedPaths
-       }
+        var selectedPaths: [Int] = []
+        
+        for (row,value) in dataSource.enumerated() {
+            if value.selected {
+                if let indexToSkip = removingIndex {
+                    if row != indexToSkip {
+                        selectedPaths.append(
+                            row
+                        )
+                    }
+                } else {
+                    selectedPaths.append(
+                        row
+                    )
+                }
+            }
+        }
+        
+        
+        return selectedPaths
+    }
     
     
     
@@ -758,6 +1221,24 @@ public final class ListSelectViewController: UITableViewController {
 }
 
 
+extension ListSelectViewController: UpdateFormValueDelegate {
+    
+    
+    public func updatedFormValue(_ formValue:FormValue,_ indexPath:IndexPath?) {
+        
+        if let textValue = formValue as? TextValue {
+            self.textValue = textValue
+        }
+        
+    }
+    
+    public func toggleTo(_ direction:Direction,_ from:IndexPath) {
+        
+    }
+    
+}
+
+
 
 extension ListSelectViewController: UISearchControllerDelegate, UISearchBarDelegate {
     
@@ -773,7 +1254,7 @@ extension ListSelectViewController: UISearchControllerDelegate, UISearchBarDeleg
         searchController.searchBar.autocapitalizationType = .none
         searchController.searchBar.autocorrectionType = .no
         searchController.dimsBackgroundDuringPresentation = false
-        searchController.searchBar.delegate = self // Monitor when the search button is tapped.
+        searchController.searchBar.delegate = self
         self.navigationItem.searchController = searchController
         
         // Make the search bar always visible.
@@ -784,50 +1265,109 @@ extension ListSelectViewController: UISearchControllerDelegate, UISearchBarDeleg
             searchController.searchBar.tintColor = .label
         }
         
-        
         definesPresentationContext = true
         tableView.keyboardDismissMode = .interactive
-        
+    }
+    
+    
+    var writeInListItem:ListItem? {
+        if allowsWriteIn {
+            return ListItem("✍🏻")
+        }
+        return nil
     }
 
     
     private func handleSearchQuery(_ query:String) {
         
-        let old = dataSource
-        let new = filterItems(query)
-        let changes = diff(old: old, new: new)
+        if allowsWriteIn {
+            
+            switch writeInStyle {
+            case .topSection:
+                let old = dataSource
+                let new = filterItems(query)
+                let changes = diff(old: old, new: new)
+                self.dataSource = new
+                tableView.reload(changes: changes,
+                                 section: 1,
+                                 insertionAnimation: .fade,
+                                 deletionAnimation: .fade,
+                                 replacementAnimation: .fade,
+                                 completion: nil
+                )
+            case .firstRow:
+                let filtered = filterItems(query)
+                let old:[ListItem] = [[self.writeInListItem].compactMap({ $0 }),dataSource].reduce([],+)
+                let new:[ListItem] = [[self.writeInListItem].compactMap({ $0 }),filtered].reduce([],+)
+                let changes = diff(old: old, new: new)
+                
+                self.dataSource = filtered
+                
+                tableView.reload(changes: changes,
+                                 section: 0,
+                                 insertionAnimation: .fade,
+                                 deletionAnimation: .fade,
+                                 replacementAnimation: .fade,
+                                 completion: nil
+                )
+            case .bottomSection:
+                let old = dataSource
+                let new = filterItems(query)
+                let changes = diff(old: old, new: new)
+                self.dataSource = new
+                tableView.reload(changes: changes,
+                                 section: 0,
+                                 insertionAnimation: .fade,
+                                 deletionAnimation: .fade,
+                                 replacementAnimation: .fade,
+                                 completion: nil
+                )
+            }
+        } else {
+            let old = dataSource
+            let new = filterItems(query)
+            let changes = diff(old: old, new: new)
+            self.dataSource = new
+            tableView.reload(changes: changes,
+                             section: 0,
+                             insertionAnimation: .fade,
+                             deletionAnimation: .fade,
+                             replacementAnimation: .fade,
+                             completion: nil
+            )
+            
+        }
+    
         
-        self.dataSource = new
-        tableView.reload(changes: changes,
-                         section: 0,
-                         insertionAnimation: .fade,
-                         deletionAnimation: .fade,
-                         replacementAnimation: .fade,
-                         completion: nil
-        )
+        
+        
+        
+        
     }
 
     
-       func matchesUserFilter(_ userFilter : String) -> (ListItem) -> Bool {
-           return {
-               return $0.searchData.map({($0.0, "\($0.1)")}).reduce(false){
-                   return $0 || $1.1.localizedStandardContains(userFilter) || userFilter == ""
-               }
-           }
-       }
+    
+    func filterItems(_ filter:String) -> [ListItem] {
+        return completeDataSource
+            .filter(matchesUserFilter(filter))
+    }
+    
+    func matchesUserFilter(_ userFilter : String) -> (ListItem) -> Bool {
+        return {
+            return $0.searchData.map({($0.0, "\($0.1)")}).reduce(false){
+                return $0 || $1.1.localizedStandardContains(userFilter) || userFilter == ""
+            }
+        }
+    }
 
-       func filterItems(_ filter:String) -> [ListItem] {
-           return completeDataSource
-               .filter(matchesUserFilter(filter))
-       }
     
 }
 
 
+// MARK: - UISearchResultsUpdating -
 extension ListSelectViewController: UISearchResultsUpdating {
     
     public func updateSearchResults(for searchController: UISearchController) {
-        
         if let text = searchController.searchBar.text {
             handleSearchQuery(text)
         }
@@ -861,6 +1401,7 @@ final class ListItemCell: UITableViewCell {
         label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle:  .caption2).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
         label.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(label)
+        label.textColor = UIColor.FormKit.valueText
         return label
     }()
     
@@ -882,7 +1423,9 @@ final class ListItemCell: UITableViewCell {
                secondaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
                secondaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
                
-               contentView.bottomAnchor.constraint(equalTo: secondaryTextLabel.bottomAnchor, constant: 8.0),
+              // contentView.bottomAnchor.constraint(equalTo: secondaryTextLabel.bottomAnchor, constant: 8.0),
+            
+            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: secondaryTextLabel.bottomAnchor),
                
            ])
            
@@ -904,6 +1447,55 @@ final class ListItemCell: UITableViewCell {
         
     }
     
+}
+
+
+
+
+final class WriteInCell: UITableViewCell {
+    
+    static let ReuseID = "FormKit.WriteInCell"
+    
+    private lazy var primaryTextLabel: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.text = "Custom ..."
+        if #available(iOS 13.0, *) {
+            label.textColor = .systemBlue
+        }
+        label.lineBreakMode = .byWordWrapping
+        label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle:  .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(label)
+        return label
+    }()
+    
+    required init?(coder aDecoder: NSCoder) {fatalError()}
+       
+       override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+           super.init(style: style, reuseIdentifier: reuseIdentifier)
+          
+            activateDefaultHeightAnchorConstraint()
+        
+           NSLayoutConstraint.activate([
+            
+               primaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+               primaryTextLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+               primaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+
+            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: primaryTextLabel.bottomAnchor),
+               
+           ])
+           
+       }
+    
+    
+    public override func prepareForReuse() {
+        super.prepareForReuse()
+        //primaryTextLabel.text = nil
+    }
+  
 }
 
 
