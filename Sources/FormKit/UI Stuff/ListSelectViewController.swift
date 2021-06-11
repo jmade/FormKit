@@ -286,17 +286,11 @@ public final class ListSelectViewController: UITableViewController {
         }
         
         
-        var tv = TextValue("", "✍🏻", "Material Name")
+        var tv = TextValue("", "✍🏻", "Custom")
         tv.inputConfiguration = TextValue.InputConfiguration(false, false, .done, { [weak self] in
             self?.returnPressed($0.value)
         })
-        /*
-        tv.useDirectionButtons = false
-        tv.returnPressedClosure = { [weak self] in
-            self?.returnPressed($0.value)
-        }
-        */
-        
+        tv.style = .writeIn
         return tv
     }()
     
@@ -481,37 +475,35 @@ public final class ListSelectViewController: UITableViewController {
     
     private func returnPressed(_ value:String?) {
         
-        guard let listSelctionValue = formValue else {
+        guard let listSelctionValue = formValue, let t = textValue, !t.value.isEmpty else {
             return
         }
         
-        if let t = textValue {
-            print("Value: \(t.value)")
-            
-            var writeItem = ListItem(t.value)
-            writeItem.selected = true
-            
-            if !allowsMultipleSelection {
-                var nonSelected:[ListItem] = listSelctionValue.listItems
-                for (i,_) in nonSelected.enumerated() {
-                    nonSelected[i].selected = false
-                }
-
-                let newItems = [ [writeItem], nonSelected ].reduce([],+)
-              
-                crawlDelegate(listSelctionValue.newWith(newItems))
-            } else {
-                crawlDelegate(
-                    listSelctionValue.newWith(
-                        [ [writeItem], listSelctionValue.listItems ].reduce([],+)
-                    )
+        print("Value: \(t.value)")
+        
+        var writeItem = ListItem(t.value)
+        writeItem.selected = true
+        
+        if allowsMultipleSelection {
+            crawlDelegate(
+                listSelctionValue.newWith(
+                    [ [writeItem], listSelctionValue.listItems ].reduce([],+)
                 )
+            )
+        } else {
+            var nonSelected:[ListItem] = listSelctionValue.listItems
+            for (i,_) in nonSelected.enumerated() {
+                nonSelected[i].selected = false
             }
             
+            crawlDelegate(
+                listSelctionValue.newWith(
+                    [ [writeItem], nonSelected ].reduce([],+)
+                )
+            )
         }
         
-
-       
+        
         print("Return Presed!")
     }
     
@@ -1009,6 +1001,7 @@ public final class ListSelectViewController: UITableViewController {
                                     
                                     if let selectionClosure = formValue?.listItemSelection {
                                         if let item = new.selectedListItem {
+                                            print("about to call `selectionClosure(item,nav)`")
                                             selectionClosure(item,nav)
                                         }
                                     } else {

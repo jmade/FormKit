@@ -147,21 +147,18 @@ extension ListSelectionValue.WriteInConfiguration {
     public init(_ textValue:TextValue,_ preventValueUpdate:Bool = false) {
         self.preventValueUpdate = preventValueUpdate
         self.textValue = textValue
+        self.textValue?.style = .writeIn
     }
     
     
     public init(_ placeholder:String?,_ preventValueUpdate:Bool = false) {
         self.preventValueUpdate = preventValueUpdate
-        if let p = placeholder {
-            self.textValue = TextValue("", nil, p)
-        }
+        self.textValue = TextValue(placeholder)
     }
     
     public init(_ placeholder:String?,_ placement: Placement) {
         self.placement = placement
-        if let p = placeholder {
-            self.textValue = TextValue("", nil, p)
-        }
+        self.textValue = TextValue(placeholder)
     }
     
     public init(_ textValue:TextValue? = nil,_ placement: Placement) {
@@ -589,7 +586,7 @@ extension ListSelectionValue {
     
     
     
-    func newWith(_ selectedValues:[String]) -> ListSelectionValue {
+    public func newWith(_ selectedValues:[String]) -> ListSelectionValue {
         
         var newSelectedIndicies: [Int] = []
         for selected in selectedValues {
@@ -615,8 +612,6 @@ extension ListSelectionValue {
         new.listItemSelection = self.listItemSelection
         new.valueChangeClosure = self.valueChangeClosure
         new.writeInConfiguration = self.writeInConfiguration
-        //new.allowsWriteIn = self.allowsWriteIn
-        //new.preventValueUpdate = self.preventValueUpdate
         return new
     }
 
@@ -673,8 +668,6 @@ extension ListSelectionValue {
         newValue.listItemSelection = self.listItemSelection
         newValue.valueChangeClosure = self.valueChangeClosure
         newValue.writeInConfiguration = self.writeInConfiguration
-        //newValue.allowsWriteIn = self.allowsWriteIn
-        //newValue.preventValueUpdate = self.preventValueUpdate
         return newValue
             
     }
@@ -684,6 +677,40 @@ extension ListSelectionValue {
 
 
 extension ListSelectionValue {
+    
+    public func newWithoutSelection() -> ListSelectionValue {
+        var newValue = ListSelectionValue(
+            selectionType: self.selectionType,
+            values: self.values,
+            selectedIndicies: [],
+            title: self.title,
+            selectionMessage: self.selectionMessage,
+            color: self.color,
+            valueIdentifiers: self.valueIdentifiers,
+            loading: self.loading,
+            loadingClosure: self.loadingClosure,
+            generationClosure: self.generationClosure,
+            customKey: self.customKey,
+            uuid: UUID().uuidString
+        )
+        
+        var newItems:[ListItem] = []
+        for item in self.listItems {
+            var unselected = item
+            unselected.selected = false
+            newItems.append(
+                unselected
+            )
+        }
+        
+        newValue.listItems = newItems
+        newValue.underlyingObjects = self.underlyingObjects
+        newValue.listItemSelection = self.listItemSelection
+        newValue.valueChangeClosure = self.valueChangeClosure
+        newValue.writeInConfiguration = self.writeInConfiguration
+        return newValue
+    }
+    
     
     
     public func newWith(_ listItems:[ListSelectViewController.ListItem],_ underlyingObjects:[Any]) -> ListSelectionValue  {

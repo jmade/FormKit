@@ -792,6 +792,24 @@ extension FormDataSource {
 }
 
 
+extension FormDataSource {
+    
+    public func indexPathForKey(_ customKey:String?) -> IndexPath? {
+        for (sectionIndex,section) in sections.enumerated() {
+            for (rowIndex,formItem) in section.rows.enumerated() {
+                if formItem.encodedKey == customKey {
+                    return IndexPath(row: rowIndex,
+                                     section: sectionIndex
+                    )
+                }
+            }
+        }
+        return nil
+    }
+    
+}
+
+
 
 
 

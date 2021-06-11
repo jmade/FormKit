@@ -26,7 +26,7 @@ public typealias TextFieldConfigurationClosure = ( (UITextField) -> Void )
 public struct TextValue {
     
     public enum Style {
-        case horizontal, vertical, horizontalDiscrete
+        case horizontal, vertical, horizontalDiscrete, writeIn
     }
     
     public var characterSet = CharacterSet.noteValue /// Depercated 2/19/21; use `allowedChars`
@@ -163,6 +163,17 @@ extension TextValue {
         self.customKey = customKey
         self.placeholder = placeholder
         self.inputDescription = inputDescription
+    }
+    
+    
+    public init(_ placeholder:String?) {
+        self.title = ""
+        self.value = ""
+        self.customKey = nil
+        self.placeholder = placeholder
+        self.style = .writeIn
+        self.isSelectable = true
+        
     }
 
     
@@ -318,7 +329,8 @@ extension TextValue {
 
 // MARK: TextCell
 public final class TextCell: UITableViewCell, Activatable {
-    static let identifier = "textCell"
+    
+    static let identifier = "com.jmade.FormKit.TextCell"
     static let ReuseID = "com.jmade.FormKit.TextCell"
     
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
@@ -465,10 +477,24 @@ public final class TextCell: UITableViewCell, Activatable {
             textField.borderStyle = .none
             textField.clearButtonMode = .never
             textField.font = UIFont.preferredFont(forTextStyle: .body)
-            textField.textColor = .gray
-            if #available(iOS 13.0, *) {
-                textField.textColor = .secondaryLabel
-            }
+            textField.textColor = UIColor.FormKit.valueText
+           
+        case .writeIn:
+            activateDefaultHeightAnchorConstraint()
+            
+            NSLayoutConstraint.activate([
+                textField.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
+                textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
+                textField.topAnchor.constraint(equalTo: margin.topAnchor),
+                margin.bottomAnchor.constraint(equalTo: margin.bottomAnchor),
+            ])
+            
+            titleLabel.text = nil
+            textField.textAlignment = .left
+            textField.borderStyle = .none
+            textField.clearButtonMode = .never
+            textField.font = UIFont.preferredFont(forTextStyle: .body)
+   
         }
         
         didLayout = true

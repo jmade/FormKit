@@ -264,6 +264,7 @@ final public class PushValueCell: UITableViewCell {
         label.lineBreakMode = .byWordWrapping
         label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle:  .caption2).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = UIColor.FormKit.valueText
         contentView.addSubview(label)
         return label
     }()

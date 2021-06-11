@@ -695,7 +695,7 @@ open class FormController: UITableViewController, CustomTransitionable {
                    height: tv.contentSize.height + tv.contentInset.top + tv.contentInset.bottom)
            
            
-            print("ContentSizeIncomingHeight: \(tv.contentSize.height) | Inset Height:\(tv.contentInset.top + tv.contentInset.bottom)")
+           // print("ContentSizeIncomingHeight: \(tv.contentSize.height) | Inset Height:\(tv.contentInset.top + tv.contentInset.bottom)")
             
     
             if newContentSize.height < self.preferredContentSize.height {
