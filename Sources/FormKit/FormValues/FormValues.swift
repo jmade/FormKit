@@ -48,13 +48,13 @@ public enum Direction {
 }
 
 // MARK: - UpdateFormValueDelegate -
-public protocol UpdateFormValueDelegate: class {
+public protocol UpdateFormValueDelegate: AnyObject {
     func updatedFormValue(_ formValue:FormValue,_ indexPath:IndexPath?)
     func toggleTo(_ direction:Direction,_ from:IndexPath)
 }
 
 // MARK: - UpdatedTextDelegate
-public protocol UpdatedTextDelegate: class {
+public protocol UpdatedTextDelegate: AnyObject {
     func updatedTextForIndexPath(_ newText:String,_ indexPath:IndexPath)
     func toggleTo(_ direction:Direction,_ from:IndexPath)
     func textEditingFinished(_ text:String,_ from:IndexPath)

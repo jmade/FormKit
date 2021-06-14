@@ -1,7 +1,7 @@
 
 import UIKit
 
-protocol HideShowPasswordTextFieldDelegate: class {
+protocol HideShowPasswordTextFieldDelegate: AnyObject {
     func isValidPassword(_ password: String) -> Bool
 }
 

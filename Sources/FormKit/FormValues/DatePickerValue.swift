@@ -302,7 +302,7 @@ extension DatePickerValue {
 
 
 // MARK: - DateInputKeyboardObserver -
-protocol DateInputKeyboardObserver: class {
+protocol DateInputKeyboardObserver: AnyObject {
     func newDate(date:Date)
 }
 

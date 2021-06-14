@@ -10,7 +10,7 @@ import Foundation
 
  
 // MARK: - SectionTapDelegate -
-public protocol SectionTapDelegate: class  {
+public protocol SectionTapDelegate: AnyObject  {
     func didSelectHeaderAt(_ section:Int)
 }
 

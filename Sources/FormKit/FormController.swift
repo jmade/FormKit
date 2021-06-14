@@ -54,7 +54,7 @@ extension UITableView {
 
 
 // MARK: - CustomTransitionable -
-protocol CustomTransitionable: class {
+protocol CustomTransitionable: AnyObject {
     var customTransitioningDelegate: PresentationTransitioningDelegate { get }
 }
 
@@ -695,13 +695,21 @@ open class FormController: UITableViewController, CustomTransitionable {
                    height: tv.contentSize.height + tv.contentInset.top + tv.contentInset.bottom)
            
            
-           // print("ContentSizeIncomingHeight: \(tv.contentSize.height) | Inset Height:\(tv.contentInset.top + tv.contentInset.bottom)")
+           //
             
     
             if newContentSize.height < self.preferredContentSize.height {
                 // ignore
             } else {
-                self.preferredContentSize = newContentSize
+                
+                if self.preferredContentSize.height != newContentSize.height {
+                    print("ContentSizeIncomingHeight: \(tv.contentSize.height) | Inset Height:\(tv.contentInset.top + tv.contentInset.bottom)")
+                    self.preferredContentSize = CGSize(width: self.preferredContentSize.width, height: newContentSize.height)
+                    self.view.setNeedsLayout()
+                    //self.preferredContentSize = newContentSize
+                }
+                
+               
             }
             
             /*
@@ -2052,7 +2060,7 @@ extension FormController {
        }
     
     public enum FeedbackType {
-        case lightImpact, heavyImpact, impact, selection, error, warning, success, failure
+        case lightImpact, mediumImpact, heavyImpact, impact, selection, error, warning, success, failure
     }
     
    
@@ -2064,6 +2072,14 @@ extension FormController {
             gen.prepare()
             if #available(iOS 13.0, *) {
                 gen.impactOccurred(intensity: 0.25)
+            } else {
+                gen.impactOccurred()
+            }
+        case .mediumImpact:
+            let gen = UIImpactFeedbackGenerator()
+            gen.prepare()
+            if #available(iOS 13.0, *) {
+                gen.impactOccurred(intensity: 0.66)
             } else {
                 gen.impactOccurred()
             }

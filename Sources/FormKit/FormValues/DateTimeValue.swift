@@ -445,7 +445,7 @@ extension DateTimeCell {
 
 
 // MARK: - DateTimeInputKeyboardObserver -
-protocol DateTimeInputKeyboardObserver: class {
+protocol DateTimeInputKeyboardObserver: AnyObject {
     func add(_ string: String)
 }
 

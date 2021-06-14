@@ -867,7 +867,7 @@ extension TimeInputCell {
 
 
 // MARK: - TimeInputKeyboardObserver -
-protocol TimeInputKeyboardObserver: class {
+protocol TimeInputKeyboardObserver: AnyObject {
     func add(_ string: String)
 }
 

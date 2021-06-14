@@ -7,7 +7,7 @@ import Foundation
 public typealias FormDataSourceUpdateClosure = ( (FormDataSource) -> Void )
 
 
-public protocol FormDataSourceUpdateDelegate: class {
+public protocol FormDataSourceUpdateDelegate: AnyObject {
     func dataSourceWasUpdated(_ dataSource:FormDataSource)
 }
 

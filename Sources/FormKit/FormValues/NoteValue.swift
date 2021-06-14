@@ -244,7 +244,7 @@ extension NoteValue {
 
 
 // MARK: - CharacterCountDisplayable -
-public protocol CharacterCountDisplayable: class {
+public protocol CharacterCountDisplayable: AnyObject {
     var maxCharacterCount:Int { get }
     var characterCountLabel: UILabel { get }
     var characterCountBarItem: UIBarButtonItem { get }

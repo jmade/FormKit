@@ -192,7 +192,7 @@ extension PushValue: FormValueDisplayable {
                 
                 if pushValue.style == .selectable {
                     //formController.updatedFormValue(self.toggledState(), path)
-                    
+                    formController.feedback(.mediumImpact)
                     formController.updateFormValue(self.toggledState(), at: path)
                     formController.tableView.reloadRows(at: [path], with: .none)
                     formController.dataSource.setNeedsUpdate()
@@ -263,8 +263,8 @@ final public class PushValueCell: UITableViewCell {
         label.numberOfLines = 0
         label.lineBreakMode = .byWordWrapping
         label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle:  .caption2).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
-        label.translatesAutoresizingMaskIntoConstraints = false
         label.textColor = UIColor.FormKit.valueText
+        label.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(label)
         return label
     }()
@@ -302,18 +302,21 @@ final public class PushValueCell: UITableViewCell {
            NSLayoutConstraint.activate([
                defaultTableViewCellHeightConstraint,
                
-               primaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
                primaryTextLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            primaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            
+            primaryTextLabel.trailingAnchor.constraint(equalTo: indicatorView.leadingAnchor),
+               
+               
                //primaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
                
                secondaryTextLabel.topAnchor.constraint(equalTo: primaryTextLabel.bottomAnchor),
                secondaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-               //secondaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
                
                secondaryTextLabel.trailingAnchor.constraint(equalTo: indicatorView.leadingAnchor),
-               primaryTextLabel.trailingAnchor.constraint(equalTo: indicatorView.leadingAnchor),
+
                
-               contentView.bottomAnchor.constraint(equalTo: secondaryTextLabel.bottomAnchor, constant: 8.0),
+            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: secondaryTextLabel.bottomAnchor),
               
                
            ])

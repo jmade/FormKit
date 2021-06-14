@@ -2,7 +2,7 @@
 
 import UIKit
 
-protocol PasswordToggleVisibilityDelegate: class {
+protocol PasswordToggleVisibilityDelegate: AnyObject {
     func viewWasToggled(_ passwordToggleVisibilityView: PasswordToggleVisibilityView, isSelected selected: Bool)
 }
 
