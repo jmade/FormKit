@@ -176,7 +176,7 @@ extension PickerSelectionValue: FormValueDisplayable {
     
     public func didSelect(_ formController: Controller, _ path: IndexPath) {
         formController.dataSource.sections[path.section].rows[path.row] = self.newToggled().formItem
-        /// TODO: Adjust contentInset here
+        /// TODO: Adjust contentInset here or fitting new content policy
         formController.tableView.reloadRows(at: [path], with: .automatic)
     }
     

@@ -852,8 +852,6 @@ public final class ListSelectViewController: UITableViewController {
     
     
     private func _newDidSelect(_ indexPath: IndexPath) {
-        print("_newDidSelect")
-        print(" indexPath -> \(indexPath) ")
         
         var dataPath = indexPath
         
@@ -867,7 +865,6 @@ public final class ListSelectViewController: UITableViewController {
         }
         
         let dataRow = dataPath.row
-        print(" dataRow -> \(dataRow) ")
        
         var uncheckedRows:[ListItem] = []
         if allowsMultipleSelection {
@@ -883,7 +880,6 @@ public final class ListSelectViewController: UITableViewController {
             }
         } else { /// Single Selection Mode
             let selectedIndicies = getFilteredSelectedIndicies(removingIndex: nil)
-            print(" selectedIndicies -> \(selectedIndicies) ")
             
             if selectedIndicies.isEmpty {
                 /// No Selection
@@ -1001,11 +997,9 @@ public final class ListSelectViewController: UITableViewController {
                                     
                                     if let selectionClosure = formValue?.listItemSelection {
                                         if let item = new.selectedListItem {
-                                            print("about to call `selectionClosure(item,nav)`")
                                             selectionClosure(item,nav)
                                         }
                                     } else {
-                                        print("about to call 'new.valueChangeClosure?(new,form,path)'")
                                         new.valueChangeClosure?(new,form,path)
                                         
                                         if preventValueUpdate {

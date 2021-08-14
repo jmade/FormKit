@@ -18,6 +18,14 @@ public struct ReadOnlyValue: Equatable, Hashable {
 
 public extension ReadOnlyValue {
     
+    
+    init(_ title:String,_ value:String,_ disabled:Bool? = nil) {
+        self.title = title
+        self.value = value
+        self.isDisabled = disabled ?? true
+    }
+    
+    
     init(centeredValue:String) {
         self.title = String()
         self.valueDisplayStyle = .centered
@@ -34,14 +42,11 @@ public extension ReadOnlyValue {
         self.title = title
         self.value = value
         self.valueDisplayStyle = valueDisplayStyle
-        self.isDisabled = true
     }
     
     init(_ title:String,_ value:String) {
         self.title = title
         self.value = value
-        self.valueDisplayStyle = .default
-        self.isDisabled = true
     }
     
     init(_ title:String,_ value:String,_ style:ValueDisplayStyle,_ disabled:Bool = true) {
@@ -59,6 +64,26 @@ public extension ReadOnlyValue {
     }
     
 }
+
+
+
+public extension ReadOnlyValue {
+    
+    static func valueOnly(_ value:String) -> ReadOnlyValue {
+        ReadOnlyValue("", value, .valueOnly)
+    }
+    
+    static func centered(_ value:String) -> ReadOnlyValue {
+        ReadOnlyValue("", value, .centered)
+    }
+    
+    static var random:ReadOnlyValue {
+        ReadOnlyValue("Random", String(UUID().uuidString.split(separator: "-")[1]))
+    }
+    
+}
+
+
 
 // MARK: - ValueDisplayStyle -
 public extension ReadOnlyValue {
@@ -133,12 +158,11 @@ extension ReadOnlyValue: FormValueDisplayable {
     
     public func configureCell(_ formController: FormController, _ cell: Cell, _ path: IndexPath) {
         cell.formValue = self
-        //cell.indexPath = path
     }
     
     public typealias Controller = FormController
     public func didSelect(_ formController: Controller, _ path: IndexPath) {
-        /// do something here ?
+        
     }
     
     public var cellDescriptor: FormCellDescriptor {
@@ -158,14 +182,59 @@ extension ReadOnlyValue {
 }
 
 
+extension UITableViewCell {
+    
+    func addAndContrainToContentView(_ view:UIView) {
+        view.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(view)
+        view.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor).isActive = true
+        view.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor).isActive = true
+        contentView.layoutMarginsGuide.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+    }
+    
+}
+
+
 
 
 
 // MARK: - ReadOnlyCell -
 public final class ReadOnlyCell: UITableViewCell {
+    
     static let identifier = "FormKit.ReadOnlyCell"
     
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
+    
+    private lazy var readOnlyView:ReadOnlyValueView = {
+        let readOnly = ReadOnlyValueView()
+        addAndContrainToContentView(readOnly)
+        return readOnly
+    }()
+    
+    var formValue : ReadOnlyValue? {
+        didSet {
+            readOnlyView.formValue = formValue
+            selectionStyle = (formValue?.isDisabled ?? false) ? .none : .default
+        }
+    }
+    
+    required init?(coder aDecoder: NSCoder) {fatalError()}
+    public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        activateDefaultHeightAnchorConstraint()
+    }
+    
+    override public func prepareForReuse() {
+        formValue = nil
+        super.prepareForReuse()
+    }
+}
+
+
+
+
+final class ReadOnlyValueView: UIView {
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
@@ -180,6 +249,10 @@ public final class ReadOnlyCell: UITableViewCell {
         }
         label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         label.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(label)
+        label.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+        label.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        //label.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         return label
     }()
     
@@ -196,6 +269,11 @@ public final class ReadOnlyCell: UITableViewCell {
         label.lineBreakMode = .byWordWrapping
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         label.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(label)
+        label.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        label.leadingAnchor.constraint(equalTo: centerXAnchor).isActive = true
+        label.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        bottomAnchor.constraint(equalTo: label.bottomAnchor).isActive = true
         return label
     }()
     
@@ -211,6 +289,11 @@ public final class ReadOnlyCell: UITableViewCell {
         }
         label.lineBreakMode = .byWordWrapping
         label.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(label)
+        label.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+        label.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        label.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        bottomAnchor.constraint(equalTo: label.bottomAnchor).isActive = true
         return label
     }()
     
@@ -219,11 +302,10 @@ public final class ReadOnlyCell: UITableViewCell {
         didSet {
             
             guard let readOnlyValue = formValue else {
+                valueLabel.attributedText = nil
+                titleLabel.text = nil
+                valueOnlyLabel.attributedText = nil
                 return
-            }
-            
-            if readOnlyValue.isDisabled {
-                self.selectionStyle = .none
             }
             
             switch readOnlyValue.valueDisplayStyle {
@@ -252,39 +334,4 @@ public final class ReadOnlyCell: UITableViewCell {
         
     }
     
-    required init?(coder aDecoder: NSCoder) {fatalError()}
-    public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-        
-        [titleLabel,valueLabel,valueOnlyLabel].forEach({
-            contentView.addSubview($0)
-        })
-        
-        activateDefaultHeightAnchorConstraint()
-        
-        NSLayoutConstraint.activate([
-            titleLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
-            
-            valueLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-            valueLabel.leadingAnchor.constraint(equalTo: contentView.centerXAnchor),
-            valueLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8.0),
-            contentView.bottomAnchor.constraint(equalTo: valueLabel.bottomAnchor, constant: 8.0),
-            
-            valueOnlyLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-            valueOnlyLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-            valueOnlyLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-            contentView.bottomAnchor.constraint(equalTo: valueOnlyLabel.bottomAnchor, constant: 8.0),
-            
-        ])
-        
-    }
-    
-    override public func prepareForReuse() {
-        valueLabel.attributedText = nil
-        titleLabel.text = nil
-        valueOnlyLabel.attributedText = nil
-        formValue = nil
-        super.prepareForReuse()
-    }
 }

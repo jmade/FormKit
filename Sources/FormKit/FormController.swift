@@ -703,7 +703,7 @@ open class FormController: UITableViewController, CustomTransitionable {
             } else {
                 
                 if self.preferredContentSize.height != newContentSize.height {
-                    print("ContentSizeIncomingHeight: \(tv.contentSize.height) | Inset Height:\(tv.contentInset.top + tv.contentInset.bottom)")
+                    //print("ContentSizeIncomingHeight: \(tv.contentSize.height) | Inset Height:\(tv.contentInset.top + tv.contentInset.bottom)")
                     self.preferredContentSize = CGSize(width: self.preferredContentSize.width, height: newContentSize.height)
                     self.view.setNeedsLayout()
                     //self.preferredContentSize = newContentSize
