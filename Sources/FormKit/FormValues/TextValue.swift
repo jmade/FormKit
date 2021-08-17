@@ -654,7 +654,6 @@ extension TextCell: UITextFieldDelegate {
         if charSet.isSuperset(of: CharacterSet(charactersIn: string)) {
             
             if (existingText + string).count <= maxChars {
-                //self.formValue = textValue.newWith(existingText + string)
                 return true
             } else {
                 var newText = ""
@@ -677,7 +676,6 @@ extension TextCell: UITextFieldDelegate {
             var newText = ""
             string.forEach { (char) in
                 if charSet.isSuperset(of: CharacterSet(charactersIn: String(char))) {
-                    print("Its Safe: \(String(char))")
                     newText.append(char)
                 }
             }

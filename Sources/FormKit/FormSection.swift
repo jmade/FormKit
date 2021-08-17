@@ -220,7 +220,7 @@ extension FormSection {
         var indicies:[Int] = []
         for (i,v) in rows.enumerated() {
             switch v {
-            case .text(_),.note(_) ,.numerical(_),.timeInput(_), .input(_), .datePicker(_):
+            case .text(_),.note(_) ,.numerical(_),.timeInput(_), .input(_), .datePicker(_), .token(_):
                 indicies.append(i)
             default:
                 break

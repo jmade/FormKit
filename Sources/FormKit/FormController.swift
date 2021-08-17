@@ -1372,6 +1372,18 @@ extension FormController {
         return nil
         
     }
+    
+    
+    open override func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
+        44.0
+    }
+    
+    
+    open override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        UITableView.automaticDimension
+    }
+    
+    
 
     override open func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         UIApplication.shared.sendAction(#selector(UIApplication.resignFirstResponder), to: nil, from: nil, for: nil)
@@ -1581,6 +1593,41 @@ extension FormController {
         }
     }
     
+    
+}
+
+
+// MARK: - ExpandingCellDelegate -
+
+protocol ExpandingCellDelegate: UIViewController {
+    func cellNeedsToExpand(at path:IndexPath)
+}
+
+
+extension FormController: ExpandingCellDelegate {
+    func cellNeedsToExpand(at path: IndexPath) {
+        if let _ = tableView.cellForRow(at: path) {
+            print("Reloading Row!")
+            tableView.reloadRows(at: [path], with: .automatic)
+            
+            /*
+            UIViewPropertyAnimator(duration: 0.1, curve: .easeInOut) {
+                self.tableView.beginUpdates()
+                cell.contentView.layoutSubviews()
+                self.tableView.endUpdates()
+            }.startAnimation()
+            */
+        }
+    }
+    
+    
+    
+    
+    func cellNeedsToExpand(closure: () -> Void) {
+        tableView.beginUpdates()
+        closure()
+        tableView.endUpdates()
+    }
     
 }
 
@@ -2273,6 +2320,13 @@ extension FormController: UpdateFormValueDelegate {
                             handleUpdatedFormValue(dateTimeValue, at: path)
                         }
                     }
+                case .token(let token):
+                    if let tokenValue = formValue as? TokenValue {
+                        if tokenValue != token {
+                            handleUpdatedFormValue(tokenValue, at: path)
+                        }
+                    }
+                    
                 }
             }
         }
@@ -2315,6 +2369,15 @@ extension FormController: UpdateFormValueDelegate {
 
 
 extension FormController {
+    
+    public func performLiveUpdates() {
+        DispatchQueue.main.async(execute: { [weak self] in
+            guard let self = self else { return }
+            self.tableView.beginUpdates()
+            self.tableView.endUpdates()
+        })
+    }
+    
     
     public func updateFormValue(_ formValue: FormValue, at path: IndexPath) {
         handleUpdatedFormValue(formValue, at: path)

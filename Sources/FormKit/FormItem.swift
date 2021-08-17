@@ -35,6 +35,7 @@ public enum FormItem {
     case datePicker(DatePickerValue)
     case push(PushValue)
     case dateTime(DateTimeValue)
+    case token(TokenValue)
 }
 
 // MARK: - CellDescriptable -
@@ -88,6 +89,8 @@ extension FormItem: FormCellDescriptable {
             return pushValue.cellDescriptor
         case .dateTime(let dateTimeValue):
             return dateTimeValue.cellDescriptor
+        case .token(let tokenValue):
+            return tokenValue.cellDescriptor
         }
     }
 }
@@ -147,6 +150,8 @@ extension FormItem: Hashable, Equatable {
             return pushValue.hashValue
         case .dateTime(let dateTimeValue):
             return dateTimeValue.hashValue
+        case .token(let tokenValue):
+            return tokenValue.hashValue
         }
     }
     
@@ -209,6 +214,8 @@ extension FormItem {
             return pushValue.encodedValue()
         case .dateTime(let dateTimeValue):
             return dateTimeValue.encodedValue()
+        case .token(let tokenValue):
+            return tokenValue.encodedValue()
         }
         
     }

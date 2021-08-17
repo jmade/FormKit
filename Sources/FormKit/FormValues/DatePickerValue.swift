@@ -555,7 +555,7 @@ extension DatePickerValueCell {
         inputLabel.font = .preferredFont(forTextStyle: .body)
         inputLabel.textAlignment = .center
         if #available(iOS 13.0, *) {
-            inputLabel.textColor = .tertiaryLabel
+            inputLabel.textColor = .secondaryLabel
         } else {
             inputLabel.textColor = .gray
         }
@@ -569,8 +569,6 @@ extension DatePickerValueCell {
         
         bar.sizeToFit()
         textField.inputAccessoryView = bar
-        
-        
         
     }
 
