@@ -58,7 +58,7 @@ public struct TokenValue {
 }
 
 
-
+// MARK: - TokenValue.Token -
 public extension TokenValue.Token {
     
     init(_ title:String) {
@@ -71,21 +71,24 @@ public extension TokenValue.Token {
 
 public extension TokenValue {
     
-    init(_ title:String) {
+    init(_ title:String,_ customKey:String?) {
         self.title = title
+        self.customKey = customKey
         self.tokenCellConfiguration = CustomConfiguration()
     }
     
     
-    init(_ title:String,_ tokens:[String],_ cellConfig:DefaultTokenCellConfiguration? = nil) {
+    init(_ title:String,_ customKey:String?,_ strings:[String],_ cellConfig:DefaultTokenCellConfiguration? = nil) {
         self.title = title
-        self.tokens = tokens.map({ Token(title: $0, id: $0) })
+        self.customKey = customKey
+        self.tokens = strings.map({ Token(title: $0, id: $0) })
         self.tokenCellConfiguration = cellConfig ?? CustomConfiguration()
     }
     
     
-    init(_ title:String,_ tokens:[Token],_ cellConfig:DefaultTokenCellConfiguration? = nil) {
+    init(_ title:String,_ customKey:String?,_ tokens:[Token],_ cellConfig:DefaultTokenCellConfiguration? = nil) {
         self.title = title
+        self.customKey = customKey
         self.tokens = tokens
         self.tokenCellConfiguration = cellConfig ?? CustomConfiguration()
     }
@@ -120,8 +123,7 @@ extension TokenValue {
     }
     
     private func newWithTokens(_ tokens:[Token]) -> TokenValue {
-        var new = TokenValue(self.title, tokens)
-        new.customKey = self.customKey
+        var new = TokenValue(self.title, self.customKey, tokens)
         new.useDirectionButtons = self.useDirectionButtons
         new.tokenCellConfiguration = self.tokenCellConfiguration
         return new

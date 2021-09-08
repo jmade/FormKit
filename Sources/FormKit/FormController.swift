@@ -646,10 +646,7 @@ open class FormController: UITableViewController, CustomTransitionable {
         self.tableView.backgroundView = blurEffectView
         self.tableView.separatorEffect = UIVibrancyEffect(blurEffect: blurEffect)
     }
-    
-    
-    
-    
+
 
     
     private func handleDataEvaluation(_ eval:FormDataSource.Evaluation) {
@@ -712,11 +709,6 @@ open class FormController: UITableViewController, CustomTransitionable {
                
             }
             
-            /*
-            if self.preferredContentSize.height != newContentSize.height {
-                self.preferredContentSize = newContentSize
-            }
-            */
         }
     }
     
@@ -1252,10 +1244,14 @@ extension FormController {
 
 extension FormController {
     
+
     
     private func closeController() {
-        dismissalClosure?()
-        dismiss(animated: true, completion: nil)
+        DispatchQueue.main.async(execute: { [weak self] in
+            guard let self = self else { return }
+            self.dismissalClosure?()
+            self.dismiss(animated: true, completion: nil)
+        })
     }
     
     

@@ -350,19 +350,13 @@ class ResizingTokenField: UIView, UICollectionViewDataSource, UICollectionViewDe
                 self.collectionView.deleteItems(at: indexPaths)
             }
             
-            print("ABOUT TO ANIMATE!!")
-            
             animator.addCompletion { pos in
                 if pos == .end {
                     completion?(true)
                 }
             }
             animator.startAnimation()
-            /*
-            UIView.animate(withDuration: animationDuration, animations: {
-                self.collectionView.deleteItems(at: indexPaths)
-            }, completion: completion)
-            */
+            
         } else {
             UIView.performWithoutAnimation {
                 collectionView.deleteItems(at: indexPaths)
@@ -396,24 +390,27 @@ class ResizingTokenField: UIView, UICollectionViewDataSource, UICollectionViewDe
     
     @available(iOS 13.0, *)
     func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
-        UIContextMenuConfiguration(identifier: nil,
-                                   previewProvider: nil,
-                                   actionProvider: {
-                                    suggestedActions in
-                                    let deleteAction =
-                                        UIAction(title: NSLocalizedString("Delete", comment: ""),
-                                                 image: UIImage(systemName: "trash"),
-                                                 attributes: .destructive) { action in
-                                            
-                                            if let cell = self.collectionView.cellForItem(at: indexPath) as? ResizingTokenFieldTokenCell {
-                                                UIViewPropertyAnimator(duration: 0.3, curve: .easeOut) {
-                                                    cell.onRemove?(nil)
-                                                }.startAnimation()
-                                                _ = self.textField?.becomeFirstResponder()
-                                            }
-                                        }
-                                    return UIMenu(title: "", children: [deleteAction])
-                                   })
+        
+        guard let cell = self.collectionView.cellForItem(at: indexPath) as? ResizingTokenFieldTokenCell else { return nil }
+        
+        return UIContextMenuConfiguration(
+            identifier: nil,
+            previewProvider: nil,
+            actionProvider: {
+                suggestedActions in
+                let deleteAction =
+                    UIAction(title: NSLocalizedString("Delete", comment: ""),
+                             image: UIImage(systemName: "trash"),
+                             attributes: .destructive) { action in
+                        UIViewPropertyAnimator(duration: 0.3, curve: .easeOut) {
+                            cell.onRemove?(nil)
+                        }.startAnimation()
+                        _ = self.textField?.becomeFirstResponder()
+                    }
+                return UIMenu(title: "", children: [deleteAction])
+            }
+        )
+        
     }
     
     
