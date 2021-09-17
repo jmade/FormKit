@@ -275,15 +275,17 @@ open class FormController: UITableViewController, CustomTransitionable {
         }
     }
     
+    
+    
+    
+    
     public var leadingBarItems:[BarItem] {
-        get {
-            return barItems.filter({ $0.side == .leading })
-        }
+        barItems.filter({ $0.side == .leading })
     }
     
     public var trailingBarItems:[BarItem] {
         get {
-            return barItems.filter({ $0.side == .trailing })
+            barItems.filter({ $0.side == .trailing })
         }
     }
     
@@ -309,6 +311,7 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     public var validationClosure:FormValidationClosure?
     
+    // MARK: - DataSource -
     public var dataSource = FormDataSource(sections: []) {
         didSet {
             
@@ -382,13 +385,13 @@ open class FormController: UITableViewController, CustomTransitionable {
         }
     }()
     
-    
     public var showsDoneButton:Bool = false {
         didSet {
             if showsDoneButton {
                 if !barItems.containsItem(doneBarItem) {
                     barItems.append(doneBarItem)
                 }
+                checkBarItems()
             } else {
                 if barItems.containsItem(doneBarItem) {
                     barItems.removeObject(doneBarItem)
@@ -428,10 +431,18 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     public var usesSwipeAction: Bool = false
     
+    public typealias SwipeActionClosure = ((FormController,FormItem,IndexPath) -> Void)
+    public var destructiveSwipeAction:SwipeActionClosure?
+    
     public var usesContextMenus: Bool = false
     
     
+    @available(iOS 13.0, *)
+    public typealias ContextMenuClosure = ( (FormController,FormItem,IndexPath) -> UIMenu?)
     
+    
+    @available(iOS 13.0, *)
+    private(set) lazy var contextMenuClosure:ContextMenuClosure = {_,_,_ in return nil}
    
     public var allowModalDismissal:Bool = false {
         didSet {
@@ -791,6 +802,18 @@ extension FormController {
         
         """
     }
+}
+
+
+
+@available(iOS 13.0, *)
+extension FormController {
+    
+    public func setContextMenuClosure(_ closure: @escaping ContextMenuClosure) {
+        self.contextMenuClosure = closure
+        self.usesContextMenus = true
+    }
+    
 }
 
 
@@ -1465,8 +1488,7 @@ extension FormController {
                 return nil
             }
             
-            
-            let contextMenu = makeContextMenu(formItem)
+            let contextMenu = makeContextMenu(formItem,indexPath)
             
             return UIContextMenuConfiguration(
                 identifier: nil,
@@ -1492,52 +1514,48 @@ extension FormController {
             
             if self.dataSource.sections[indexPath.section].rows.count == 1 {
                 // Delete the Section
-                let _ = self.dataSource.sections.remove(at: indexPath.section)
+                let removedSection = self.dataSource.sections.remove(at: indexPath.section)
+                if let removedItem = removedSection.firstRow {
+                    self.destructiveSwipeAction?(self,removedItem,indexPath)
+                }
                 self.tableView.deleteSections(IndexSet(arrayLiteral: indexPath.section) , with: .fade)
             } else {
-                let _ = self.dataSource.sections[indexPath.section].rows.remove(at: indexPath.row)
+                let removedItem = self.dataSource.sections[indexPath.section].rows.remove(at: indexPath.row)
+                self.destructiveSwipeAction?(self,removedItem,indexPath)
                 self.tableView.deleteRows(at: [indexPath], with: .fade)
             }
+            
             self.generateHapticFeedback(.impact)
             handler(true)
         }
         
         //
-        
-        
-        
         action.image = UIImage(systemName: "trash.fill")
         action.backgroundColor = .systemRed
         
         return action
-        
-        
-        
     }
     
-    
-  
-    
-    
-    /// Context Menu
-    func makeContextMenu(_ formItem:FormItem) -> UIMenu {
-          
 
-    //        // The "title" will show up as an action for opening this menu
-    //        let edit = UIMenu(title: "Edit...", children: [rename, delete])
-
-                // Create a UIAction for sharing
-            let share = UIAction(title: "Share", image: UIImage(systemName: "square.and.arrow.up")) { action in
-                // Show system share sheet
-                
-            }
+    
+    // MARK: - Context Menu -
+    func makeContextMenu(_ formItem:FormItem,_ indexPath: IndexPath) -> UIMenu? {
+        contextMenuClosure(self,formItem,indexPath)
         
-            
-
-
-            // Create our menu with both the edit menu and the share action
-            return UIMenu(title: "Main Menu", children: [share])
+        /*
+        if let providedContextMenu = contextMenuClosure(self,formItem,indexPath) {
+            return providedContextMenu
         }
+        
+        let share = UIAction(title: "Share", image: UIImage(systemName: "square.and.arrow.up")) { action in
+            // Show system share sheet
+            
+        }
+        
+        // Create our menu with both the edit menu and the share action
+        return UIMenu(title: "", children: [share])
+        */
+    }
         
     
 }

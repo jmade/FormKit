@@ -445,9 +445,19 @@ public final class TextCell: UITableViewCell, Activatable {
                 titleLabel.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
                 titleLabel.topAnchor.constraint(equalTo: margin.topAnchor),
                 //titleLabel.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
-                textField.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
+                
+                textField.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 8.0),
+                
+                
+                //textField.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
                 textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
-                textField.widthAnchor.constraint(equalTo: margin.widthAnchor, multiplier: 0.5),
+                textField.topAnchor.constraint(equalTo: titleLabel.topAnchor),
+                
+                
+                //textField.widthAnchor.constraint(equalTo: margin.widthAnchor, multiplier: 0.5),
+                margin.bottomAnchor.constraint(equalTo: textField.bottomAnchor),
+
+                
                 ])
         case .vertical:
             NSLayoutConstraint.activate([
@@ -464,13 +474,32 @@ public final class TextCell: UITableViewCell, Activatable {
             
             activateDefaultHeightAnchorConstraint()
            
+            
+            
             NSLayoutConstraint.activate([
+                titleLabel.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
+                titleLabel.topAnchor.constraint(equalTo: margin.topAnchor),
+                //titleLabel.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
+                
+                textField.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 8.0),
+                
+                
+                //textField.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
+                textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
+                textField.topAnchor.constraint(equalTo: titleLabel.topAnchor),
+                
+                
+                //textField.widthAnchor.constraint(equalTo: margin.widthAnchor, multiplier: 0.5),
+                margin.bottomAnchor.constraint(equalTo: textField.bottomAnchor),
+                
+                /*
                 titleLabel.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
                 titleLabel.topAnchor.constraint(equalTo: margin.topAnchor),
                 //titleLabel.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
                 textField.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
                 textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
                 textField.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 8.0),
+                */
             ])
             
             textField.textAlignment = .right
@@ -478,6 +507,9 @@ public final class TextCell: UITableViewCell, Activatable {
             textField.clearButtonMode = .never
             textField.font = UIFont.preferredFont(forTextStyle: .body)
             textField.textColor = UIColor.FormKit.valueText
+            
+            //titleLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+            
            
         case .writeIn:
             activateDefaultHeightAnchorConstraint()
@@ -496,7 +528,7 @@ public final class TextCell: UITableViewCell, Activatable {
             textField.font = UIFont.preferredFont(forTextStyle: .body)
    
         }
-        
+        titleLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         didLayout = true
     }
     
