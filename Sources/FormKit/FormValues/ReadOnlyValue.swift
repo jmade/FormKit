@@ -94,13 +94,12 @@ public extension ReadOnlyValue {
         
         var digitFont = UIFont.preferredFont(forTextStyle: .body)
         if #available(iOS 13.0, *) {
-            digitFont = UIFont.monospacedSystemFont(ofSize: UIFont.systemFontSize, weight: .regular)
+            digitFont = UIFont.monospacedSystemFont(ofSize: UIFont.preferredFont(forTextStyle: .body).pointSize, weight: .regular)
         }
-        
         
         var boldDigit = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
         if #available(iOS 13.0, *) {
-            boldDigit = UIFont.monospacedDigitSystemFont(ofSize: UIFont.systemFontSize, weight: .bold)
+            boldDigit = UIFont.monospacedDigitSystemFont(ofSize: UIFont.preferredFont(forTextStyle: .body).pointSize, weight: .bold)
         }
         
         
@@ -243,9 +242,7 @@ final class ReadOnlyValueView: UIView {
         label.numberOfLines = 1
         label.lineBreakMode = .byClipping
         if #available(iOS 13.0, *) {
-            label.textColor = .secondaryLabel
-        } else {
-            label.textColor = .darkGray
+            label.textColor = .label
         }
         label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -262,7 +259,7 @@ final class ReadOnlyValueView: UIView {
         label.textAlignment = .right
         label.numberOfLines = 0
         if #available(iOS 13.0, *) {
-            label.textColor = .tertiaryLabel
+            label.textColor = .secondaryLabel
         } else {
             label.textColor = .lightGray
         }
@@ -271,7 +268,7 @@ final class ReadOnlyValueView: UIView {
         label.translatesAutoresizingMaskIntoConstraints = false
         addSubview(label)
         label.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
-        label.leadingAnchor.constraint(equalTo: centerXAnchor).isActive = true
+        label.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 4.0).isActive = true
         label.topAnchor.constraint(equalTo: topAnchor).isActive = true
         bottomAnchor.constraint(equalTo: label.bottomAnchor).isActive = true
         return label

@@ -6,7 +6,6 @@ import Foundation
 // MARK: - FormDataSourceUpdateClosure -
 public typealias FormDataSourceUpdateClosure = ( (FormDataSource) -> Void )
 
-
 public protocol FormDataSourceUpdateDelegate: AnyObject {
     func dataSourceWasUpdated(_ dataSource:FormDataSource)
 }
@@ -41,7 +40,7 @@ public class FormDataSource {
         self.update()
     }
     
-    public var updateClosure: FormDataSourceUpdateClosure? = nil
+    public var updateClosure: FormDataSourceUpdateClosure?
     
 }
 

@@ -5,6 +5,7 @@ import UIKit
 // MARK: - FormValidationClosure -
 public typealias FormValidationClosure = ( (FormDataSource,FormController) -> Void )
 
+public typealias FormDataPublishClosure = ( (FormDataSource) -> (FormDataSource) )
 
 
 
@@ -253,6 +254,10 @@ public typealias FormDismissalClosure = ( () -> Void )
 // MARK: - FormController -
 open class FormController: UITableViewController, CustomTransitionable {
     
+    
+    public var publishClosure: FormDataPublishClosure?
+    
+    
     public var dismissalClosure: FormDismissalClosure?
     
     private var contentSizeObserver : NSKeyValueObservation?
@@ -361,7 +366,7 @@ open class FormController: UITableViewController, CustomTransitionable {
         return dataSource.footerValues()
     }
     
-    private var defaultContentInsets = UIEdgeInsets(top: 20, left: 0, bottom: 30, right: 0)
+    private var defaultContentInsets = UIEdgeInsets(top: 0, left: 0, bottom: 30, right: 0)
     
     
     /// Loading
@@ -599,14 +604,18 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     // MARK: - setupUI -
     private func setupUI() {
-        //print("[FromKit] Form Controller (setupUI)")
-        // Header Cell
+        
+        
+        if #available(iOS 15.0, *) {
+            tableView.sectionHeaderTopPadding = 0
+        }
+        
         
         switch displayStyle {
         case .modern:
             tableView.register(FormHeaderCell.self, forHeaderFooterViewReuseIdentifier: FormHeaderCell.identifier)
             tableView.register(FormHeaderCell.self, forHeaderFooterViewReuseIdentifier: FormHeaderCell.footerIdentifier)
-            tableView.contentInset = defaultContentInsets
+            //tableView.contentInset = defaultContentInsets
         default:
             break
         }
@@ -692,9 +701,17 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     override open func viewDidLoad() {
         super.viewDidLoad()
+        
+        if #available(iOS 15.0, *) {
+            tableView.sectionHeaderTopPadding = 0
+        }
+        
         if didLoad == false {
             setupUI()
         }
+        
+        
+        
         
         contentSizeObserver = tableView.observe(\.contentSize) { [weak self] tv, _ in
             guard let self = self else { return }
@@ -721,6 +738,8 @@ open class FormController: UITableViewController, CustomTransitionable {
             }
             
         }
+        
+        
     }
     
     
@@ -1391,7 +1410,16 @@ extension FormController {
         return nil
         
     }
-    
+
+    /*
+    open override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        if dataSource.sections[section].title.isEmpty {
+            return UITableView.automaticDimension
+        } else {
+            return UITableView.automaticDimension
+        }
+    }
+    */
     
     open override func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
         44.0
@@ -2184,6 +2212,12 @@ extension FormController {
 // MARK: - UpdateFormValueDelegate -
 extension FormController: UpdateFormValueDelegate {
     
+    
+    public func update(_ formValue: FormValue,_ row:Int,_ section:Int = 0) {
+        self.updatedFormValue(formValue, IndexPath(row: row, section: section))
+    }
+    
+ 
     public func updatedFormValue(_ formValue: FormValue, _ indexPath: IndexPath?) {
         if let path = indexPath {
             
@@ -2235,6 +2269,7 @@ extension FormController: UpdateFormValueDelegate {
                     if let readOnlyValue = formValue as? ReadOnlyValue {
                         if readOnlyValue != readOnly {
                             handleUpdatedFormValue(readOnlyValue, at: path)
+                            tableView.reloadRows(at: [path], with: .none)
                         }
                     }
                 case .picker(let picker):
