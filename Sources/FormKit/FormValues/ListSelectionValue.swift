@@ -615,9 +615,7 @@ extension ListSelectionValue {
         return new
     }
 
-    
-    
-    
+
     
     public func newWith(_ listItems:[ListSelectViewController.ListItem],_ fromLoading:Bool = false) -> ListSelectionValue  {
         
@@ -840,6 +838,52 @@ public extension ListSelectionValue {
 
 
 
+extension UITextView {
+  // Massive credit to Dave Delong for his extensive help with this solution.
+  /// Returns whether or not the `UITextView` is displaying truncated text. This includes text
+  /// that is visually truncated with an ellipsis (...), and text that is simply cut off through
+  /// word wrapping.
+  ///
+  /// - Important:
+  /// This only works properly when the `NSLineBreakMode` is set to `.byTruncatingTail` or `.byWordWrapping`.
+  ///
+  /// - Remark:
+  /// Calculation enumerates over all line fragments that the textview's LayoutManger generates
+  /// and checks for the presence of the truncation glyph. If the textview's `NSLineBreakMode` is
+  /// not set to `.byTruncatingTail` this calculation will be based on whether the textview's
+  /// character content extends beyond its view frame.
+  var isTextTruncated: Bool {
+    var isTruncating = false
+
+    // The `truncatedGlyphRange(...) method will tell us if text has been truncated
+    // based on the line break mode of the text container
+    layoutManager.enumerateLineFragments(forGlyphRange: NSRange(location: 0, length: Int.max)) { _, _, _, glyphRange, stop in
+      let truncatedRange = self.layoutManager.truncatedGlyphRange(inLineFragmentForGlyphAt: glyphRange.lowerBound)
+      if truncatedRange.location != NSNotFound {
+        isTruncating = true
+        stop.pointee = true
+      }
+    }
+
+    // It's possible that the text is truncated not because of the line break mode,
+    // but because the text is outside the drawable bounds
+    if isTruncating == false {
+      let glyphRange = layoutManager.glyphRange(for: textContainer)
+      let characterRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
+
+      isTruncating = characterRange.upperBound < text.utf16.count
+    }
+
+    return isTruncating
+  }
+}
+
+
+
+
+
+
+
 // MARK: ListSelectionCell
 final public class ListSelectionCell: UITableViewCell {
     static let identifier = "com.jmade.FormKit.ListSelectionCell"
@@ -858,8 +902,8 @@ final public class ListSelectionCell: UITableViewCell {
     
     lazy var selectionLabel: UILabel = {
         let label = UILabel()
-        label.numberOfLines = 0
-        label.lineBreakMode = .byWordWrapping
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         if #available(iOS 13.0, *) {
             label.textColor = .secondaryLabel
         } else {
@@ -869,11 +913,35 @@ final public class ListSelectionCell: UITableViewCell {
         return label
     }()
     
+
+    lazy var overflowLabel: UILabel = {
+        let label = UILabel()
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        if #available(iOS 13.0, *) {
+            label.textColor = .secondaryLabel
+        } else {
+             label.textColor = .gray
+        }
+        label.textAlignment = .left
+        return label
+    }()
+    
+    
     var formValue : ListSelectionValue? {
         didSet {
             if let listSelectValue = formValue {
                 titleLabel.text = listSelectValue.title
                 selectionLabel.text = listSelectValue.selectionTitle
+                
+                /*
+                if selectionLabel.isTextTruncated {
+                    print("Text Is truncated!")
+                    overflowLabel.text = listSelectValue.selectionTitle
+                }
+                */
+                
+                
                 if let path = indexPath {
                     updateFormValueDelegate?.updatedFormValue(listSelectValue, path)
                 }
@@ -885,7 +953,7 @@ final public class ListSelectionCell: UITableViewCell {
     required init?(coder aDecoder: NSCoder) {fatalError()}
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        [titleLabel,selectionLabel].forEach({
+        [titleLabel,selectionLabel,overflowLabel].forEach({
             $0.translatesAutoresizingMaskIntoConstraints = false
             contentView.addSubview($0)
         })
@@ -900,11 +968,22 @@ final public class ListSelectionCell: UITableViewCell {
             
             //selectionLabel.centerYAnchor.constraint(equalTo: contentView.layoutMarginsGuide.centerYAnchor),
             selectionLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-            selectionLabel.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 8.0),
+            selectionLabel.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 2.0),
+            selectionLabel.topAnchor.constraint(equalTo: titleLabel.topAnchor),
+            
+            /*
+            overflowLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0),
+            overflowLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            overflowLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            
+            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: overflowLabel.bottomAnchor)
+            */
+            
             contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: selectionLabel.bottomAnchor)
             ])
         
         accessoryType = .disclosureIndicator
+        
         
         titleLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         selectionLabel.setContentCompressionResistancePriority(UILayoutPriority(rawValue: 499), for: .horizontal)
@@ -914,6 +993,7 @@ final public class ListSelectionCell: UITableViewCell {
     override public func prepareForReuse() {
         titleLabel.text = nil
         selectionLabel.text = nil
+        overflowLabel.text = nil
         formValue = nil
         super.prepareForReuse()
     }

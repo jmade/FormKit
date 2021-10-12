@@ -317,7 +317,7 @@ open class FormController: UITableViewController, CustomTransitionable {
     public var validationClosure:FormValidationClosure?
     
     // MARK: - DataSource -
-    public var dataSource = FormDataSource(sections: []) {
+    public var dataSource = FormDataSource() {
         didSet {
             
             guard !dataSource.isEmpty else {
@@ -333,6 +333,7 @@ open class FormController: UITableViewController, CustomTransitionable {
             self.title = self.dataSource.title
             
             if oldValue.isEmpty {
+                print("[FormKit] (DataSource) didSet 'oldValue.isEmpty'")
                 DispatchQueue.main.async(execute: { [weak self] in
                     guard let self = self else { return }
                     if self.tableView.numberOfSections == 0 {
@@ -348,6 +349,7 @@ open class FormController: UITableViewController, CustomTransitionable {
                     }
                 })
             } else {
+                print("[FormKit] (DataSource) didSet 'handleDataEvaluation'")
                 handleDataEvaluation(
                     FormDataSource.evaluate(oldValue, new: dataSource)
                 )
@@ -521,13 +523,9 @@ open class FormController: UITableViewController, CustomTransitionable {
                super.init(style: .grouped)
            }
            self.dataSource = data
-           self.title = dataSource.title
            self.validationClosure = validation
        }
-    
-    
-    
-    
+
     
     
     public init(loadingMessage:String?,loadingClosure: @escaping FormDataLoadingClosure) {
@@ -605,7 +603,6 @@ open class FormController: UITableViewController, CustomTransitionable {
     // MARK: - setupUI -
     private func setupUI() {
         
-        
         if #available(iOS 15.0, *) {
             tableView.sectionHeaderTopPadding = 0
         }
@@ -634,26 +631,25 @@ open class FormController: UITableViewController, CustomTransitionable {
         
         setupToolBar()
         
-        if let message = loadingMessage {
-            if #available(iOS 13.0, *) {
-                tableView.tableFooterView = ItemsLoadingView(message: message, textStyle: .body, color: .label)
-            } else {
-                tableView.tableFooterView = ItemsLoadingView(message: message, textStyle: .body, color: .black)
-            }
-        }
-        
-        
         if let closure = loadingClosure {
-            if #available(iOS 13.0, *) {
-                tableView.tableFooterView = ItemsLoadingView(message: "Loading", textStyle: .body, color: .label)
-            } else {
-                tableView.tableFooterView = ItemsLoadingView(message: "Loading", textStyle: .body, color: .black)
-            }
+            tableView.tableFooterView = ItemsLoadingView(
+                message: loadingMessage ?? "Loading",
+                textStyle: .body,
+                color: UIColor.FormKit.text
+            )
+            print("[FormKit] firing `loadingClosure`")
             closure(self)
+        } else {
+            if let loadingMessage = loadingMessage {
+                tableView.tableFooterView = ItemsLoadingView(
+                    message: loadingMessage,
+                    textStyle: .body,
+                    color: UIColor.FormKit.text
+                )
+            }
         }
         
         didLoad = true
-        
     }
     
     
@@ -2719,9 +2715,12 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
     private func applyHeader(_ header:HeaderValue) {
         
         let data:(image:UIImage?,color:UIColor?) = getImage(header)
+        
         self.titleLabel.text = header.title
         self.subTitleLabel.text = header.subtitle
         self.titleLabel.sizeToFit()
+        
+        
         if let color = data.color {
             indicatorView.tintColor = color
         } else {
@@ -2773,6 +2772,7 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
     
     public override func prepareForReuse() {
         headerValue = nil
+        footerValue = nil
         titleLabel.text = nil
         subTitleLabel.text = nil
         indicatorView.image = nil
