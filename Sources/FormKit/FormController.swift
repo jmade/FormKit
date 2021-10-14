@@ -333,7 +333,7 @@ open class FormController: UITableViewController, CustomTransitionable {
             self.title = self.dataSource.title
             
             if oldValue.isEmpty {
-                print("[FormKit] (DataSource) didSet 'oldValue.isEmpty'")
+                
                 DispatchQueue.main.async(execute: { [weak self] in
                     guard let self = self else { return }
                     if self.tableView.numberOfSections == 0 {
@@ -349,7 +349,7 @@ open class FormController: UITableViewController, CustomTransitionable {
                     }
                 })
             } else {
-                print("[FormKit] (DataSource) didSet 'handleDataEvaluation'")
+                
                 handleDataEvaluation(
                     FormDataSource.evaluate(oldValue, new: dataSource)
                 )
@@ -637,7 +637,7 @@ open class FormController: UITableViewController, CustomTransitionable {
                 textStyle: .body,
                 color: UIColor.FormKit.text
             )
-            print("[FormKit] firing `loadingClosure`")
+            
             closure(self)
         } else {
             if let loadingMessage = loadingMessage {
