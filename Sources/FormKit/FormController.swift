@@ -316,48 +316,48 @@ open class FormController: UITableViewController, CustomTransitionable {
     
     public var validationClosure:FormValidationClosure?
     
+    
     // MARK: - DataSource -
     public var dataSource = FormDataSource() {
         didSet {
             
-            guard !dataSource.isEmpty else {
+            guard let closure = formDataResolutionClosure else {
+                self._dataSource = dataSource
                 return
             }
             
-            tableView.tableFooterView = nil
-            
-            guard tableView.window != nil else {
-                return
-            }
-            
-            self.title = self.dataSource.title
-            
-            if oldValue.isEmpty {
-                
-                DispatchQueue.main.async(execute: { [weak self] in
-                    guard let self = self else { return }
-                    if self.tableView.numberOfSections == 0 {
-                        self.tableView.insertSections(
-                            IndexSet(integersIn: 0...(self.dataSource.sections.count-1)),
-                            with: .top
-                        )
-                    } else {
-                        self.tableView.reloadSections(
-                            IndexSet(integersIn: 0...(self.dataSource.sections.count-1)),
-                            with: .automatic
-                        )
-                    }
-                })
-            } else {
-                
-                handleDataEvaluation(
-                    FormDataSource.evaluate(oldValue, new: dataSource)
-                )
-            }
-            
-            runValidation()
+            self._dataSource = closure(oldValue,dataSource)
         }
     }
+    
+    /// Shadow DataSource
+    private var _dataSource = FormDataSource() {
+        didSet {
+            
+            let new = _dataSource
+            DispatchQueue.main.async(execute: { [weak self] in
+                guard let self = self else { return }
+                self.handleNewDataSource(new, with: oldValue)
+            })
+            
+        }
+    }
+    
+    
+    
+   
+    
+    
+    /// `FormDataResolutionClosure` A Closure called after an form event but before the `FormController` sets its `FormDataSource`
+    /// This alows you to make any final changes, or undo any unwanted changes cleanly to provide a modified `FormKit` experience
+    /// (mainly for use when writing a sub class `FormController`)
+    ///
+    public typealias FormDataResolutionClosure = (FormDataSource,FormDataSource) -> FormDataSource
+    
+    public var formDataResolutionClosure: FormDataResolutionClosure?
+    
+    
+    
     
     
     private var headers:[HeaderValue] {
@@ -805,6 +805,51 @@ open class FormController: UITableViewController, CustomTransitionable {
 
     
 }
+
+
+
+extension FormController {
+    
+    private func handleNewDataSource(_ dataSource:FormDataSource,with oldValue:FormDataSource) {
+        guard !dataSource.isEmpty else {
+            return
+        }
+        
+        tableView.tableFooterView = nil
+        
+        guard tableView.window != nil else {
+            return
+        }
+        
+        self.title = self.dataSource.title
+        
+        if oldValue.isEmpty {
+            if self.tableView.numberOfSections == 0 {
+                self.tableView.insertSections(
+                    IndexSet(integersIn: 0...(self.dataSource.sections.count-1)),
+                    with: .top
+                )
+            } else {
+                self.tableView.reloadSections(
+                    IndexSet(integersIn: 0...(self.dataSource.sections.count-1)),
+                    with: .automatic
+                )
+            }
+        } else {
+            
+            handleDataEvaluation(
+                FormDataSource.evaluate(oldValue, new: dataSource)
+            )
+        }
+        
+        runValidation()
+    }
+    
+    
+}
+
+
+
 
 
 extension FormController {
@@ -1364,6 +1409,7 @@ extension FormController {
             item.cellDescriptor.didSelect(self,indexPath)
         }
         
+        dataSource.lastPath = (indexPath.row,indexPath.section)
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
@@ -1426,6 +1472,12 @@ extension FormController {
         UITableView.automaticDimension
     }
     
+    
+    open override func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        dataSource.yOffset = scrollView.contentOffset.y
+        //let yOffset = scrollView.contentOffset.y
+        
+    }
     
 
     override open func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
@@ -1548,6 +1600,15 @@ extension FormController {
                 self.destructiveSwipeAction?(self,removedItem,indexPath)
                 self.tableView.deleteRows(at: [indexPath], with: .fade)
             }
+            
+            self.dataSource.lastPath = (indexPath.row,indexPath.section)
+            let r = self.tableView.rect(forSection: indexPath.section)
+            self.dataSource.lastRect = (
+                Double(r.origin.x),
+                Double(r.origin.y),
+                Double(r.size.width),
+                Double(r.size.height)
+            )
             
             self.generateHapticFeedback(.impact)
             handler(true)
@@ -2429,8 +2490,18 @@ extension FormController {
     }
     
     private func handleUpdatedFormValue(_ formValue: FormValue, at path: IndexPath) {
+        dataSource.yOffset = tableView.contentOffset.y
         dataSource.updateWith(formValue: formValue, at: path)
         runValidation()
+        
+        let r = self.tableView.rect(forSection: path.section)
+        self.dataSource.lastRect = (
+            Double(r.origin.x),
+            Double(r.origin.y),
+            Double(r.size.width),
+            Double(r.size.height)
+        )
+        
     }
     
 }

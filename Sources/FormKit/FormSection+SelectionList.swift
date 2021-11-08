@@ -64,14 +64,39 @@ public extension FormSection {
     }
     
     
-    static func SelectableList(_ title:String,_ subTitle:String?,_ footer:String?,_ itemSet:ItemSet) -> FormSection {
+    static func SelectableList(_ title:String?,_ subTitle:String?,_ footer:String?,_ itemSet:ItemSet) -> FormSection {
         FormSection(
-            title,
+            title ?? "",
             subTitle ?? "",
             itemSet.pushValues,
             footer ?? ""
         )
     }
+    
+    
+    
+    enum ActionResult {
+        case worked, failed(String)
+    }
+    
+    typealias ActionResultClosure = () -> ActionResult
+    
+    static func ActionSubmit(_ title:String,resultHandler: @escaping ActionResultClosure) -> FormSection {
+        FormSection(ActionValue.Submit(title, { (_, f, _) in
+            
+            let result = resultHandler()
+            switch result {
+            case .worked:
+                //f.feedback(.success)
+                f.close()
+            case .failed(let err):
+                print("Error: \(err)")
+                //f.feedback(.error)
+            }
+            
+        }))
+    }
+    
     
     
     static func ActionSubmit(_ title:String,_ saveHandler: @escaping () -> Void) -> FormSection {
@@ -88,6 +113,38 @@ public extension FormSection {
 
 public extension FormDataSource {
     
+//    static func SingleSelectionList(_ title:String? = nil,
+//                                    _ subTitle:String? = nil,
+//                                    _ footer:String? = nil,
+//                                    _ actionTitle:String = "Save",
+//                                    _ itemSet:FormSection.ItemSet,
+//                                    _ closure: @escaping ( ([String:String]) -> Void )) -> FormDataSource {
+//
+//        let data = FormDataSource(title ?? "", [
+//            .SelectableList(title,subTitle,footer,itemSet),
+//            .ActionSubmit(actionTitle, resultHandler: {
+//
+//                if Bool.random() {
+//                    print("Worked!")
+//                    return .worked
+//                } else {
+//                    print("Failed!")
+//                    return .failed("Bool Error!")
+//                }
+//
+//            }),
+//            //.ActionSubmit(actionTitle, saveHandler)
+//        ])
+//
+//        data.updateClosure = { (data) in
+//            closure(data.activeParams)
+//        }
+//
+//        return data
+//
+//    }
+    
+    
     static func SelectableList(_ formTitle:String,
                                _ title:String,
                                _ subTitle:String? = nil,
@@ -99,7 +156,16 @@ public extension FormDataSource {
         
         let data = FormDataSource(formTitle, [
             .SelectableList(title,subTitle,footer,itemSet),
-            .ActionSubmit(actionTitle, saveHandler)
+            .ActionSubmit(actionTitle, resultHandler: {
+                
+                if Bool.random() {
+                    return .worked
+                } else {
+                    return .failed("Bool Error!")
+                }
+                
+            }),
+            //.ActionSubmit(actionTitle, saveHandler)
         ])
         
         data.updateClosure = { (data) in

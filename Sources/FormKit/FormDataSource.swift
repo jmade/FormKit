@@ -17,6 +17,11 @@ public class FormDataSource {
     
     public var additionalParameters:[String:String] = [:]
     
+    public var yOffset:Double = 0.0
+    
+    public var lastPath: (row:Int,section:Int) = (-1,-1)
+    public var lastRect: (x:Double,y:Double,w:Double,h:Double) = (0.0,0.0,0.0,0.0)
+    
     public weak var delegate:FormDataSourceUpdateDelegate?
     
     public var title:String = ""

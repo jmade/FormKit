@@ -163,6 +163,15 @@ public extension PushValue {
 }
 
 
+extension PushValue: TableViewSelectable {
+    
+    public var isSelectable: Bool {
+        style != .selectable
+    }
+    
+}
+
+
 
 
 // MARK: - FormValueDisplayable -

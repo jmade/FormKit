@@ -53,6 +53,14 @@ public class FormSection: Equatable {
         return _headerValue
     }
     
+    public var isExpanded:Bool {
+        if headerValue.state == .expanded {
+            return true
+        } else {
+            return false
+        }
+    }
+    
     private var _headerValue = HeaderValue()
     
 }
@@ -74,6 +82,7 @@ extension FormSection {
     
     public func toggleState(_ sectionHeight:Double) {
         self._headerValue.toggleMode(sectionHeight)
+        updateClosure(self)
     }
     
     public func setHeaderValue(_ headerValue:HeaderValue) {
