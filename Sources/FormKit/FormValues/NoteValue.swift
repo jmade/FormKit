@@ -2,8 +2,12 @@ import UIKit
 
 extension UIBarButtonItem {
     
+    public var flexible: UIBarButtonItem {
+        UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+    }
+    
     static func Flexible() -> UIBarButtonItem {
-        return UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
     }
     
 }
@@ -337,7 +341,7 @@ public final class NoteCell: UITableViewCell, Activatable, CharacterCountDisplay
                 
                 updateCharacterCount(0)
                 
-            }     
+            }
         }
     }
     

@@ -321,43 +321,44 @@ open class FormController: UITableViewController, CustomTransitionable {
     public var dataSource = FormDataSource() {
         didSet {
             
-            guard let closure = formDataResolutionClosure else {
-                self._dataSource = dataSource
+            guard !dataSource.isEmpty else {
                 return
             }
             
-            self._dataSource = closure(oldValue,dataSource)
+            tableView.tableFooterView = nil
+            
+            guard tableView.window != nil else {
+                return
+            }
+            
+            self.title = self.dataSource.title
+            
+            if oldValue.isEmpty {
+                
+                DispatchQueue.main.async(execute: { [weak self] in
+                    guard let self = self else { return }
+                    if self.tableView.numberOfSections == 0 {
+                        self.tableView.insertSections(
+                            IndexSet(integersIn: 0...(self.dataSource.sections.count-1)),
+                            with: .top
+                        )
+                    } else {
+                        self.tableView.reloadSections(
+                            IndexSet(integersIn: 0...(self.dataSource.sections.count-1)),
+                            with: .automatic
+                        )
+                    }
+                })
+            } else {
+                
+                handleDataEvaluation(
+                    FormDataSource.evaluate(oldValue, new: dataSource)
+                )
+            }
+            
+            runValidation()
         }
     }
-    
-    /// Shadow DataSource
-    private var _dataSource = FormDataSource() {
-        didSet {
-            
-            let new = _dataSource
-            DispatchQueue.main.async(execute: { [weak self] in
-                guard let self = self else { return }
-                self.handleNewDataSource(new, with: oldValue)
-            })
-            
-        }
-    }
-    
-    
-    
-   
-    
-    
-    /// `FormDataResolutionClosure` A Closure called after an form event but before the `FormController` sets its `FormDataSource`
-    /// This alows you to make any final changes, or undo any unwanted changes cleanly to provide a modified `FormKit` experience
-    /// (mainly for use when writing a sub class `FormController`)
-    ///
-    public typealias FormDataResolutionClosure = (FormDataSource,FormDataSource) -> FormDataSource
-    
-    public var formDataResolutionClosure: FormDataResolutionClosure?
-    
-    
-    
     
     
     private var headers:[HeaderValue] {
@@ -805,50 +806,6 @@ open class FormController: UITableViewController, CustomTransitionable {
 
     
 }
-
-
-
-extension FormController {
-    
-    private func handleNewDataSource(_ dataSource:FormDataSource,with oldValue:FormDataSource) {
-        guard !dataSource.isEmpty else {
-            return
-        }
-        
-        tableView.tableFooterView = nil
-        
-        guard tableView.window != nil else {
-            return
-        }
-        
-        self.title = self.dataSource.title
-        
-        if oldValue.isEmpty {
-            if self.tableView.numberOfSections == 0 {
-                self.tableView.insertSections(
-                    IndexSet(integersIn: 0...(self.dataSource.sections.count-1)),
-                    with: .top
-                )
-            } else {
-                self.tableView.reloadSections(
-                    IndexSet(integersIn: 0...(self.dataSource.sections.count-1)),
-                    with: .automatic
-                )
-            }
-        } else {
-            
-            handleDataEvaluation(
-                FormDataSource.evaluate(oldValue, new: dataSource)
-            )
-        }
-        
-        runValidation()
-    }
-    
-    
-}
-
-
 
 
 
@@ -2476,11 +2433,26 @@ extension FormController: UpdateFormValueDelegate {
 
 extension FormController {
     
-    public func performLiveUpdates() {
+    public func performLiveUpdates(_ stopAnimation:Bool = false) {
+        print("[FormKit] (performLiveUpdates) stopAnimation: \(stopAnimation)")
         DispatchQueue.main.async(execute: { [weak self] in
             guard let self = self else { return }
-            self.tableView.beginUpdates()
-            self.tableView.endUpdates()
+            
+            if stopAnimation {
+                UIView.setAnimationsEnabled(false)
+                
+                self.tableView.beginUpdates()
+                self.tableView.endUpdates()
+                
+                let scrollTo = self.tableView.contentSize.height - self.tableView.frame.size.height
+                print(" scrollTo -> \(scrollTo) ")
+                self.tableView.setContentOffset(CGPoint(x: 0, y: scrollTo), animated: false)
+                
+                UIView.setAnimationsEnabled(true)
+            } else {
+                self.tableView.beginUpdates()
+                self.tableView.endUpdates()
+            }
         })
     }
     

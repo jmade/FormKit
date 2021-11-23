@@ -250,27 +250,6 @@ public typealias FormValueDisplayable = FormConfigurable & FormCellDescriptable
 
 
 
-//: MARK: - UIViewController -
-extension UIViewController {
-    
-    @objc func backButtonAction() {
-        self.dismiss(animated: true, completion: nil)
-    }
-    
-    func addBackbutton(title: String) {
-        if let nav = self.navigationController,
-            let item = nav.navigationBar.topItem {
-            item.backBarButtonItem  = UIBarButtonItem(title: title, style: UIBarButtonItem.Style.plain, target: self, action:
-                #selector(self.backButtonAction))
-        } else {
-            if let nav = self.navigationController,
-                let _ = nav.navigationBar.backItem {
-                self.navigationController!.navigationBar.backItem!.title = title
-            }
-        }
-    }
-    
-}
 
 
 public extension UIViewController {
