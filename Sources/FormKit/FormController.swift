@@ -1,5 +1,5 @@
 import UIKit
-
+import QuickLook
 
 
 // MARK: - FormValidationClosure -
@@ -250,15 +250,19 @@ extension BarItem {
 
 
 public typealias FormDismissalClosure = ( () -> Void )
+public typealias FormControllerDismissalClosure = ( (FormController) -> Void )
 
 // MARK: - FormController -
-open class FormController: UITableViewController, CustomTransitionable {
+open class FormController: UITableViewController, CustomTransitionable, QLPreviewControllerDataSource {
     
+    private var previewController:QLPreviewController?
+    private var previewItem:FKPreview?
     
     public var publishClosure: FormDataPublishClosure?
     
     
     public var dismissalClosure: FormDismissalClosure?
+    public var closeClosure: FormControllerDismissalClosure?
     
     private var contentSizeObserver : NSKeyValueObservation?
     
@@ -803,6 +807,32 @@ open class FormController: UITableViewController, CustomTransitionable {
         }
         self.dataSource = FormDataSource()
     }
+    
+    
+    public func numberOfPreviewItems(in controller: QLPreviewController) -> Int {
+        1
+    }
+
+    public func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
+        guard let preview = previewItem else {
+            return FKPreview("Error",URL(string: "")!)
+        }
+        return preview
+    }
+    
+    public func setPreviewController(_ previewController:QLPreviewController) {
+        self.previewController = previewController
+    }
+    
+    public func showPreview(_ url:URL,_ title:String? = nil) {
+        if previewController == nil {
+            previewController = QLPreviewController()
+        }
+        
+        previewController!.dataSource = self
+        previewItem = FKPreview(title ?? "", url)
+        navigationController?.pushViewController(previewController!, animated: true)
+    }
 
     
 }
@@ -1290,6 +1320,7 @@ extension FormController {
         DispatchQueue.main.async(execute: { [weak self] in
             guard let self = self else { return }
             self.dismissalClosure?()
+            self.closeClosure?(self)
             self.dismiss(animated: true, completion: nil)
         })
     }

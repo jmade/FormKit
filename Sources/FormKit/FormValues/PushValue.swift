@@ -28,6 +28,7 @@ public struct PushValue {
     }
     public var style:Style = .standard
     public var cellAccessoryType: UITableViewCell.AccessoryType = .disclosureIndicator
+    private var isLoading = false
 }
 
 
@@ -76,7 +77,6 @@ public extension PushValue {
     }
     
     
-    
     init(_ primary:String,_ model:Any,_ cellAccessoryType: UITableViewCell.AccessoryType ,actionClosure: @escaping PushValueActionClosure) {
         self.primary = primary
         self.model = model
@@ -103,7 +103,6 @@ public extension PushValue {
         self.style = .selectable
     }
     
-    
     init(_ title:String,_ isSelected:Bool,_ subTitle:String? = nil,_ model:Any? = nil) {
         self.primary = title
         self.secondary = subTitle
@@ -113,10 +112,28 @@ public extension PushValue {
         self.style = .selectable
     }
     
+}
+
+extension PushValue {
     
-   
+    public var shouldShowIndicator:Bool {
+        isLoading
+    }
+    
+    public func loading() -> PushValue {
+        var copy = self
+        copy.isLoading = true
+        return copy
+    }
+    
+    public func notLoading() -> PushValue {
+        var copy = self
+        copy.isLoading = false
+        return copy
+    }
     
 }
+
 
 
 // MARK: - FormValue -
@@ -196,19 +213,18 @@ extension PushValue: FormValueDisplayable {
             switch selectedFormItem {
             case .push(let pushValue):
                 
+                guard pushValue.isLoading == false else {
+                    return
+                }
+                
                 selectionClosure?(pushValue,formController,path)
                 actionClosure?(pushValue)
                 
                 if pushValue.style == .selectable {
-                    //formController.updatedFormValue(self.toggledState(), path)
-                    formController.feedback(.mediumImpact)
-                    formController.updateFormValue(self.toggledState(), at: path)
+                    formController.feedback(.lightImpact)
+                    formController.dataSource.updateWith(formValue: self.toggledState(), at: path)
                     formController.tableView.reloadRows(at: [path], with: .none)
                     formController.dataSource.setNeedsUpdate()
-                    
-                    //formController.dataSource.sections[path.section].rows[path.row] = self.toggledState().formItem
-                    //formController.tableView.reloadRows(at: [path], with: .none)
-                    
                 }
             default:
                 break
@@ -247,11 +263,34 @@ final public class PushValueCell: UITableViewCell {
                     indicatorView.tintColor = nil
                     accessoryType = push.cellAccessoryType
                 }
+                
+                if push.shouldShowIndicator {
+                    loadingView.startAnimating()
+                } else {
+                    loadingView.stopAnimating()
+                }
             }
             primaryTextLabel.text = formValue?.primary
             secondaryTextLabel.text = formValue?.secondary
         }
     }
+    
+    
+    lazy var loadingView: UIActivityIndicatorView = {
+        let progressView = UIActivityIndicatorView()
+        if #available(iOS 13.0, *) {
+            progressView.style = .medium
+        } else {
+            progressView.style = .gray
+        }
+        progressView.translatesAutoresizingMaskIntoConstraints = false
+        progressView.hidesWhenStopped = true
+        progressView.stopAnimating()
+        contentView.addSubview(progressView)
+        progressView.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor).isActive = true
+        progressView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
+        return progressView
+    }()
     
     
     lazy var primaryTextLabel: UILabel = {
@@ -292,12 +331,10 @@ final public class PushValueCell: UITableViewCell {
         imageView.setContentHuggingPriority(.required, for: .horizontal)
         imageView.setContentHuggingPriority(.required, for: .vertical)
         contentView.addSubview(imageView)
-        //imageView.leadingAnchor.constraint(equalTo: primaryTextLabel.trailingAnchor).isActive = true
         imageView.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor).isActive = true
         imageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
         return imageView
     }()
-    
     
     
     required init?(coder aDecoder: NSCoder) {fatalError()}
@@ -309,29 +346,25 @@ final public class PushValueCell: UITableViewCell {
            defaultTableViewCellHeightConstraint.priority = UILayoutPriority(501)
            
            NSLayoutConstraint.activate([
-               defaultTableViewCellHeightConstraint,
-               
-               primaryTextLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            defaultTableViewCellHeightConstraint,
+            primaryTextLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
             primaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-            
             primaryTextLabel.trailingAnchor.constraint(equalTo: indicatorView.leadingAnchor),
-               
-               
-               //primaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-               
-               secondaryTextLabel.topAnchor.constraint(equalTo: primaryTextLabel.bottomAnchor),
-               secondaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-               
-               secondaryTextLabel.trailingAnchor.constraint(equalTo: indicatorView.leadingAnchor),
-
-               
+            secondaryTextLabel.topAnchor.constraint(equalTo: primaryTextLabel.bottomAnchor),
+            secondaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            secondaryTextLabel.trailingAnchor.constraint(equalTo: indicatorView.leadingAnchor),
             contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: secondaryTextLabel.bottomAnchor),
-              
-               
            ])
-        
-           
        }
+    
+    
+    public override func setSelected(_ selected: Bool, animated: Bool) {
+        guard let push = formValue, push.shouldShowIndicator else {
+            super.setSelected(selected, animated: animated)
+            return
+        }
+        super.setSelected(false, animated: false)
+    }
     
     
     public override func prepareForReuse() {
@@ -340,6 +373,7 @@ final public class PushValueCell: UITableViewCell {
         primaryTextLabel.text = nil
         secondaryTextLabel.text = nil
         indicatorView.image = nil
+        loadingView.stopAnimating()
     }
     
     
