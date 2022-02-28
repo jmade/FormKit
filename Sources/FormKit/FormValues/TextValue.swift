@@ -552,7 +552,7 @@ public final class TextCell: UITableViewCell, Activatable {
                         UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction))
                     )
                     
-                    barItems.append(.Flexible())
+                    barItems.append(.flexible)
                     
                     barItems.append(
                         UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
@@ -563,7 +563,7 @@ public final class TextCell: UITableViewCell, Activatable {
                 
                 if textValue.characterCount != nil {
                     barItems.append(characterCountBarItem)
-                    barItems.append(.Flexible())
+                    barItems.append(.flexible)
                 }
                             
                 let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: 44.0)))
@@ -588,11 +588,11 @@ public final class TextCell: UITableViewCell, Activatable {
                 )
             }
             
-            barItems.append(.Flexible())
+            barItems.append(.flexible)
             
             if textValue.characterCount != nil {
                 barItems.append(characterCountBarItem)
-                barItems.append(.Flexible())
+                barItems.append(.flexible)
             }
             
             barItems.append(

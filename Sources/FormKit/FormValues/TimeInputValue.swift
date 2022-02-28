@@ -753,7 +753,7 @@ public final class TimeInputCell: UITableViewCell, Activatable {
             let previous = UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction))
             let next = UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction))
             let done = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
-            bar.items = [previous,next,.Flexible(),exp,.Flexible(),done]
+            bar.items = [previous,next,.flexible,exp,.flexible,done]
             
             bar.sizeToFit()
             textField.inputAccessoryView = bar
