@@ -100,7 +100,7 @@ public struct ListSelectionValue {
     public var listItemSelection: ListItemSelectionClosure?
     public var valueChangeClosure: ListSelectValueChangeClosure?
     public var storageValue:Codable?
-    
+    public var allowSelectAll: Bool = true
     
     public struct WriteInConfiguration {
         
@@ -668,6 +668,60 @@ extension ListSelectionValue {
         newValue.writeInConfiguration = self.writeInConfiguration
         return newValue
             
+    }
+    
+}
+
+
+extension ListSelectionValue {
+    
+    var isAllSelected: Bool {
+        if values.isEmpty {
+            return listItems.count == selectedIndicies.count
+        } else {
+            return values.count == selectedIndicies.count
+        }
+    }
+    
+    
+    public func newWithAllSelected() -> ListSelectionValue {
+        
+        var newSelectedIndicies:[Int] = Array(listItems.indices)
+        
+        var newItems:[ListItem] = []
+        for item in self.listItems {
+            var selected = item
+            selected.selected = true
+            newItems.append(
+                selected
+            )
+        }
+        
+        if newSelectedIndicies.isEmpty {
+            newSelectedIndicies = Array(values.indices)
+        }
+        
+        var newValue = ListSelectionValue(
+            selectionType: self.selectionType,
+            values: self.values,
+            selectedIndicies: newSelectedIndicies,
+            title: self.title,
+            selectionMessage: self.selectionMessage,
+            color: self.color,
+            valueIdentifiers: self.valueIdentifiers,
+            loading: self.loading,
+            loadingClosure: self.loadingClosure,
+            generationClosure: self.generationClosure,
+            customKey: self.customKey,
+            uuid: UUID().uuidString
+        )
+        
+        newValue.listItems = newItems
+        newValue.underlyingObjects = self.underlyingObjects
+        newValue.listItemSelection = self.listItemSelection
+        newValue.valueChangeClosure = self.valueChangeClosure
+        newValue.writeInConfiguration = self.writeInConfiguration
+        return newValue
     }
     
 }

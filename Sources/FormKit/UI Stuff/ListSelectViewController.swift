@@ -427,7 +427,6 @@ public final class ListSelectViewController: UITableViewController {
         super.init(style: listSelectValue.makeDescriptor().tableViewStyle)
         tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
         tableView.register(WriteInCell.self, forCellReuseIdentifier: WriteInCell.ReuseID)
-        
         tableView.register(TextCell.self, forCellReuseIdentifier: TextCell.ReuseID)
         
         self.title = listSelectValue.title
@@ -435,6 +434,54 @@ public final class ListSelectViewController: UITableViewController {
         self.sectionTitles = [listSelectValue.selectionTitle]
         self.formIndexPath = path
         self._formValue = listSelectValue
+        
+        if allowsMultipleSelection {
+            if listSelectValue.allowSelectAll {
+                if listSelectValue.isAllSelected {
+                    navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Deselect All", style: UIBarButtonItem.Style.plain, target: self, action: #selector(handleDeSelectAllTapped))
+                } else {
+                    navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Select All", style: UIBarButtonItem.Style.plain, target: self, action: #selector(handleSelectAllTapped))
+                }
+            }
+        }
+        
+    }
+    
+    @objc
+    private func handleSelectAllTapped() {
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Deselect All", style: UIBarButtonItem.Style.plain, target: self, action: #selector(handleDeSelectAllTapped))
+        performSelectAll()
+    }
+    
+    private func performSelectAll() {
+        guard let formValue = formValue else {
+            return
+        }
+        
+        let newValue = formValue.newWithAllSelected()
+        self._formValue = newValue
+        completeDataSource = newValue.listItems
+        handleNewDataSource(newValue.listItems)
+        crawlDelegate(newValue, false)
+    }
+    
+    private func performDeSelectAll() {
+        guard let formValue = formValue else {
+            return
+        }
+        
+        let newValue = formValue.newWithoutSelection()
+        self._formValue = newValue
+        completeDataSource = newValue.listItems
+        handleNewDataSource(newValue.listItems)
+        crawlDelegate(newValue, false)
+    }
+    
+    
+    @objc
+    private func handleDeSelectAllTapped() {
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Select All", style: UIBarButtonItem.Style.plain, target: self, action: #selector(handleSelectAllTapped))
+        performDeSelectAll()
     }
     
     
@@ -665,10 +712,6 @@ public final class ListSelectViewController: UITableViewController {
     // MARK: - TableView functions -
     public override func numberOfSections(in tableView: UITableView) -> Int {
         return numberOfSections
-        //return allowsWriteIn ? 2 : 1
-        
-        //return 1
-        //return dataSource.isEmpty ? 0 : sectionTitles.count
     }
     
     
@@ -976,7 +1019,7 @@ public final class ListSelectViewController: UITableViewController {
     
 
     
-    private func crawlDelegate(_ new:ListSelectionValue) {
+    private func crawlDelegate(_ new:ListSelectionValue,_ pop:Bool = true) {
         
         if let nav = navigationController {
             
@@ -1012,8 +1055,10 @@ public final class ListSelectViewController: UITableViewController {
                                         
                                         form.tableView.reloadRows(at: [path], with: .fade)
                                     }
+                                    if pop {
+                                        performPop()
+                                    }
                                     
-                                    performPop()
                                 }
                                 
                                 /*
@@ -1331,6 +1376,28 @@ extension ListSelectViewController: UISearchControllerDelegate, UISearchBarDeleg
         
         
     }
+    
+    
+    private func handleNewDataSource(_ newDataSource: [SelectionRow]) {
+        if allowsWriteIn {
+            switch writeInStyle {
+            case .topSection:
+                self.dataSource = newDataSource
+                tableView.reloadSections(IndexSet(integer: 1), with: .fade)
+            case .firstRow:
+                let new:[ListItem] = [[self.writeInListItem].compactMap({ $0 }),newDataSource].reduce([],+)
+                self.dataSource = new
+                tableView.reloadSections(.zero, with: .fade)
+            case .bottomSection:
+                self.dataSource = newDataSource
+                tableView.reloadSections(.zero, with: .fade)
+            }
+        } else {
+            self.dataSource = newDataSource
+            tableView.reloadSections(.zero, with: .fade)
+        }
+    }
+    
 
     
     
