@@ -2465,7 +2465,7 @@ extension FormController: UpdateFormValueDelegate {
 extension FormController {
     
     public func performLiveUpdates(_ stopAnimation:Bool = false) {
-        print("[FormKit] (performLiveUpdates) stopAnimation: \(stopAnimation)")
+        //print("[FormKit] (performLiveUpdates) stopAnimation: \(stopAnimation)")
         DispatchQueue.main.async(execute: { [weak self] in
             guard let self = self else { return }
             
@@ -2476,7 +2476,6 @@ extension FormController {
                 self.tableView.endUpdates()
                 
                 let scrollTo = self.tableView.contentSize.height - self.tableView.frame.size.height
-                print(" scrollTo -> \(scrollTo) ")
                 self.tableView.setContentOffset(CGPoint(x: 0, y: scrollTo), animated: false)
                 
                 UIView.setAnimationsEnabled(true)

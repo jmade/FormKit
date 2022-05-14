@@ -16,7 +16,7 @@ public typealias ListItemSelectionClosure = (ListItem,UINavigationController?) -
 public typealias ListSelectValueChangeClosure = ( (ListSelectionValue,FormController,IndexPath) -> Void )
 
  
-
+public typealias ItemStore = ListSelectionValue.ListItemStore
 
 // MARK: - ListSelectionValue -
 public struct ListSelectionValue {
@@ -75,6 +75,8 @@ public struct ListSelectionValue {
     }
     
     
+   // (ListSelectionValue) -> 
+    
     
     public enum SelectionType { case single, multiple }
     public var selectionType: SelectionType
@@ -116,8 +118,12 @@ public struct ListSelectionValue {
     }
     public var writeInConfiguration: WriteInConfiguration?
     
-    //public var allowsWriteIn:Bool = false
-    //public var preventValueUpdate:Bool = false // if true, the selected value wont appear. rare use case.
+    public struct ListItemStore {
+        var key:String
+        var listItems:[ListSelectViewController.ListItem]
+    }
+    
+    public var listItemStores: [ListItemStore] = []
     
 }
 
@@ -226,6 +232,16 @@ extension ListSelectionValue {
 }
 
 
+extension ListSelectionValue.ListItemStore {
+    
+    public init(_ key:String,_ listItems:[ListItem]) {
+        self.key = key
+        self.listItems = listItems
+    }
+    
+}
+
+
 
 extension ListSelectionValue {
     
@@ -243,8 +259,6 @@ extension ListSelectionValue {
                 self.color = color
             }
         }
-        
-        
     }
     
     /// Single Selection
@@ -431,7 +445,6 @@ extension ListSelectionValue {
         
     }
     
-    
     public init(_ title:String,_ customKey:String? = nil,_ listItems:[ListSelectViewController.ListItem],_ underlyingObjects:[Any]) {
         self.values = []
         self.selectedIndicies = []
@@ -461,6 +474,22 @@ extension ListSelectionValue {
         self.writeInConfiguration = writeInConfig
     }
     
+    
+    public init(_ title:String,_ customKey:String, listItemsStores:[ListItemStore],_ selectionType: SelectionType = .multiple) {
+        self.values = []
+        self.selectedIndicies = []
+        self.title = title
+        self.selectionMessage = "Select a Value"
+        self.selectionType = selectionType
+        self.loadingClosure = nil
+        self.color = nil
+        self.loading = nil
+        self.listItems = listItemsStores.first?.listItems ?? []
+        self.customKey = customKey
+        self.underlyingObjects = []
+        self.listItemStores = listItemsStores
+    }
+    
 }
 
 
@@ -478,7 +507,7 @@ extension ListSelectionValue {
                 if values.count > idx {
                     return values[idx]
                 } else {
-                    return "-"
+                    return ""
                 }
             } else {
                 if let value = selectedValue {
@@ -487,6 +516,12 @@ extension ListSelectionValue {
                 return ""
             }
         case .multiple:
+            if selectedIndicies.isEmpty {
+                return ""
+            }
+            if selectedIndicies.count == listItems.count {
+                return "All \(selectedIndicies.count) Selected"
+            }
             return "\(selectedIndicies.count) Selected"
         }
     }
@@ -516,16 +551,26 @@ extension ListSelectionValue: FormValue {
         .listSelection(self)
     }
     
-    
     public var selectedValue:String? {
-        listItems.filter({ $0.selected }).first?.title
+        
+        if let firstItemStore = listItemStores.first {
+            return firstItemStore.listItems.filter({ $0.selected }).first?.title
+        }
+        return listItems.filter({ $0.selected }).first?.title
+        
     }
+    
     
     private var selectedIdentifier:String? {
-        listItems.filter({ $0.selected }).first?.identifier
+        if let firstItemStore = listItemStores.first {
+            return firstItemStore.listItems.filter({ $0.selected }).first?.identifier
+        }
+        return listItems.filter({ $0.selected }).first?.identifier
     }
     
+    
     private var encodedSelectedValue:String? {
+        
         if let id = selectedIdentifier {
             return id
         }
@@ -539,16 +584,30 @@ extension ListSelectionValue: FormValue {
     
     
     private var encodedSelectedValues:String? {
-        let identifiers = listItems.filter({ $0.selected }).compactMap({ $0.identifier })
-        if identifiers.isEmpty {
-            let titles = listItems.filter({ $0.selected }).map({ $0.title })
-            if titles.isEmpty {
-                return nil
+        if let firstItemStore = listItemStores.first {
+            let identifiers = firstItemStore.listItems.filter({ $0.selected }).compactMap({ $0.identifier })
+            if identifiers.isEmpty {
+                let titles = firstItemStore.listItems.filter({ $0.selected }).map({ $0.title })
+                if titles.isEmpty {
+                    return nil
+                } else {
+                    return titles.joined(separator: ",")
+                }
             } else {
-                return titles.joined(separator: ",")
+                return identifiers.joined(separator: ",")
             }
         } else {
-            return identifiers.joined(separator: ",")
+            let identifiers = listItems.filter({ $0.selected }).compactMap({ $0.identifier })
+            if identifiers.isEmpty {
+                let titles = listItems.filter({ $0.selected }).map({ $0.title })
+                if titles.isEmpty {
+                    return nil
+                } else {
+                    return titles.joined(separator: ",")
+                }
+            } else {
+                return identifiers.joined(separator: ",")
+            }
         }
     }
     
@@ -612,6 +671,7 @@ extension ListSelectionValue {
         new.listItemSelection = self.listItemSelection
         new.valueChangeClosure = self.valueChangeClosure
         new.writeInConfiguration = self.writeInConfiguration
+        new.listItemStores = self.listItemStores.map({ $0.newWithSelectedIndicies(newSelectedIndicies) })
         return new
     }
 
@@ -622,16 +682,22 @@ extension ListSelectionValue {
         var newSelectedIndicies: [Int] = []
         var newMatchingStringValues:[String] = []
         
-        
         for (i,listItem) in listItems.enumerated() {
             if listItem.selected {
                 newSelectedIndicies.append(i)
                 newMatchingStringValues.append(listItem.identifier ?? "!?")
             }
         }
-               
-        let newValues = listItems.map({ $0.title })
-        let newIdentifiers = listItems.compactMap({ $0.identifier })
+        
+        let newListItemStores = self.listItemStores.map({ $0.newWithSelectedIndicies(newSelectedIndicies) })
+        
+        if let firstItemStore = newListItemStores.first {
+            newMatchingStringValues = firstItemStore.listItems.filter({ $0.selected }).map({ $0.identifier ?? "!?" })
+        }
+        
+        
+        let newValues = newListItemStores.first?.listItems.map({ $0.title }) ?? listItems.map({ $0.title })
+        let newIdentifiers = newListItemStores.first?.listItems.compactMap({ $0.identifier }) ?? listItems.compactMap({ $0.identifier })
        
         var newLoading:Loading? = nil
         if let currentLoading = self.loading {
@@ -661,16 +727,60 @@ extension ListSelectionValue {
                 uuid: UUID().uuidString
         )
         
-        newValue.listItems = listItems
+        newValue.listItems = newListItemStores.first?.listItems ?? listItems
         newValue.underlyingObjects = self.underlyingObjects
         newValue.listItemSelection = self.listItemSelection
         newValue.valueChangeClosure = self.valueChangeClosure
         newValue.writeInConfiguration = self.writeInConfiguration
+        newValue.listItemStores = newListItemStores
         return newValue
             
     }
     
 }
+
+
+extension ListSelectionValue.ListItemStore {
+     
+    public func newWithSelectedIndicies(_ indicies:[Int]) -> ListSelectionValue.ListItemStore {
+        var newItems:[ListItem] = []
+        for (i,item) in self.listItems.enumerated() {
+            var newItem = item
+            newItem.selected = indicies.contains(i)
+            newItems.append(
+                newItem
+            )
+        }
+        return .init(self.key, newItems)
+    }
+    
+    public func newWithAllSelected() -> ListSelectionValue.ListItemStore {
+        var newItems:[ListItem] = []
+        for item in self.listItems {
+            var newItem = item
+            newItem.selected = true
+            newItems.append(
+                newItem
+            )
+        }
+        return .init(self.key, newItems)
+    }
+    
+    public func newWithAllDeselected() -> ListSelectionValue.ListItemStore {
+        var newItems:[ListItem] = []
+        for item in self.listItems {
+            var newItem = item
+            newItem.selected = false
+            newItems.append(
+                newItem
+            )
+        }
+        return .init(self.key, newItems)
+    }
+    
+}
+
+
 
 
 extension ListSelectionValue {
@@ -721,6 +831,7 @@ extension ListSelectionValue {
         newValue.listItemSelection = self.listItemSelection
         newValue.valueChangeClosure = self.valueChangeClosure
         newValue.writeInConfiguration = self.writeInConfiguration
+        newValue.listItemStores = self.listItemStores.map({ $0.newWithAllSelected() })
         return newValue
     }
     
@@ -760,12 +871,14 @@ extension ListSelectionValue {
         newValue.listItemSelection = self.listItemSelection
         newValue.valueChangeClosure = self.valueChangeClosure
         newValue.writeInConfiguration = self.writeInConfiguration
+        newValue.listItemStores = self.listItemStores.map({ $0.newWithAllDeselected() })
         return newValue
     }
     
     
     
     public func newWith(_ listItems:[ListSelectViewController.ListItem],_ underlyingObjects:[Any]) -> ListSelectionValue  {
+        
         
           var screenedListItems = listItems
           var newSelectedIndicies: [Int] = []
@@ -819,21 +932,17 @@ extension ListSelectionValue {
                   uuid: UUID().uuidString
           )
           
-          newValue.listItems = screenedListItems
+        newValue.listItems = screenedListItems
         newValue.underlyingObjects = underlyingObjects
         newValue.listItemSelection = self.listItemSelection
         newValue.valueChangeClosure = self.valueChangeClosure
         newValue.writeInConfiguration = self.writeInConfiguration
-        //newValue.allowsWriteIn = self.allowsWriteIn
-        //newValue.preventValueUpdate = self.preventValueUpdate
+        newValue.listItemStores = self.listItemStores.map({ $0.newWithSelectedIndicies(newSelectedIndicies) })
           return newValue
               
       }
     
 }
-
-
-
 
 
 // MARK: - FormValueDisplayable -

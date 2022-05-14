@@ -262,7 +262,6 @@ public final class ListSelectViewController: UITableViewController {
         return _formValue?.writeInConfiguration?.textValue
     }
     
-    
     private lazy var textV:TextValue = {
         
         if let loaded = loadedTextValue {
@@ -284,7 +283,6 @@ public final class ListSelectViewController: UITableViewController {
                 return value
             }
         }
-        
         
         var tv = TextValue("", "✍🏻", "Custom")
         tv.inputConfiguration = TextValue.InputConfiguration(false, false, .done, { [weak self] in
@@ -313,10 +311,6 @@ public final class ListSelectViewController: UITableViewController {
         }
         return .firstRow
     }
-    
-
-    
-    //private var writeInStyle:WriteInStyle = .topSection
     
     
     private var preventValueUpdate:Bool {
@@ -419,6 +413,8 @@ public final class ListSelectViewController: UITableViewController {
     var isSeachBarAnimationCompleted: Bool = false
     private var setupWasCalled:Bool = false
     
+    
+    
     // MARK: - Init -
     required init?(coder aDecoder: NSCoder) {fatalError()}
 
@@ -428,6 +424,13 @@ public final class ListSelectViewController: UITableViewController {
         tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
         tableView.register(WriteInCell.self, forCellReuseIdentifier: WriteInCell.ReuseID)
         tableView.register(TextCell.self, forCellReuseIdentifier: TextCell.ReuseID)
+        tableView.register(FormHeaderCell.self, forHeaderFooterViewReuseIdentifier: FormHeaderCell.identifier)
+        
+        
+        if #available(iOS 15.0, *) {
+            tableView.sectionHeaderTopPadding = 0
+        }
+        
         
         self.title = listSelectValue.title
         self.allowsMultipleSelection = listSelectValue.selectionType == .multiple
@@ -526,8 +529,6 @@ public final class ListSelectViewController: UITableViewController {
             return
         }
         
-        print("Value: \(t.value)")
-        
         var writeItem = ListItem(t.value)
         writeItem.selected = true
         
@@ -549,9 +550,7 @@ public final class ListSelectViewController: UITableViewController {
                 )
             )
         }
-        
-        
-        print("Return Presed!")
+
     }
     
     
@@ -659,7 +658,16 @@ public final class ListSelectViewController: UITableViewController {
     
     private func firstSectionTitle() -> String? {
         if allowsMultipleSelection {
-            return "\(dataSource.filter({ $0.selected }).count) Selected".uppercased()
+            let count = completeDataSource.filter({ $0.selected }).count
+            if count == 0 {
+                return "0 SELECTED"
+            } else {
+                if count == completeDataSource.count {
+                    return "All \(completeDataSource.filter({ $0.selected }).count) Selected".uppercased()
+                } else {
+                    return "\(completeDataSource.filter({ $0.selected }).count) Selected".uppercased()
+                }
+            }
         } else {
             return sectionTitles.first?.uppercased()
         }
@@ -673,7 +681,7 @@ public final class ListSelectViewController: UITableViewController {
           setUnformatedData(existingData)
       }
       
-/// ***
+    /// ***
       public func setUnformatedData(_ unformated: ([String],[Int])) {
           DispatchQueue.main.async(execute: { [weak self] in
               self?.unformatedData = unformated
@@ -711,11 +719,18 @@ public final class ListSelectViewController: UITableViewController {
 
     // MARK: - TableView functions -
     public override func numberOfSections(in tableView: UITableView) -> Int {
-        return numberOfSections
+        numberOfSections
     }
     
     
-    public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+    private func headerValue() -> HeaderValue {
+        let section = allowsWriteIn ? 1 : 0
+        var headerValue = HeaderValue(title: "", section: section)
+        headerValue.subtitle = headerTitleForSection(section)
+        return headerValue
+    }
+    
+    private func headerTitleForSection(_ section: Int) -> String? {
         if allowsWriteIn {
             switch writeInStyle {
             case .topSection:
@@ -770,6 +785,16 @@ public final class ListSelectViewController: UITableViewController {
         }
     }
     
+    
+    public override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        
+        if let headerCell = tableView.dequeueReusableHeaderFooterView(withIdentifier: FormHeaderCell.identifier) as? FormHeaderCell {
+            headerCell.configureView(headerValue())
+            return headerCell
+        }
+        
+        return nil
+    }
     
     public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if allowsWriteIn {
@@ -888,7 +913,10 @@ public final class ListSelectViewController: UITableViewController {
         }
         
         tableView.beginUpdates()
-        tableView.headerView(forSection: allowsWriteIn ? 1 : 0)?.textLabel?.text = firstSectionTitle()
+        //tableView.headerView(forSection: allowsWriteIn ? 1 : 0)?.textLabel?.text = firstSectionTitle()
+        if let headerCell = tableView.headerView(forSection: allowsWriteIn ? 1 : 0) as? FormHeaderCell {
+            headerCell.headerValue = headerValue()
+        }
         tableView.endUpdates()
     }
     
@@ -1012,7 +1040,13 @@ public final class ListSelectViewController: UITableViewController {
         }
         
         tableView.beginUpdates()
-        tableView.headerView(forSection: allowsWriteIn ? 1 : 0)?.textLabel?.text = firstSectionTitle()
+        
+        //tableView.headerView(forSection: allowsWriteIn ? 1 : 0)?.textLabel?.text = firstSectionTitle()
+        
+        if let headerCell = tableView.headerView(forSection: allowsWriteIn ? 1 : 0) as? FormHeaderCell {
+            headerCell.headerValue = headerValue()
+        }
+        
         tableView.endUpdates()
     }
     
@@ -1265,7 +1299,7 @@ extension ListSelectViewController: UpdateFormValueDelegate {
     }
     
     public func toggleTo(_ direction:Direction,_ from:IndexPath) {
-        
+        /* Intentionally left blank  */
     }
     
 }
@@ -1275,8 +1309,13 @@ extension ListSelectViewController: UpdateFormValueDelegate {
 extension ListSelectViewController: UISearchControllerDelegate, UISearchBarDelegate {
     
     public func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-        handleSearchQuery("")
+        if searchBar.selectedScopeButtonIndex != 0 {
+            useListItemsStoreAt(0,"")
+        } else {
+            handleSearchQuery("")
+        }
     }
+    
     
     private func setupSearch() {
         
@@ -1287,6 +1326,17 @@ extension ListSelectViewController: UISearchControllerDelegate, UISearchBarDeleg
         searchController.searchBar.autocorrectionType = .no
         searchController.dimsBackgroundDuringPresentation = false
         searchController.searchBar.delegate = self
+        
+        
+        if let listSelect = formValue {
+            if !listSelect.listItemStores.isEmpty {
+                if #available(iOS 13.0, *) {
+                    searchController.automaticallyShowsScopeBar = true
+                }
+                searchController.searchBar.scopeButtonTitles = listSelect.listItemStores.map({ $0.key })
+            }
+        }
+        
         self.navigationItem.searchController = searchController
         
         // Make the search bar always visible.
@@ -1369,11 +1419,6 @@ extension ListSelectViewController: UISearchControllerDelegate, UISearchBarDeleg
             )
             
         }
-    
-        
-        
-        
-        
         
     }
     
@@ -1421,10 +1466,40 @@ extension ListSelectViewController: UISearchControllerDelegate, UISearchBarDeleg
 // MARK: - UISearchResultsUpdating -
 extension ListSelectViewController: UISearchResultsUpdating {
     
+  
+    
     public func updateSearchResults(for searchController: UISearchController) {
         if let text = searchController.searchBar.text {
             handleSearchQuery(text)
         }
+    }
+    
+    
+    public func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
+        useListItemsStoreAt(selectedScope,searchBar.text)
+    }
+    
+}
+
+
+extension ListSelectViewController {
+    
+    private func useListItemsStoreAt(_ index:Int,_ searchText:String?) {
+        
+        guard let listSelect = formValue else { return }
+        
+        guard listSelect.listItemStores.count >= index else {
+            print("No `listItemStore` found at index: \(index)")
+            return
+        }
+        
+        var newItems = listSelect.listItemStores[index].listItems
+        for (i,value) in completeDataSource.enumerated() {
+            newItems[i].selected = value.selected
+        }
+        
+        completeDataSource = newItems
+        handleSearchQuery(searchText ?? "")
     }
     
 }
