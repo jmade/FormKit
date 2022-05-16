@@ -495,10 +495,10 @@ extension ListSelectionValue {
         self.loadingClosure = nil
         self.color = nil
         self.loading = nil
-        self.listItems = listItemsStores.first?.listItems ?? []
+        self.listItems = itemStores.first?.listItems ?? []
         self.customKey = customKey
         self.underlyingObjects = []
-        self.listItemStores = listItemsStores
+        self.listItemStores = itemStores
     }
     
 }
