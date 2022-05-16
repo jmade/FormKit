@@ -426,7 +426,7 @@ public final class ListSelectViewController: UITableViewController {
         self.view.addSubview(label)
         
         NSLayoutConstraint.activate([
-            label.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor, constant: 52),
+            label.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor, constant: 68),
             label.centerXAnchor.constraint(equalTo: view.centerXAnchor)
         ])
         return label
