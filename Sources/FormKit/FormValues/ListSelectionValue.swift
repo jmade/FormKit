@@ -144,6 +144,17 @@ extension ListSelectionValue {
         return false
     }
     
+    
+    public var qualifiesForScopeTitles: Bool {
+        guard let firstStore = listItemStores.first else {
+            return false
+        }
+        
+        let count = firstStore.listItems.count
+        
+        return listItemStores.map({ $0.listItems.count == count }).allSatisfy({ $0 == true })
+    }
+    
 }
 
 
@@ -475,12 +486,12 @@ extension ListSelectionValue {
     }
     
     
-    public init(_ title:String,_ customKey:String, listItemsStores:[ListItemStore],_ selectionType: SelectionType = .multiple) {
+    public init(_ title:String,_ customKey:String, itemStores:[ListItemStore]) {
         self.values = []
         self.selectedIndicies = []
         self.title = title
         self.selectionMessage = "Select a Value"
-        self.selectionType = selectionType
+        self.selectionType = .single
         self.loadingClosure = nil
         self.color = nil
         self.loading = nil

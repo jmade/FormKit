@@ -332,7 +332,11 @@ public final class ListSelectViewController: UITableViewController {
     
     private var completeDataSource:[SelectionRow] = []
     
-    private var dataSource: [SelectionRow] = []
+    private var dataSource: [SelectionRow] = [] {
+        didSet {
+            //handleSearchPlaceholder()
+        }
+    }
     
     public var allowDismissal:Bool = true {
         didSet {
@@ -403,7 +407,7 @@ public final class ListSelectViewController: UITableViewController {
     
     // MARK: - Searching -
     private var searchEnabled = true
-    private var searchTextField: SearchTextField? = nil
+    //private var searchTextField: UISearchTextField? = nil
     
     /// ***
     private var listSearchTable:ListSearchTable? = nil
@@ -412,6 +416,43 @@ public final class ListSelectViewController: UITableViewController {
     
     var isSeachBarAnimationCompleted: Bool = false
     private var setupWasCalled:Bool = false
+    
+    private lazy var displayLabel:UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textAlignment = .center
+        label.font = .preferredFont(forTextStyle: .headline)
+        label.text = "No Results found"
+        self.view.addSubview(label)
+        
+        NSLayoutConstraint.activate([
+            label.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor, constant: 52),
+            label.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+        ])
+        return label
+    }()
+
+    public var displayMessage:String? {
+        didSet {
+            if let displayMessage = displayMessage {
+                if displayLabel.alpha.isZero {
+                    displayLabel.text = displayMessage
+                    UIViewPropertyAnimator(duration: 1/3, curve: .easeIn) { [unowned self] in
+                        self.displayLabel.alpha = 1.0
+                    }.startAnimation()
+                } else {
+                    UIViewPropertyAnimator(duration: 1/3, curve: .easeIn) { [unowned self] in
+                        self.displayLabel.text = displayMessage
+                    }.startAnimation()
+                }
+            } else {
+                UIViewPropertyAnimator(duration: 1/3, curve: .easeIn) { [unowned self] in
+                    self.displayLabel.text = nil
+                    self.displayLabel.alpha = 0.0
+                }.startAnimation()
+            }
+        }
+    }
     
     
     
@@ -507,6 +548,22 @@ public final class ListSelectViewController: UITableViewController {
         
     }
     
+    private func handleSearchPlaceholder() {
+        if #available(iOS 13.0, *) {
+            if let searchController = self.navigationItem.searchController {
+                guard dataSource.isEmpty else {
+                    if dataSource.count == 1 {
+                        searchController.searchBar.searchTextField.placeholder = "Search \(dataSource.count)"
+                    } else {
+                        searchController.searchBar.searchTextField.placeholder = "Search \(dataSource.count)"
+                    }
+                    return
+                }
+                searchController.searchBar.searchTextField.placeholder = "Search"
+            }
+        }
+    }
+    
     
     // MARK: - Loading -
     
@@ -556,6 +613,8 @@ public final class ListSelectViewController: UITableViewController {
     
     private func setup() {
         setupWasCalled = true
+        
+        displayLabel.alpha = 0
         
         /*
         if navigationItem.largeTitleDisplayMode != .never {
@@ -1329,7 +1388,8 @@ extension ListSelectViewController: UISearchControllerDelegate, UISearchBarDeleg
         
         
         if let listSelect = formValue {
-            if !listSelect.listItemStores.isEmpty {
+            
+            if listSelect.qualifiesForScopeTitles {
                 if #available(iOS 13.0, *) {
                     searchController.automaticallyShowsScopeBar = true
                 }
@@ -1420,6 +1480,8 @@ extension ListSelectViewController: UISearchControllerDelegate, UISearchBarDeleg
             
         }
         
+        
+        displayMessage = dataSource.isEmpty ? "No Results Found" : nil
     }
     
     
@@ -1489,14 +1551,21 @@ extension ListSelectViewController {
         guard let listSelect = formValue else { return }
         
         guard listSelect.listItemStores.count >= index else {
-            print("No `listItemStore` found at index: \(index)")
+            print("[FormKit](ListSelectViewController) No `listItemStore` found at index: \(index)")
             return
         }
         
         var newItems = listSelect.listItemStores[index].listItems
-        for (i,value) in completeDataSource.enumerated() {
-            newItems[i].selected = value.selected
+        
+        if !newItems.isEmpty {
+            for (i,value) in completeDataSource.enumerated() {
+                if newItems.count >= i {
+                    newItems[i].selected = value.selected
+                }
+            }
         }
+        
+        
         
         completeDataSource = newItems
         handleSearchQuery(searchText ?? "")
