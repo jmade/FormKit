@@ -285,9 +285,6 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     }
     
     
-    
-    
-    
     public var leadingBarItems:[BarItem] {
         barItems.filter({ $0.side == .leading })
     }
@@ -372,6 +369,9 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     private var footers:[FooterValue] {
         return dataSource.footerValues()
     }
+    
+    private var lastInvalidItems:[FormDataSource.InvalidItem] = []
+    
     
     private var defaultContentInsets = UIEdgeInsets(top: 0, left: 0, bottom: 30, right: 0)
     
@@ -776,11 +776,87 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     }
     
     
+    private func itemsToReload(new:[FormDataSource.InvalidItem]) -> [FormDataSource.InvalidItem] {
+        
+        var reload: [FormDataSource.InvalidItem] = []
+        
+        for oldItem in lastInvalidItems {
+            if new.containsItem(oldItem) == false {
+                // Item is now validated.
+                reload.append(oldItem)
+            }
+        }
+        
+        for newItem in new {
+            if lastInvalidItems.containsItem(newItem) == false {
+                // Item is newly invalid.
+                reload.append(newItem)
+            }
+        }
+        
+        lastInvalidItems = new
+        return reload
+        
+    }
+    
+    
     private func runValidation() {
+        guard validationClosure == nil else {
+            legacyValidation()
+            return
+        }
+        
+        // run modern validation here...
+        setLastSection(dataSource.isValid)
+        
+        //let reload = itemsToReload(new: dataSource.invalidItems)
+        
+        //let paths = reload.map({ $0.indexPath })
+        
+//        if !paths.isEmpty {
+//            UIView.setAnimationsEnabled(false)
+//            tableView.beginUpdates()
+//            tableView.reloadRows(at: paths, with: .none)
+//            tableView.endUpdates()
+//            UIView.setAnimationsEnabled(true)
+//        }
+        
+        
+        /*
+        if !dataSource.isValid {
+            print("\n**************")
+            dataSource.invalidItems.forEach({
+                print("Path: \($0.indexPath) • \($0.messages)")
+            })
+            print("**************\n")
+        }
+        */
+    }
+    
+    
+    private func legacyValidation() {
         if !dataSource.isEmpty {
             validationClosure?(dataSource,self)
         }
     }
+    
+    
+    private func setLastSection(_ enabled:Bool) {
+        if let lastSection = dataSource.lastSection {
+            let sectionIdx = dataSource.lastSectionIdx
+            for (i,formItem) in lastSection.rows.enumerated() {
+                if let actionValue = formItem.asActionValue() {
+                    updateActionValue(
+                        enabled ? actionValue.enabled() : actionValue.disabled(),
+                        at: IndexPath(row: i, section: sectionIdx)
+                    )
+                }
+            }
+        }
+    }
+    
+    
+    
     
     
     private func checkForActiveInput() {

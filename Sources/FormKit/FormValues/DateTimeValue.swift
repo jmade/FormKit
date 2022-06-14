@@ -52,6 +52,7 @@ public struct DateTimeValue {
     
     public var isValid = true
     public var highlightWhenSelected = false /// this is reffering to the value label.
+    public var validators: [Validator] = []
 }
 
 

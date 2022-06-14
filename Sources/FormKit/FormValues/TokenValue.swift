@@ -54,6 +54,7 @@ public struct TokenValue {
         case string, array
     }
     public var exportStyle:ExportStyle = .string
+    public var validators: [Validator] = []
     
 }
 

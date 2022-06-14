@@ -1,3 +1,4 @@
+
 import UIKit
 
 
@@ -26,10 +27,10 @@ public typealias TextFieldConfigurationClosure = ( (UITextField) -> Void )
 public struct TextValue {
     
     public enum Style {
-        case horizontal, vertical, horizontalDiscrete, writeIn
+        case horizontal, vertical, horizontalDiscrete, writeIn, modern
     }
     
-    public var characterSet = CharacterSet.noteValue /// Depercated 2/19/21; use `allowedChars`
+    public var characterSet = CharacterSet.noteValue /// Deprecated 2/19/21; use `allowedChars`
     
     /// TableSelectable
     public var isSelectable: Bool = false
@@ -51,6 +52,7 @@ public struct TextValue {
     public var allowedChars:String?
     
     public var inputConfiguration: InputConfiguration?
+    public var validationRules:[StringRule] = []
 }
 
 
@@ -244,6 +246,13 @@ extension TextValue: Hashable {
 
 extension TextValue: FormValue, TableViewSelectable {
     
+    public var validators: [Validator] {
+        [
+            Validator(title, self.value, rules: validationRules),
+        ]
+    }
+
+    
     public var formItem: FormItem {
         return FormItem.text(self)
     }
@@ -262,12 +271,13 @@ extension TextValue {
     func newWith(_ newValue:String) -> TextValue {
         
         var newValue = TextValue(characterSet: self.characterSet,
-                         isSelectable: self.isSelectable,
-                         customKey: self.customKey,
-                         title: self.title,
-                         value: newValue,
-                         style: self.style,
-                         useDirectionButtons: self.useDirectionButtons
+                                 isSelectable: self.isSelectable,
+                                 customKey: self.customKey,
+                                 title: self.title,
+                                 value: newValue,
+                                 style: self.style,
+                                 useDirectionButtons: self.useDirectionButtons,
+                                 validationRules: self.validationRules
         )
         newValue.placeholder = self.placeholder
         newValue.inputDescription = self.inputDescription
@@ -291,6 +301,7 @@ extension TextValue: FormValueDisplayable {
         cell.formValue = self
         cell.indexPath = path
         cell.updateFormValueDelegate = formController
+        cell.tableView = formController.tableView
     }
     
     public func didSelect(_ formController: Controller, _ path: IndexPath) {
@@ -325,6 +336,50 @@ extension TextValue {
 }
 
 
+fileprivate extension UIImageView {
+    
+    static func validationIconView(_ image:UIImage) -> UIImageView {
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentMode = .scaleAspectFit
+        imageView.tintColor = UIColor.FormKit.text
+        if #available(iOS 13.0, *) {
+            imageView.preferredSymbolConfiguration = .init(textStyle: .caption2, scale: .medium)
+        } else {
+            imageView.heightAnchor.constraint(lessThanOrEqualToConstant: UIFont.preferredFont(forTextStyle: .caption2).lineHeight).isActive = true
+        }
+        imageView.setContentHuggingPriority(.required, for: .horizontal)
+        imageView.setContentHuggingPriority(.required, for: .vertical)
+        imageView.image = image
+        return imageView
+    }
+    
+}
+
+fileprivate extension UILabel {
+    
+    static func validationLabel() -> UILabel {
+        
+        let label = UILabel()
+        label.textAlignment = .left
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        //label.font = UIFont.preferredFont(forTextStyle: .footnote)
+        label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .caption2).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+        
+        
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
+        label.textColor = .red
+        return label
+    }
+}
+
+
+
+
+
 
 
 // MARK: TextCell
@@ -335,11 +390,13 @@ public final class TextCell: UITableViewCell, Activatable {
     
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
     public lazy var indexPath: IndexPath? = nil
+    var tableView: UITableView?
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: .body)
         label.textAlignment = .left
+        label.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         return label
     }()
     
@@ -358,12 +415,27 @@ public final class TextCell: UITableViewCell, Activatable {
     
     private lazy var inputDescriptionLabel:UILabel = {
         let label = UILabel.inputDescription
-        contentView.addSubview(label)
-        label.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor).isActive = true
-        label.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor).isActive = true
-        label.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0).isActive = true
-        contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: label.bottomAnchor).isActive = true
         return label
+    }()
+    
+    private lazy var validationLabel:UILabel = {
+        let label = UILabel.inputDescription
+        label.textColor = .red
+        return label
+    }()
+    
+    private lazy var validationErrorView: ValidationErrorCellView = {
+        let view = ValidationErrorCellView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(view)
+        view.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor).isActive = true
+        view.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor).isActive = true
+        
+        
+        view.heightAnchor.constraint(greaterThanOrEqualToConstant: 22).isActive = true
+        view.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0).isActive = true
+        contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        return view
     }()
     
     
@@ -374,7 +446,6 @@ public final class TextCell: UITableViewCell, Activatable {
         label.font = UIFont.preferredFont(forTextStyle: .body)
         label.textAlignment = .left
         label.text  = ""
-        //contentView.addSubview(label)
         return label
     }()
     
@@ -385,11 +456,55 @@ public final class TextCell: UITableViewCell, Activatable {
     var formValue:TextValue? {
         didSet {
             if let textValue = formValue {
-                titleLabel.text = textValue.title
+                
+                if let titleText = titleLabel.text {
+                    if titleText != textValue.title {
+                        titleLabel.text = textValue.title
+                    }
+                } else {
+                    titleLabel.text = textValue.title
+                }
+                
+             
                 textValue.textConfigurationClosure(textField)
-                textField.text = textValue.value
-                textField.placeholder = textValue.placeholder
-                inputDescriptionLabel.text = textValue.inputDescription
+                
+                if let textFieldText = textField.text {
+                    if textFieldText != textValue.value {
+                        textField.text = textValue.value
+                    }
+                } else {
+                    textField.text = textValue.value
+                }
+                
+                if let placeholderValueText = textValue.placeholder {
+                    if let placeholderText = textField.placeholder {
+                        if placeholderText != placeholderValueText {
+                            textField.placeholder = placeholderValueText
+                        }
+                    } else {
+                        textField.placeholder = placeholderValueText
+                    }
+                } else {
+                    if textField.placeholder != nil {
+                        textField.placeholder = nil
+                    }
+                }
+                
+                if let inputDescriptionValueText = textValue.inputDescription {
+                    if let inputDescriptionText = inputDescriptionLabel.text {
+                        if inputDescriptionText != inputDescriptionValueText {
+                            inputDescriptionLabel.text = inputDescriptionValueText
+                        }
+                    } else {
+                        inputDescriptionLabel.text = inputDescriptionValueText
+                    }
+                } else {
+                    if inputDescriptionLabel.text != nil {
+                        inputDescriptionLabel.text = nil
+                    }
+                }
+     
+                
                 if let max = textValue.characterCount {
                     maxCharacterCount = max
                 }
@@ -402,25 +517,61 @@ public final class TextCell: UITableViewCell, Activatable {
                     self.selectionStyle = .none
                 }
                 
+               
+                if textValue.formItem.invalid {
+                    validationLabel.text = textValue.formItem.errorMessages.joined(separator: "\n")
+                    if validationLabel.isHidden == true {
+                        validationLabel.isHidden = false
+                    }
+                } else {
+                    validationLabel.text = nil
+                    if validationLabel.isHidden == false {
+                        validationLabel.isHidden = true
+                    }
+                }
+                
                 layout()
+                
             }
         }
     }
     
     private var didLayout:Bool = false
     
+    private var useContentStack: Bool = true
+    
+    private lazy var contentStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.distribution = .fillProportionally
+        stack.spacing = 2.0
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            stack.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: stack.bottomAnchor)
+        ])
+        return stack
+    }()
+    
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        [titleLabel,textField].forEach({
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview($0)
-        })
+        if useContentStack {
+        } else {
+            [titleLabel,textField,inputDescriptionLabel].forEach({
+                $0.translatesAutoresizingMaskIntoConstraints = false
+                contentView.addSubview($0)
+            })
+        }
         
         textField.delegate = self
         textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
     }
+    
     
     override public func prepareForReuse() {
         super.prepareForReuse()
@@ -430,7 +581,87 @@ public final class TextCell: UITableViewCell, Activatable {
         inputDescriptionLabel.text = nil
     }
     
-    func layout(){
+    func layout() {
+        if useContentStack {
+            contentStackLayout()
+        } else {
+            originalLayout()
+        }
+    }
+    
+    
+    private func makeValueStack(_ axis: NSLayoutConstraint.Axis) -> UIStackView {
+        let stack = UIStackView()
+        stack.axis = axis
+        stack.distribution = .fillProportionally
+        stack.spacing = 2.0
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
+    }
+    
+    func contentStackLayout() {
+        guard let textValue = formValue, didLayout == false else { return }
+        evaluateButtonBar()
+        
+        
+        
+        switch textValue.style {
+            
+        case .horizontal:
+            let stack = makeValueStack(.horizontal)
+            stack.addArrangedSubview(titleLabel)
+            stack.addArrangedSubview(textField)
+            contentStack.addArrangedSubview(stack)
+            
+            contentStack.addArrangedSubview(inputDescriptionLabel)
+            contentStack.addArrangedSubview(validationLabel)
+        case .vertical:
+            let stack = makeValueStack(.vertical)
+            stack.addArrangedSubview(titleLabel)
+            stack.addArrangedSubview(textField)
+            contentStack.addArrangedSubview(stack)
+            
+            contentStack.addArrangedSubview(inputDescriptionLabel)
+            contentStack.addArrangedSubview(validationLabel)
+        case .horizontalDiscrete:
+            textField.textAlignment = .right
+            textField.borderStyle = .none
+            textField.clearButtonMode = .never
+            
+            textField.font = UIFont.preferredFont(forTextStyle: .body)
+            textField.textColor = UIColor.FormKit.valueText
+            
+            let stack = makeValueStack(.horizontal)
+            stack.addArrangedSubview(titleLabel)
+            stack.addArrangedSubview(textField)
+            contentStack.addArrangedSubview(stack)
+            
+            contentStack.addArrangedSubview(inputDescriptionLabel)
+            contentStack.addArrangedSubview(validationLabel)
+        case .writeIn:
+            ()
+        case .modern:
+            textField.textAlignment = .right
+            textField.borderStyle = .none
+            textField.clearButtonMode = .never
+            
+            textField.font = UIFont.boldSystemFont(ofSize: 24)
+            textField.textColor = UIColor.FormKit.valueText
+            
+            let stack = makeValueStack(.horizontal)
+            stack.addArrangedSubview(titleLabel)
+            stack.addArrangedSubview(textField)
+            contentStack.addArrangedSubview(stack)
+            
+            contentStack.addArrangedSubview(inputDescriptionLabel)
+            contentStack.addArrangedSubview(validationLabel)
+        }
+        didLayout = true
+    }
+    
+    
+    func originalLayout(){
+        
         guard let textValue = formValue, didLayout == false else { return }
         
         evaluateButtonBar()
@@ -438,7 +669,7 @@ public final class TextCell: UITableViewCell, Activatable {
         
         switch textValue.style {
         case .horizontal:
-            
+            print("Layout Horizontal")
             activateDefaultHeightAnchorConstraint()
             
             NSLayoutConstraint.activate([
@@ -453,9 +684,13 @@ public final class TextCell: UITableViewCell, Activatable {
                 textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
                 textField.topAnchor.constraint(equalTo: titleLabel.topAnchor),
                 
+                inputDescriptionLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+                inputDescriptionLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+                inputDescriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0),
+                contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: inputDescriptionLabel.bottomAnchor),
                 
                 //textField.widthAnchor.constraint(equalTo: margin.widthAnchor, multiplier: 0.5),
-                margin.bottomAnchor.constraint(equalTo: textField.bottomAnchor),
+                //margin.bottomAnchor.constraint(equalTo: textField.bottomAnchor),
 
                 
                 ])
@@ -469,9 +704,15 @@ public final class TextCell: UITableViewCell, Activatable {
                 textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
                 textField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4.0),
                 //margin.bottomAnchor.constraint(equalTo: textField.bottomAnchor, constant: 4.0)
+                
+                inputDescriptionLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+                inputDescriptionLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+                inputDescriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0),
+                contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: inputDescriptionLabel.bottomAnchor),
+                
                 ])
         case .horizontalDiscrete:
-            
+            print("Horizontal Discrete!")
             activateDefaultHeightAnchorConstraint()
            
             
@@ -490,7 +731,7 @@ public final class TextCell: UITableViewCell, Activatable {
                 
                 
                 //textField.widthAnchor.constraint(equalTo: margin.widthAnchor, multiplier: 0.5),
-                margin.bottomAnchor.constraint(equalTo: textField.bottomAnchor),
+               // margin.bottomAnchor.constraint(equalTo: textField.bottomAnchor),
                 
                 /*
                 titleLabel.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
@@ -500,6 +741,12 @@ public final class TextCell: UITableViewCell, Activatable {
                 textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
                 textField.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 8.0),
                 */
+                
+                inputDescriptionLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+                inputDescriptionLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+                inputDescriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0),
+                contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: inputDescriptionLabel.bottomAnchor),
+                
             ])
             
             textField.textAlignment = .right
@@ -510,7 +757,8 @@ public final class TextCell: UITableViewCell, Activatable {
             
             //titleLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
             
-           
+        case .modern:
+            ()
         case .writeIn:
             activateDefaultHeightAnchorConstraint()
             
@@ -518,7 +766,7 @@ public final class TextCell: UITableViewCell, Activatable {
                 textField.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
                 textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
                 textField.topAnchor.constraint(equalTo: margin.topAnchor),
-                margin.bottomAnchor.constraint(equalTo: margin.bottomAnchor),
+                textField.bottomAnchor.constraint(equalTo: margin.bottomAnchor),
             ])
             
             titleLabel.text = nil
@@ -528,7 +776,9 @@ public final class TextCell: UITableViewCell, Activatable {
             textField.font = UIFont.preferredFont(forTextStyle: .body)
    
         }
-        titleLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+    
+        
+        //titleLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         didLayout = true
     }
     
@@ -608,6 +858,59 @@ public final class TextCell: UITableViewCell, Activatable {
     
     }
     
+    
+    private func sendTextToDelegate() {
+        
+        guard
+            let newText = textField.text,
+            let existingTextValue = formValue
+        else {
+            return
+        }
+        
+        if existingTextValue.characterCount != nil {
+            updateCharacterCount(newText.count)
+        }
+        
+        let newValue = existingTextValue.newWith(newText)
+        
+        let becameValid = existingTextValue.formItem.invalid && newValue.formItem.valid
+        let becameInValid = existingTextValue.formItem.valid && newValue.formItem.invalid
+        
+        let messageCountChanged = existingTextValue.formItem.errorMessages != newValue.formItem.errorMessages
+        let updateLayout = becameValid || becameInValid || messageCountChanged
+        
+        if updateLayout {
+            //UIView.setAnimationsEnabled(false)
+            self.tableView?.beginUpdates()
+            self.formValue = newValue
+            //updateValidation(newValue)
+            self.tableView?.endUpdates()
+            //UIView.setAnimationsEnabled(true)
+        }
+        
+        updateFormValueDelegate?.updatedFormValue(
+            newValue,
+            indexPath
+        )
+    }
+    
+    private func updateValidation(_ value:TextValue) {
+        if value.formItem.invalid {
+            validationLabel.text = value.formItem.errorMessages.joined(separator: "\n")
+            if validationLabel.isHidden == true {
+                validationLabel.isHidden = false
+            }
+        } else {
+            validationLabel.text = nil
+            if validationLabel.isHidden == false {
+                validationLabel.isHidden = true
+            }
+        }
+    }
+
+    
+    
     public func updateCharacterCount(_ count:Int) {
         characterCountLabel.text = "\(count)/\(maxCharacterCount)"
         if #available(iOS 13.0, *) {
@@ -646,7 +949,8 @@ public final class TextCell: UITableViewCell, Activatable {
             if textValue.characterCount != nil {
                 updateCharacterCount(text.count)
             }
-            updateFormValueDelegate?.updatedFormValue(textValue.newWith(text), indexPath)
+            sendTextToDelegate()
+            //updateFormValueDelegate?.updatedFormValue(textValue.newWith(text), indexPath)
         }
     }
     

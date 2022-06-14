@@ -31,13 +31,19 @@ extension ValueEncodable {
 public typealias FormEncodable = CustomKeyProvidable & ValueEncodable
 
 
+// MARK: - FormValidatable -
+public protocol FormValidatable {
+    var validators: [Validator] { get }
+}
+
+
 // MARK: - FormItemizable -
 public protocol FormItemizable {
     var formItem: FormItem { get }
 }
 
 // MARK: - FormValue -
-public typealias FormValue = FormItemizable & FormEncodable
+public typealias FormValue = FormItemizable & FormEncodable & FormValidatable
 
 
 public protocol TextNumericalInput {}

@@ -329,6 +329,19 @@ extension FormDataSource {
 
 extension FormDataSource {
     
+    public var displayParams:[String:String] {
+        var value:[ [String:String] ] = []
+        
+        for section in sections {
+            for row in section.rows {
+                value.append(row.displayValues)
+            }
+        }
+        
+        return value.merged()
+    }
+    
+    
     public var params:[String:String] {
         var value:[ [String:String] ] = []
         
@@ -434,13 +447,49 @@ extension FormDataSource {
         
         print(report)
     }
+
+    
+    public var isValid:Bool {
+        sections.allSatisfy({ $0.isValid })
+    }
     
     
+    public struct InvalidItem: Equatable {
+        var formItem:FormItem
+        var indexPath:IndexPath
+        var messages:[String]
+        
+        public static func == (lhs: InvalidItem, rhs: InvalidItem) -> Bool {
+            lhs.indexPath == rhs.indexPath && lhs.messages == rhs.messages
+        }
+
+    }
+    
+    public var invalidItems:[InvalidItem] {
+        var items:[InvalidItem] = []
+        for (sectionIdx,section) in sections.enumerated() {
+            for (rowIdx,row) in section.rows.enumerated() {
+                if row.invalid {
+                    items.append(
+                        InvalidItem(
+                            formItem: row,
+                            indexPath: IndexPath(row: rowIdx, section: sectionIdx),
+                            messages: row.errorMessages
+                        )
+                    )
+                }
+            }
+        }
+        return items
+    }
     
     
     public var isEmpty:Bool {
         return sections.isEmpty
     }
+    
+    
+    
     
 
     public func rowsForSection(_ section:Int) -> [FormItem] {
@@ -670,6 +719,9 @@ extension FormDataSource {
         return sections.last
     }
     
+    public var lastSectionIdx:Int {
+        return sections.count-1
+    }
     
     public func section(for index: Int) -> FormSection? {
         guard index >= 0, index < sections.endIndex else {

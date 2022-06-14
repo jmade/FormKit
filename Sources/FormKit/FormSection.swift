@@ -466,7 +466,24 @@ public extension FormSection {
     }
     
     
+    var isValid:Bool {
+        rows.allSatisfy({ $0.valid })
+    }
     
+    var invalidRowIndicies:[Int] {
+        var indicies:[Int] = []
+        for (i,r) in rows.enumerated() {
+            if r.invalid {
+                indicies.append(i)
+            }
+        }
+        return indicies
+    }
     
+    var validationErrors: [String] {
+        rows.map({ $0.errors }).map({
+            return $0.map({ $0.value }).reduce([],+)
+        }).reduce([],+)
+    }
     
 }

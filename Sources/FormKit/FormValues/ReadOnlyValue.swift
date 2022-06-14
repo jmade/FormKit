@@ -13,6 +13,7 @@ public struct ReadOnlyValue: Equatable, Hashable {
     public let value:String
     public var isDisabled:Bool = true
     public var customKey:String? = nil
+    public var validators: [Validator] = []
 }
 
 

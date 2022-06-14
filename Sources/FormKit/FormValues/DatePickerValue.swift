@@ -21,6 +21,8 @@ public struct DatePickerValue {
     public var isValid = true
     public var highlightWhenSelected = false
     
+    public var validators: [Validator] = []
+    
 }
 
 

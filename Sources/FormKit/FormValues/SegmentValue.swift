@@ -20,7 +20,7 @@ public struct SegmentValue: FormValue, TableViewSelectable {
     
     public typealias SegmentValueChangeClosure = ( (SegmentValue,FormController,IndexPath) -> Void )
     public var valueChangeClosure: SegmentValueChangeClosure? = nil
-    
+    public var validators: [Validator] = []
     
 }
 

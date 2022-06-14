@@ -23,6 +23,7 @@ public struct InputValue {
     public var placeholder:String? = nil
     public var useDirectionButtons:Bool = true
     public var textPattern:String? = nil
+    public var validators: [Validator] = []
 }
     
 

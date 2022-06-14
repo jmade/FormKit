@@ -6,6 +6,7 @@ public struct TimeValue: Equatable, Hashable {
     let title:String
     let time:String
     public var customKey:String? = "Time"
+    public var validators: [Validator] = []
 }
 
 

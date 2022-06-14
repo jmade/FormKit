@@ -29,6 +29,7 @@ public struct PushValue {
     public var style:Style = .standard
     public var cellAccessoryType: UITableViewCell.AccessoryType = .disclosureIndicator
     private var isLoading = false
+    public var validators: [Validator] = []
 }
 
 

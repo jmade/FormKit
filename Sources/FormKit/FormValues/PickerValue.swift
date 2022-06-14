@@ -18,6 +18,7 @@ public struct PickerValue: FormValue, Equatable, Hashable {
         self.values = values
         self.selectedIndex = selectedIndex
     }
+    public var validators: [Validator] = []
 }
 
 extension PickerValue: FormValueDisplayable {

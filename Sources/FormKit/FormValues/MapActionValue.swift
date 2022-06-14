@@ -11,6 +11,7 @@ public struct MapActionValue {
     var primary:String? = nil
     var secondary: String? = nil
     var mapValue:MapValue? = nil
+    public var validators: [Validator] = []
 }
 
 

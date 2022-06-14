@@ -1,7 +1,7 @@
 import UIKit
 
 //: MARK: - NumericalValue -
-public struct NumericalValue: Equatable, Hashable {
+public struct NumericalValue {
     
     public enum Style {
         case horizontal,vertical, hoizontalDiscrete
@@ -24,7 +24,28 @@ public struct NumericalValue: Equatable, Hashable {
     public var placeholder:String? = nil
     public var inputDescription:String?
     
+    public var floatValidationRules: [FloatRule] = []
+    public var intValidationRules: [IntRule] = []
+    
 }
+
+extension NumericalValue: Equatable, Hashable {
+    
+    public static func == (lhs: NumericalValue, rhs: NumericalValue) -> Bool {
+        lhs.title == rhs.title && lhs.value == rhs.value && lhs.numberType == rhs.numberType
+    }
+    
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(title)
+        hasher.combine(value)
+        hasher.combine(numberType)
+    }
+
+    
+}
+
+
 
 
 public extension NumericalValue {
@@ -149,6 +170,19 @@ extension NumericalValue {
 // MARK: - FormValue -
 extension NumericalValue: FormValue {
     
+    private var floatValdator: Validator {
+        Validator("value", Double(self.value), rules: floatValidationRules)
+    }
+    
+    private var intValdator: Validator {
+        Validator("value", Int(self.value), rules: intValidationRules)
+    }
+    
+    public var validators: [Validator] {
+        numberType == .int ? [intValdator] : [floatValdator]
+    }
+    
+    
     public var formItem: FormItem {
            .numerical(self)
     }
@@ -171,6 +205,7 @@ extension NumericalValue: FormValueDisplayable, TableViewSelectable {
     public func configureCell(_ formController: Controller, _ cell: Cell, _ path: IndexPath) {
         cell.formValue = self
         cell.indexPath = path
+        cell.tableView = formController.tableView
         cell.updateFormValueDelegate = formController
     }
     
@@ -201,7 +236,9 @@ extension NumericalValue {
                 style: self.style,
                 numberType: self.numberType,
                 useDirectionButtons: self.useDirectionButtons,
-                inputDescription: self.inputDescription
+                inputDescription: self.inputDescription,
+                floatValidationRules: self.floatValidationRules,
+                intValidationRules: self.intValidationRules
         )
     }
     
@@ -267,11 +304,12 @@ public final class NumericalCell: UITableViewCell, Activatable {
     
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
     var indexPath: IndexPath?
+    var tableView: UITableView?
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: .body)
-        label.textAlignment = .center
+        label.textAlignment = .left
         return label
     }()
     
@@ -284,27 +322,128 @@ public final class NumericalCell: UITableViewCell, Activatable {
         return textField
     }()
     
+    /*
     private lazy var inputDescriptionLabel:UILabel = {
         let label = UILabel.inputDescription
         contentView.addSubview(label)
         label.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor).isActive = true
         label.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor).isActive = true
-        label.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0).isActive = true
+        label.topAnchor.constraint(equalTo: validationErrorView.bottomAnchor, constant: 2.0).isActive = true
         contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: label.bottomAnchor).isActive = true
         return label
     }()
+    */
+    
+    private lazy var inputDescriptionLabel:UILabel = {
+        let label = UILabel.inputDescription
+        return label
+    }()
+    
+    private lazy var validationLabel:UILabel = {
+        let label = UILabel.inputDescription
+        label.textColor = .red
+        return label
+    }()
+    
+    
+    private lazy var validationErrorView: ValidationErrorCellView = {
+        let view = ValidationErrorCellView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(view)
+        view.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor).isActive = true
+        view.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor).isActive = true
+        
+        
+        
+        view.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0).isActive = true
+        contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        return view
+    }()
+    
     
     var formValue : NumericalValue? {
         didSet {
             if let numericalValue = formValue {
-                titleLabel.text = numericalValue.title
-                textField.text = numericalValue.value
-                textField.placeholder = numericalValue.placeholder
-                inputDescriptionLabel.text = numericalValue.inputDescription
+                
+                if let titleText = titleLabel.text {
+                    if titleText != numericalValue.title {
+                        titleLabel.text = numericalValue.title
+                    }
+                } else {
+                    titleLabel.text = numericalValue.title
+                }
+                
+                if let textFieldText = textField.text {
+                    if textFieldText != numericalValue.value {
+                        textField.text = numericalValue.value
+                    }
+                } else {
+                    textField.text = numericalValue.value
+                }
+                
+                if let placeholderValueText = numericalValue.placeholder {
+                    if let placeholderText = textField.placeholder {
+                        if placeholderText != placeholderValueText {
+                            textField.placeholder = placeholderValueText
+                        }
+                    } else {
+                        textField.placeholder = placeholderValueText
+                    }
+                } else {
+                    if textField.placeholder != nil {
+                        textField.placeholder = nil
+                    }
+                }
+                
+                if let inputDescriptionValueText = numericalValue.inputDescription {
+                    if let inputDescriptionText = inputDescriptionLabel.text {
+                        if inputDescriptionText != inputDescriptionValueText {
+                            inputDescriptionLabel.text = inputDescriptionValueText
+                        }
+                    } else {
+                        inputDescriptionLabel.text = inputDescriptionValueText
+                    }
+                } else {
+                    if inputDescriptionLabel.text != nil {
+                        inputDescriptionLabel.text = nil
+                    }
+                }
+                
+                if numericalValue.formItem.invalid {
+                    validationLabel.text = numericalValue.formItem.errorMessages.joined(separator: "\n")
+                    if validationLabel.isHidden == true {
+                        validationLabel.isHidden = false
+                    }
+                } else {
+                    if validationLabel.isHidden == false {
+                        validationLabel.isHidden = true
+                        validationLabel.text = nil
+                    }
+                }
+                //validationErrorView.set(numericalValue.formItem.errorMessages)
                 layout()
             }
         }
     }
+    
+    private var useContentStack: Bool = true
+    
+    private lazy var contentStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.distribution = .fillProportionally
+        stack.spacing = 2.0
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor, constant: 2.0),
+            stack.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: stack.bottomAnchor, constant: 2.0)
+        ])
+        return stack
+    }()
+    
     
     private var didLayout:Bool = false
     
@@ -312,10 +451,13 @@ public final class NumericalCell: UITableViewCell, Activatable {
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        [titleLabel,textField].forEach({
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview($0)
-        })
+        if useContentStack {
+        } else {
+            [titleLabel,textField,inputDescriptionLabel].forEach({
+                $0.translatesAutoresizingMaskIntoConstraints = false
+                contentView.addSubview($0)
+            })
+        }
         
         textField.delegate = self
         textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
@@ -329,7 +471,88 @@ public final class NumericalCell: UITableViewCell, Activatable {
         inputDescriptionLabel.text = nil
     }
     
-    func layout(){
+    func layout() {
+        if useContentStack {
+            contentStackLayout()
+        } else {
+            originalLayout()
+        }
+    }
+    
+    
+    fileprivate func makeValueStack(_ axis: NSLayoutConstraint.Axis) -> UIStackView {
+        let stack = UIStackView()
+        stack.axis = axis
+        stack.distribution = .fillProportionally
+        stack.spacing = 2.0
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
+    }
+    
+    
+    func contentStackLayout() {
+        guard let numericalValue = formValue, didLayout == false else { return }
+        evaluateButtonBar()
+        
+        switch numericalValue.numberType {
+        case .int:
+            textField.keyboardType = .numberPad
+            textField.returnKeyType = .done
+        case .float:
+            textField.keyboardType = .decimalPad
+        }
+        
+        
+        switch numericalValue.style {
+            
+        case .horizontal:
+            let stack = makeValueStack(.horizontal)
+            stack.addArrangedSubview(titleLabel)
+            stack.addArrangedSubview(textField)
+            contentStack.addArrangedSubview(stack)
+            
+            contentStack.addArrangedSubview(inputDescriptionLabel)
+            contentStack.addArrangedSubview(validationLabel)
+        case .vertical:
+            let stack = makeValueStack(.vertical)
+            stack.addArrangedSubview(titleLabel)
+            stack.addArrangedSubview(textField)
+            contentStack.addArrangedSubview(stack)
+            
+            contentStack.addArrangedSubview(inputDescriptionLabel)
+            contentStack.addArrangedSubview(validationLabel)
+        case .hoizontalDiscrete:
+            
+            textField.textAlignment = .right
+            textField.borderStyle = .none
+            textField.clearButtonMode = .never
+            textField.font = UIFont.monospacedDigitSystemFont(ofSize: 24, weight: .semibold)  //UIFont.preferredFont(forTextStyle: .body)
+            textField.textColor = UIColor.FormKit.valueText
+            
+            
+            let titleStack = makeValueStack(.vertical)
+            titleStack.addArrangedSubview(titleLabel)
+            titleStack.addArrangedSubview(inputDescriptionLabel)
+            
+            let stack = makeValueStack(.horizontal)
+            stack.addArrangedSubview(titleStack)
+            stack.addArrangedSubview(textField)
+            contentStack.addArrangedSubview(stack)
+            
+            //contentStack.addArrangedSubview(inputDescriptionLabel)
+            contentStack.addArrangedSubview(validationLabel)
+            
+            //contentStack.addArrangedSubview(inputDescriptionLabel)
+            //contentStack.addArrangedSubview(validationLabel)
+                               
+            
+        }
+        didLayout = true
+    }
+    
+    
+    
+    func originalLayout(){
         guard let numericalValue = formValue, didLayout == false else { return }
         
         evaluateButtonBar()
@@ -338,6 +561,7 @@ public final class NumericalCell: UITableViewCell, Activatable {
         switch numericalValue.numberType {
         case .int:
             textField.keyboardType = .numberPad
+            textField.returnKeyType = .done
         case .float:
             textField.keyboardType = .decimalPad
         }
@@ -441,8 +665,23 @@ public final class NumericalCell: UITableViewCell, Activatable {
     @objc
     func textFieldTextChanged() {
         if let text = textField.text {
-            guard let numericalValue = formValue else { return }
-            updateFormValueDelegate?.updatedFormValue(numericalValue.newWith(text), indexPath)
+            guard let currentValue = formValue else { return }
+            
+            let newValue = currentValue.newWith(text)
+            
+            let becameValid = currentValue.formItem.invalid && newValue.formItem.valid
+            let becameInValid = currentValue.formItem.valid && newValue.formItem.invalid
+            
+            let messageCountChanged = currentValue.formItem.errorMessages != newValue.formItem.errorMessages
+            let updateLayout = becameValid || becameInValid || messageCountChanged
+            
+            if updateLayout {
+                self.tableView?.beginUpdates()
+                self.formValue = newValue
+                self.tableView?.endUpdates()
+            }
+            
+            updateFormValueDelegate?.updatedFormValue(newValue, indexPath)
         }
     }
     

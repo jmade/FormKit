@@ -15,6 +15,7 @@ public struct SliderValue {
     public var title:String = "Slider"
     public var value:Double = 22.0
     public var customKey:String? = nil
+    public var validators: [Validator] = []
 }
 
 

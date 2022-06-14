@@ -12,6 +12,8 @@ public struct CustomValue {
     public typealias CellDidTapClosure = (CustomValueCell) -> Bool
     public var cellDidTapClosure:CellDidTapClosure? = nil
     
+    public var validators: [Validator] = []
+    
 }
 
 

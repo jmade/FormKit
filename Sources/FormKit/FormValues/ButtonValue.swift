@@ -3,6 +3,15 @@ import UIKit
 //: MARK: - ButtonValue -
 public struct ButtonValue: FormValue, Equatable, Hashable {
     
+    public func hash(into hasher: inout Hasher) {
+        return hasher.combine(identifier)
+    }
+    
+    public static func == (lhs: ButtonValue, rhs: ButtonValue) -> Bool {
+        return lhs.identifier == rhs.identifier
+    }
+    
+    
     public var formItem: FormItem {
         return FormItem.button(self)
     }
@@ -14,6 +23,8 @@ public struct ButtonValue: FormValue, Equatable, Hashable {
     
     var title:String = ""
     var color:UIColor = .blue
+    let identifier = UUID()
+    public var validators: [Validator] = []
     
     public init(title: String,_ color:UIColor = .blue,_ style:RoundButton.Style = .cell,_ withAttachment:Bool = false ) {
         self.title = title

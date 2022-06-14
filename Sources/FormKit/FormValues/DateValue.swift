@@ -17,6 +17,8 @@ public struct DateValue {
     public var minDate:Date?
     public var maxDate:Date?
     
+    public var validators: [Validator] = []
+    
 }
 
 

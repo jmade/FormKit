@@ -23,6 +23,7 @@ public struct StepperValue: FormValue, TableViewSelectable, Equatable, Hashable 
     public var title:String
     public var info:String? = nil
     public var value:Double
+    public var validators: [Validator] = []
 }
 
 

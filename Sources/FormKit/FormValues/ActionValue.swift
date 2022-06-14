@@ -50,6 +50,7 @@ public struct ActionValue: Equatable {
     
     public var readOnlyValue:ReadOnlyValue? = nil
     public var originalId:String? = nil
+    public var validators: [Validator] = []
 
 }
 

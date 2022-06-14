@@ -165,7 +165,6 @@ extension FormItem {
         return encodedValues.keys.first
     }
     
-    
     public var encodedValues:[String:String] {
         switch self {
         case .stepper(let stepper):
@@ -217,10 +216,71 @@ extension FormItem {
         case .token(let tokenValue):
             return tokenValue.encodedValue()
         }
+    }
+    
+}
+
+
+
+extension FormItem {
+    
+    public var displayValues:[String:String] {
+        switch self {
+        case .stepper(let stepper):
+            return [stepper.title : stepper.encodedValue().values.first!]
+        case .text(let text):
+            return [text.title : text.encodedValue().values.first!]
+        case .time(let time):
+            return [time.title : time.encodedValue().values.first!]
+        case .button(let button):
+            return [button.title : button.encodedValue().values.first!]
+        case .note(let note):
+            return [ (note.customKey ?? note.title) ?? "Note": note.encodedValue().values.first!]
+        case .segment(let segment):
+            return [segment.customKey ?? "Segment" : segment.encodedValue().values.first!]
+        case .numerical(let numerical):
+            return [numerical.title : numerical.encodedValue().values.first!]
+        case .readOnly(let readOnly):
+            return [readOnly.title : readOnly.encodedValue().values.first!]
+        case .picker(let picker):
+            return [picker.customKey ?? "Picker" : picker.encodedValue().values.first!]
+        case .pickerSelection(let pickerSelection):
+            return [pickerSelection.title : pickerSelection.encodedValue().values.first!]
+        case .action(let action):
+            return [action.title : action.encodedValue().values.first!]
+        case .listSelection(let list):
+            return [list.title : list.encodedValue().values.first!]
+        case .timeInput(let time):
+            return [time.title : time.encodedValue().values.first!]
+        case .switchValue(let switchValue):
+            return [switchValue.title : switchValue.encodedValue().values.first!]
+        case .slider(let sliderValue):
+            return [sliderValue.title : sliderValue.encodedValue().values.first!]
+        case .map(let mapValue):
+            return [mapValue.customKey ?? "Map" : mapValue.encodedValue().values.first!]
+        case .mapAction(let mapActionValue):
+            return [mapActionValue.customKey ?? "Map" : mapActionValue.encodedValue().values.first!]
+        case .custom(let custom):
+            return [custom.identifier.uuidString : custom.encodedValue().values.first!]
+        case .input(let input):
+            return [input.title : input.encodedValue().values.first!]
+        case .date(let date):
+            return [(date.title ?? date.customKey) ?? "Date" : date.encodedValue().values.first!]
+        case .datePicker(let datePicker):
+            return [(datePicker.title ?? datePicker.customKey) ?? "Date" : datePicker.encodedValue().values.first!]
+        case .push(let pushValue):
+            return [pushValue.primary ?? "Push" : pushValue.encodedValue().values.first!]
+        case .dateTime(let dateTimeValue):
+            return [dateTimeValue.title : dateTimeValue.encodedValue().values.first!]
+        case .token(let tokenValue):
+            return [tokenValue.title : tokenValue.encodedValue().values.first!]
+        }
         
     }
     
 }
+
+
 
 
 
@@ -313,6 +373,27 @@ extension FormItem {
     }
     
     
+    public func asActionValue() -> ActionValue? {
+        switch self {
+        case .action(let action):
+            return action
+        default:
+            break
+        }
+        return nil
+    }
+
+    
+    public func asPushValue() -> PushValue? {
+        switch self {
+        case .push(let push):
+            return push
+        default:
+            break
+        }
+        return nil
+    }
+    
     
     public func isValid() -> Bool {
         switch self {
@@ -334,6 +415,64 @@ extension FormItem {
     }
     
 }
+
+
+extension FormItem: Validatable {
+    
+    var validators: [Validator] {
+        switch self {
+        case .stepper(let stepper):
+            return stepper.validators
+        case .text(let text):
+            return text.validators
+        case .time(let time):
+            return time.validators
+        case .button(let button):
+            return button.validators
+        case .note(let note):
+            return note.validators
+        case .segment(let segment):
+            return segment.validators
+        case .numerical(let numerical):
+            return numerical.validators
+        case .readOnly(let readOnly):
+            return readOnly.validators
+        case .picker(let picker):
+            return picker.validators
+        case .pickerSelection(let pickerSelection):
+            return pickerSelection.validators
+        case .action(let action):
+            return action.validators
+        case .listSelection(let list):
+            return list.validators
+        case .timeInput(let time):
+            return time.validators
+        case .switchValue(let switchValue):
+            return switchValue.validators
+        case .slider(let sliderValue):
+            return sliderValue.validators
+        case .map(let mapValue):
+            return mapValue.validators
+        case .mapAction(let mapActionValue):
+            return mapActionValue.validators
+        case .custom(let custom):
+            return custom.validators
+        case .input(let input):
+            return input.validators
+        case .date(let date):
+            return date.validators
+        case .datePicker(let datePicker):
+            return datePicker.validators
+        case .push(let pushValue):
+            return pushValue.validators
+        case .dateTime(let dateTimeValue):
+            return dateTimeValue.validators
+        case .token(let tokenValue):
+            return tokenValue.validators
+        }
+    }
+}
+
 
 //
 

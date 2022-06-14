@@ -125,6 +125,8 @@ public struct ListSelectionValue {
     
     public var listItemStores: [ListItemStore] = []
     
+    public var validators: [Validator] = []
+    
 }
 
 

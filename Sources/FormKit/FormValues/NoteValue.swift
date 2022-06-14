@@ -81,6 +81,7 @@ public struct NoteValue: TextNumericalInput {
     public var emptyValuePlaceholder:String?
     public var characterCount:Int?
     public var allowedChars:String?
+    public var validators: [Validator] = []
     
 }
 
@@ -289,8 +290,22 @@ public final class NewNoteCell: UITableViewCell, Activatable, CharacterCountDisp
         didSet {
             if let noteValue = formValue {
                 
-                titleLabel.text = noteValue.title
-                textView.text = noteValue.value
+                if let titleText = titleLabel.text {
+                    if titleText != noteValue.title {
+                        titleLabel.text = noteValue.title
+                    }
+                } else {
+                    titleLabel.text = noteValue.title
+                }
+                
+                if let textViewText = textView.text {
+                    if textViewText != noteValue.value {
+                        textView.text = noteValue.value
+                    }
+                } else {
+                    textView.text = noteValue.value
+                }
+                
                 
                 if let max = noteValue.characterCount {
                     maxCharacterCount = max
@@ -434,19 +449,23 @@ public final class NewNoteCell: UITableViewCell, Activatable, CharacterCountDisp
             updateCharacterCount(newText.count)
         }
         
+        let newValue = existingNoteValue.newWith(newText)
+        
+        
         let newSize = textView.sizeThatFits(CGSize(width: textView.frame.size.width, height: .greatestFiniteMagnitude))
         
         if lastHeight != newSize.height {
             UIView.setAnimationsEnabled(false)
             self.tableView?.beginUpdates()
             textView.sizeToFit()
+            self.formValue = newValue
             self.tableView?.endUpdates()
             UIView.setAnimationsEnabled(true)
             lastHeight = newSize.height
         }
         
         updateFormValueDelegate?.updatedFormValue(
-            existingNoteValue.newWith(newText),
+            newValue,
             indexPath
         )
     }

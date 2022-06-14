@@ -35,6 +35,7 @@ public struct MapValue {
     
     
     public var mapData: MapData?
+    public var validators: [Validator] = []
 }
 
 public typealias MapValueChangeClosure = (MapValue) -> ()

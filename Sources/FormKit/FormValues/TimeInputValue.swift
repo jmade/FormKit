@@ -60,6 +60,7 @@ public struct TimeInputValue {
     
     public var isValid = true
     public var highlightWhenSelected = true
+    public var validators: [Validator] = []
     
 }
 

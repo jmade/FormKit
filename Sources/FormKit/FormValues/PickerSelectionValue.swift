@@ -16,6 +16,7 @@ public struct PickerSelectionValue: Equatable, Hashable {
     public var mode:Mode = .display
     public var customKey: String? = nil
     public let identifier = UUID()
+    public var validators: [Validator] = []
 }
 
 
