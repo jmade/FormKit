@@ -334,11 +334,25 @@ extension FormDataSource {
         
         for section in sections {
             for row in section.rows {
-                value.append(row.displayValues)
+                for entry in row.displayValues {
+                    if !entry.value.isEmpty {
+                        value.append(["\(entry.key)":"\(entry.value)"])
+                    }
+                }
             }
         }
         
-        return value.merged()
+        var data:[String:String] = [:]
+        
+        for v in value {
+            if let key = v.first?.key {
+                data[key] = v.first!.value
+            }
+        }
+        
+        return data
+        
+        //return value.merged()
     }
     
     

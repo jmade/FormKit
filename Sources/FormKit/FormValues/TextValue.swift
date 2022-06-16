@@ -1,8 +1,6 @@
 
 import UIKit
 
-
-
 struct TextValueTransportInitialization: Decodable {
        var title: String
        var customKey: String?
@@ -12,10 +10,6 @@ struct TextValueTransportInitialization: Decodable {
        var characterCount: Int?
        var allowedChars: String?
 }
-
-
-
-
 
 public typealias TextValueReturnPressedClosure = ( (TextValue) -> Void )
 
@@ -27,7 +21,7 @@ public typealias TextFieldConfigurationClosure = ( (UITextField) -> Void )
 public struct TextValue {
     
     public enum Style {
-        case horizontal, vertical, horizontalDiscrete, writeIn, modern
+        case horizontal, vertical, horizontalDiscrete, writeIn
     }
     
     public var characterSet = CharacterSet.noteValue /// Deprecated 2/19/21; use `allowedChars`
@@ -53,6 +47,7 @@ public struct TextValue {
     
     public var inputConfiguration: InputConfiguration?
     public var validationRules:[StringRule] = []
+    
 }
 
 
@@ -191,7 +186,7 @@ extension TextValue {
     Initializes a new FormSection with the optional subtitle and footer strings.
 
     - Parameters:
-       - title: The *title* of the TextValue
+       - title: The **Title** of the TextValue
        - customKey: used as the JSON Key value when using `FormDataSource` params
        - value: The value in the textfield
        - placeholder: optional text displayed in textfield, that disappears on input. example: "Required"
@@ -200,7 +195,7 @@ extension TextValue {
        - characterCount: optional max number of characters that should be allowed
      
      
-    - Note: Does this work?
+    - Note: Note.
     - Returns: A fully functional form element for Text Input.
     */
     
@@ -240,8 +235,6 @@ extension TextValue: Hashable {
     }
     
 }
-
-
 
 
 extension TextValue: FormValue, TableViewSelectable {
@@ -336,49 +329,6 @@ extension TextValue {
 }
 
 
-fileprivate extension UIImageView {
-    
-    static func validationIconView(_ image:UIImage) -> UIImageView {
-        let imageView = UIImageView()
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = UIColor.FormKit.text
-        if #available(iOS 13.0, *) {
-            imageView.preferredSymbolConfiguration = .init(textStyle: .caption2, scale: .medium)
-        } else {
-            imageView.heightAnchor.constraint(lessThanOrEqualToConstant: UIFont.preferredFont(forTextStyle: .caption2).lineHeight).isActive = true
-        }
-        imageView.setContentHuggingPriority(.required, for: .horizontal)
-        imageView.setContentHuggingPriority(.required, for: .vertical)
-        imageView.image = image
-        return imageView
-    }
-    
-}
-
-fileprivate extension UILabel {
-    
-    static func validationLabel() -> UILabel {
-        
-        let label = UILabel()
-        label.textAlignment = .left
-        label.numberOfLines = 0
-        label.lineBreakMode = .byWordWrapping
-        //label.font = UIFont.preferredFont(forTextStyle: .footnote)
-        label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .caption2).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
-        
-        
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
-        label.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
-        label.textColor = .red
-        return label
-    }
-}
-
-
-
-
 
 
 
@@ -413,29 +363,21 @@ public final class TextCell: UITableViewCell, Activatable {
         return textField
     }()
     
+    
     private lazy var inputDescriptionLabel:UILabel = {
         let label = UILabel.inputDescription
         return label
     }()
     
     private lazy var validationLabel:UILabel = {
-        let label = UILabel.inputDescription
-        label.textColor = .red
+        let label = UILabel()
+        label.textAlignment = .left
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
         return label
-    }()
-    
-    private lazy var validationErrorView: ValidationErrorCellView = {
-        let view = ValidationErrorCellView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(view)
-        view.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor).isActive = true
-        view.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor).isActive = true
-        
-        
-        view.heightAnchor.constraint(greaterThanOrEqualToConstant: 22).isActive = true
-        view.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0).isActive = true
-        contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-        return view
     }()
     
     
@@ -464,9 +406,6 @@ public final class TextCell: UITableViewCell, Activatable {
                 } else {
                     titleLabel.text = textValue.title
                 }
-                
-             
-                textValue.textConfigurationClosure(textField)
                 
                 if let textFieldText = textField.text {
                     if textFieldText != textValue.value {
@@ -519,7 +458,10 @@ public final class TextCell: UITableViewCell, Activatable {
                 
                
                 if textValue.formItem.invalid {
-                    validationLabel.text = textValue.formItem.errorMessages.joined(separator: "\n")
+                    if #available(iOS 13.0, *) {
+                        let attributedString = textValue.formItem.attributedMessage
+                        validationLabel.attributedText = attributedString
+                    }
                     if validationLabel.isHidden == true {
                         validationLabel.isHidden = false
                     }
@@ -531,6 +473,10 @@ public final class TextCell: UITableViewCell, Activatable {
                 }
                 
                 layout()
+                
+                textValue.textConfigurationClosure(textField)
+                
+                contentView.layoutSubviews()
                 
             }
         }
@@ -559,15 +505,6 @@ public final class TextCell: UITableViewCell, Activatable {
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        
-        if useContentStack {
-        } else {
-            [titleLabel,textField,inputDescriptionLabel].forEach({
-                $0.translatesAutoresizingMaskIntoConstraints = false
-                contentView.addSubview($0)
-            })
-        }
-        
         textField.delegate = self
         textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
     }
@@ -579,14 +516,11 @@ public final class TextCell: UITableViewCell, Activatable {
         titleLabel.text = nil
         indexPath = nil
         inputDescriptionLabel.text = nil
+        validationLabel.attributedText = nil
     }
     
     func layout() {
-        if useContentStack {
-            contentStackLayout()
-        } else {
-            originalLayout()
-        }
+        contentStackLayout()
     }
     
     
@@ -603,10 +537,7 @@ public final class TextCell: UITableViewCell, Activatable {
         guard let textValue = formValue, didLayout == false else { return }
         evaluateButtonBar()
         
-        
-        
         switch textValue.style {
-            
         case .horizontal:
             let stack = makeValueStack(.horizontal)
             stack.addArrangedSubview(titleLabel)
@@ -639,27 +570,20 @@ public final class TextCell: UITableViewCell, Activatable {
             contentStack.addArrangedSubview(inputDescriptionLabel)
             contentStack.addArrangedSubview(validationLabel)
         case .writeIn:
-            ()
-        case .modern:
-            textField.textAlignment = .right
+            titleLabel.text = nil
+            textField.textAlignment = .left
             textField.borderStyle = .none
             textField.clearButtonMode = .never
-            
-            textField.font = UIFont.boldSystemFont(ofSize: 24)
-            textField.textColor = UIColor.FormKit.valueText
-            
+            textField.font = UIFont.preferredFont(forTextStyle: .body)
             let stack = makeValueStack(.horizontal)
-            stack.addArrangedSubview(titleLabel)
             stack.addArrangedSubview(textField)
             contentStack.addArrangedSubview(stack)
-            
-            contentStack.addArrangedSubview(inputDescriptionLabel)
-            contentStack.addArrangedSubview(validationLabel)
         }
+        
         didLayout = true
     }
     
-    
+    /*
     func originalLayout(){
         
         guard let textValue = formValue, didLayout == false else { return }
@@ -756,9 +680,7 @@ public final class TextCell: UITableViewCell, Activatable {
             textField.textColor = UIColor.FormKit.valueText
             
             //titleLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
-            
-        case .modern:
-            ()
+        
         case .writeIn:
             activateDefaultHeightAnchorConstraint()
             
@@ -781,7 +703,7 @@ public final class TextCell: UITableViewCell, Activatable {
         //titleLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         didLayout = true
     }
-    
+    */
     
     func evaluateButtonBar() {
         guard let textValue = formValue else { return }
@@ -881,12 +803,9 @@ public final class TextCell: UITableViewCell, Activatable {
         let updateLayout = becameValid || becameInValid || messageCountChanged
         
         if updateLayout {
-            //UIView.setAnimationsEnabled(false)
             self.tableView?.beginUpdates()
             self.formValue = newValue
-            //updateValidation(newValue)
             self.tableView?.endUpdates()
-            //UIView.setAnimationsEnabled(true)
         }
         
         updateFormValueDelegate?.updatedFormValue(
@@ -894,22 +813,6 @@ public final class TextCell: UITableViewCell, Activatable {
             indexPath
         )
     }
-    
-    private func updateValidation(_ value:TextValue) {
-        if value.formItem.invalid {
-            validationLabel.text = value.formItem.errorMessages.joined(separator: "\n")
-            if validationLabel.isHidden == true {
-                validationLabel.isHidden = false
-            }
-        } else {
-            validationLabel.text = nil
-            if validationLabel.isHidden == false {
-                validationLabel.isHidden = true
-            }
-        }
-    }
-
-    
     
     public func updateCharacterCount(_ count:Int) {
         characterCountLabel.text = "\(count)/\(maxCharacterCount)"
@@ -950,7 +853,6 @@ public final class TextCell: UITableViewCell, Activatable {
                 updateCharacterCount(text.count)
             }
             sendTextToDelegate()
-            //updateFormValueDelegate?.updatedFormValue(textValue.newWith(text), indexPath)
         }
     }
     

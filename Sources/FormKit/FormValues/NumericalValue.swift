@@ -26,6 +26,18 @@ public struct NumericalValue {
     
     public var floatValidationRules: [FloatRule] = []
     public var intValidationRules: [IntRule] = []
+    public var textConfigurationClosure: TextFieldConfigurationClosure?
+    
+    
+    
+    /**
+    Pattern used to make the input of the `UITexfield` in the `UITableViewCell`.
+     - Note: This pattern uses `"#"` as number input
+     
+     For Example a Phone Number Pattern would be `"(###)-###-####"`.
+    */
+    public var inputFormatPattern: String?
+    
     
 }
 
@@ -182,7 +194,6 @@ extension NumericalValue: FormValue {
         numberType == .int ? [intValdator] : [floatValdator]
     }
     
-    
     public var formItem: FormItem {
            .numerical(self)
     }
@@ -236,9 +247,12 @@ extension NumericalValue {
                 style: self.style,
                 numberType: self.numberType,
                 useDirectionButtons: self.useDirectionButtons,
+                placeholder: self.placeholder,
                 inputDescription: self.inputDescription,
                 floatValidationRules: self.floatValidationRules,
-                intValidationRules: self.intValidationRules
+                intValidationRules: self.intValidationRules,
+                textConfigurationClosure: self.textConfigurationClosure,
+                inputFormatPattern: self.inputFormatPattern
         )
     }
     
@@ -306,6 +320,8 @@ public final class NumericalCell: UITableViewCell, Activatable {
     var indexPath: IndexPath?
     var tableView: UITableView?
     
+    var formatter:DefaultTextInputFormatter? = nil
+    
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: .body)
@@ -322,45 +338,23 @@ public final class NumericalCell: UITableViewCell, Activatable {
         return textField
     }()
     
-    /*
-    private lazy var inputDescriptionLabel:UILabel = {
-        let label = UILabel.inputDescription
-        contentView.addSubview(label)
-        label.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor).isActive = true
-        label.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor).isActive = true
-        label.topAnchor.constraint(equalTo: validationErrorView.bottomAnchor, constant: 2.0).isActive = true
-        contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: label.bottomAnchor).isActive = true
-        return label
-    }()
-    */
-    
     private lazy var inputDescriptionLabel:UILabel = {
         let label = UILabel.inputDescription
         return label
     }()
     
     private lazy var validationLabel:UILabel = {
-        let label = UILabel.inputDescription
-        label.textColor = .red
+        let label = UILabel()
+        label.textAlignment = .left
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
         return label
     }()
     
-    
-    private lazy var validationErrorView: ValidationErrorCellView = {
-        let view = ValidationErrorCellView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(view)
-        view.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor).isActive = true
-        view.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor).isActive = true
-        
-        
-        
-        view.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0).isActive = true
-        contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-        return view
-    }()
-    
-    
+
     var formValue : NumericalValue? {
         didSet {
             if let numericalValue = formValue {
@@ -380,6 +374,7 @@ public final class NumericalCell: UITableViewCell, Activatable {
                 } else {
                     textField.text = numericalValue.value
                 }
+                
                 
                 if let placeholderValueText = numericalValue.placeholder {
                     if let placeholderText = textField.placeholder {
@@ -410,7 +405,28 @@ public final class NumericalCell: UITableViewCell, Activatable {
                 }
                 
                 if numericalValue.formItem.invalid {
-                    validationLabel.text = numericalValue.formItem.errorMessages.joined(separator: "\n")
+                    if #available(iOS 13.0, *) {
+                        
+                        
+                        
+                        /*
+                        let attributedString = numericalValue.formItem.errorMessages.renderValidationAttributedStringWith(
+                            numericalValue.validationConfiguration
+                        )
+                        */
+                        
+                        let attributedString = numericalValue.formItem.attributedMessage
+                        
+                        
+                        UIViewPropertyAnimator(duration: 1/3, curve: .easeInOut) { [weak self] in
+                            guard let self = self else { return }
+                            self.validationLabel.attributedText = attributedString
+                        }.startAnimation()
+                        
+                        //validationLabel.attributedText = attributedString
+                    } else {
+                        validationLabel.text = numericalValue.formItem.errorMessages.joined(separator: "\n")
+                    }
                     if validationLabel.isHidden == true {
                         validationLabel.isHidden = false
                     }
@@ -420,8 +436,17 @@ public final class NumericalCell: UITableViewCell, Activatable {
                         validationLabel.text = nil
                     }
                 }
-                //validationErrorView.set(numericalValue.formItem.errorMessages)
+                
                 layout()
+                
+                numericalValue.textConfigurationClosure?(textField)
+                
+                if let formatPattern = numericalValue.inputFormatPattern {
+                    formatter = DefaultTextInputFormatter(textPattern: formatPattern)
+                }
+                
+                contentView.layoutSubviews()
+                
             }
         }
     }
@@ -458,6 +483,8 @@ public final class NumericalCell: UITableViewCell, Activatable {
                 contentView.addSubview($0)
             })
         }
+        
+        
         
         textField.delegate = self
         textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
@@ -502,7 +529,6 @@ public final class NumericalCell: UITableViewCell, Activatable {
             textField.keyboardType = .decimalPad
         }
         
-        
         switch numericalValue.style {
             
         case .horizontal:
@@ -522,30 +548,19 @@ public final class NumericalCell: UITableViewCell, Activatable {
             contentStack.addArrangedSubview(inputDescriptionLabel)
             contentStack.addArrangedSubview(validationLabel)
         case .hoizontalDiscrete:
-            
             textField.textAlignment = .right
             textField.borderStyle = .none
             textField.clearButtonMode = .never
-            textField.font = UIFont.monospacedDigitSystemFont(ofSize: 24, weight: .semibold)  //UIFont.preferredFont(forTextStyle: .body)
+            textField.font = UIFont.preferredFont(forTextStyle: .body)
             textField.textColor = UIColor.FormKit.valueText
             
-            
-            let titleStack = makeValueStack(.vertical)
-            titleStack.addArrangedSubview(titleLabel)
-            titleStack.addArrangedSubview(inputDescriptionLabel)
-            
             let stack = makeValueStack(.horizontal)
-            stack.addArrangedSubview(titleStack)
+            stack.addArrangedSubview(titleLabel)
             stack.addArrangedSubview(textField)
             contentStack.addArrangedSubview(stack)
             
-            //contentStack.addArrangedSubview(inputDescriptionLabel)
+            contentStack.addArrangedSubview(inputDescriptionLabel)
             contentStack.addArrangedSubview(validationLabel)
-            
-            //contentStack.addArrangedSubview(inputDescriptionLabel)
-            //contentStack.addArrangedSubview(validationLabel)
-                               
-            
         }
         didLayout = true
     }
@@ -662,11 +677,11 @@ public final class NumericalCell: UITableViewCell, Activatable {
         textField.becomeFirstResponder()
     }
     
-    @objc
-    func textFieldTextChanged() {
+    
+    private func handleTextChange() {
+        guard let currentValue = formValue else { return }
+        
         if let text = textField.text {
-            guard let currentValue = formValue else { return }
-            
             let newValue = currentValue.newWith(text)
             
             let becameValid = currentValue.formItem.invalid && newValue.formItem.valid
@@ -683,6 +698,13 @@ public final class NumericalCell: UITableViewCell, Activatable {
             
             updateFormValueDelegate?.updatedFormValue(newValue, indexPath)
         }
+        
+    }
+    
+    
+    @objc
+    func textFieldTextChanged() {
+        handleTextChange()
     }
     
     private func endTextEditing(){
@@ -704,18 +726,103 @@ extension NumericalCell: UITextFieldDelegate {
         
         switch formValue.numberType {
         case .int:
+            
+            guard CharacterSet.decimalDigits.isSuperset(of: CharacterSet(charactersIn: string)) else {
+                return false
+            }
+            
+            /*
             if CharacterSet.decimalDigits.isSuperset(of: CharacterSet(charactersIn: string)) {
                 return true
             } else {
                  return false
             }
+            */
         case .float:
-            let floatCharacterSet = CharacterSet.decimalDigits.union(CharacterSet(charactersIn: ".-+"))
+            
+            var floatAdditionalChars = ""
+            
+            if let formatText = formValue.inputFormatPattern {
+                
+                if !formatText.contains(".") {
+                    floatAdditionalChars += "."
+                }
+                
+                if !formatText.contains("-") {
+                    floatAdditionalChars += "-"
+                }
+                
+                if !formatText.contains("+") {
+                    floatAdditionalChars += "+"
+                }
+                
+            } else {
+                floatAdditionalChars = ".-+"
+            }
+            
+          
+            let additionalCharSet = CharacterSet(charactersIn: floatAdditionalChars)
+            
+            let floatCharacterSet = CharacterSet.decimalDigits.union(additionalCharSet)
+            
+            guard floatCharacterSet.isSuperset(of: CharacterSet(charactersIn: string)) else {
+                return false
+            }
+            
+            /*
             if floatCharacterSet.isSuperset(of: CharacterSet(charactersIn: string)) {
                 return true
             } else {
                 return false
             }
+            */
+        }
+        
+        
+        if let formatter = formatter {
+            let result = formatter.formatInput(currentText: textField.text ?? "", range: range, replacementString: string)
+            
+            //print("Result Formatted Text: '\(result.formattedText)'")
+            
+            
+            /// here we need to switch over the count and creat a double less than 0 for a count of 2 or less.
+            /// `let text = "1"` -> `Double("0.0\(text)")
+            /// `let text = "12"` -> `Double("0.\(text)")
+
+            /*
+            if let val = Double(result.formattedText) {
+                
+                let number = NSNumber(value: val)
+                
+                let nf = NumberFormatter()
+                nf.alwaysShowsDecimalSeparator = true
+                nf.maximumFractionDigits = 2
+                nf.minimumFractionDigits = 2
+                nf.maximumIntegerDigits = 2
+                nf.minimumIntegerDigits = 2
+                
+                nf.numberStyle = .decimal
+                
+                if let formattedString = nf.string(from: number) {
+                    print("Formated: '\(formattedString)'")
+                    
+                    /*
+                    textField.text = formattedString
+                    //textField.setCursorLocation(result.caretBeginOffset)
+                    handleTextChange()
+                    return false
+                    */
+                }
+
+            }
+            */
+             
+            textField.text = result.formattedText
+            textField.setCursorLocation(result.caretBeginOffset)
+            handleTextChange()
+            return false
+        } else {
+            return true
         }
         
     }

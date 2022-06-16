@@ -806,31 +806,8 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
             return
         }
         
-        // run modern validation here...
         setLastSection(dataSource.isValid)
-        
-        //let reload = itemsToReload(new: dataSource.invalidItems)
-        
-        //let paths = reload.map({ $0.indexPath })
-        
-//        if !paths.isEmpty {
-//            UIView.setAnimationsEnabled(false)
-//            tableView.beginUpdates()
-//            tableView.reloadRows(at: paths, with: .none)
-//            tableView.endUpdates()
-//            UIView.setAnimationsEnabled(true)
-//        }
-        
-        
-        /*
-        if !dataSource.isValid {
-            print("\n**************")
-            dataSource.invalidItems.forEach({
-                print("Path: \($0.indexPath) • \($0.messages)")
-            })
-            print("**************\n")
-        }
-        */
+
     }
     
     

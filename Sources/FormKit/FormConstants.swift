@@ -3,6 +3,269 @@ import UIKit
 
 
 
+// MARK: - ValidationConfiguration -
+public struct ValidationConfiguration {
+    public var messageColor: UIColor?
+    public var imageName: String?
+    public var textStyle: UIFont.TextStyle?
+    public var fontWeight: UIFont.Weight?
+}
+
+public extension ValidationConfiguration {
+    
+    /* warning is appropriate for Warnings.
+     *
+     */
+    
+    static var `default`: ValidationConfiguration {
+        ValidationConfiguration(
+            messageColor: .FormKit.valueText,
+            imageName: nil,
+            textStyle: .caption1,
+            fontWeight: .regular
+        )
+    }
+    
+    
+    
+    
+    static var warning: ValidationConfiguration {
+        ValidationConfiguration(
+            messageColor: .warning,
+            imageName: "exclamationmark.triangle",
+            textStyle: .caption1,
+            fontWeight: .bold
+        )
+    }
+    
+    /* quaternarySystemFillColor is appropriate for filling large areas containing complex content.
+     * Example: Expanded table cells.
+     */
+    static var error: ValidationConfiguration {
+        ValidationConfiguration(
+            messageColor: .red,
+            imageName: "xmark.octagon",
+            textStyle: .caption1,
+            fontWeight: .bold
+        )
+    }
+    
+    /* quaternarySystemFillColor is appropriate for filling large areas containing complex content.
+     * Example: Expanded table cells.
+     */
+    static var info: ValidationConfiguration {
+        ValidationConfiguration(
+            messageColor: .FormKit.valueText,
+            imageName: "info.circle",
+            textStyle: .caption1,
+            fontWeight: .bold
+        )
+    }
+    
+}
+
+
+
+
+
+
+// MARK: - PhoneNumberFormatter -
+struct PhoneNumberFormatter {
+    
+    static func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        var fullString = textField.text ?? ""
+        fullString.append(string)
+        if range.length == 1 {
+            textField.text = fullString.phoneNumberFormat(shouldRemoveLastDigit: true)
+        } else {
+            textField.text = fullString.phoneNumberFormat()
+        }
+        return false
+    }
+    
+}
+
+
+
+extension String {
+    
+    func phoneNumberFormat(shouldRemoveLastDigit: Bool = false) -> String {
+        let phoneNumber = self
+        guard !phoneNumber.isEmpty else { return "" }
+        guard let regex = try? NSRegularExpression(pattern: "[\\s-\\(\\)]", options: .caseInsensitive) else { return "" }
+        let r = NSString(string: phoneNumber).range(of: phoneNumber)
+        var number = regex.stringByReplacingMatches(in: phoneNumber, options: .init(rawValue: 0), range: r, withTemplate: "")
+
+        if number.count > 10 {
+            let tenthDigitIndex = number.index(number.startIndex, offsetBy: 10)
+            number = String(number[number.startIndex..<tenthDigitIndex])
+        }
+
+        if shouldRemoveLastDigit {
+            let end = number.index(number.startIndex, offsetBy: number.count-1)
+            number = String(number[number.startIndex..<end])
+        }
+
+        if number.count < 7 {
+            let end = number.index(number.startIndex, offsetBy: number.count)
+            let range = number.startIndex..<end
+            number = number.replacingOccurrences(of: "(\\d{3})(\\d+)", with: "($1) $2", options: .regularExpression, range: range)
+
+        } else {
+            let end = number.index(number.startIndex, offsetBy: number.count)
+            let range = number.startIndex..<end
+            number = number.replacingOccurrences(of: "(\\d{3})(\\d{3})(\\d+)", with: "($1) $2-$3", options: .regularExpression, range: range)
+        }
+
+        return number
+    }
+    
+}
+
+
+
+extension NSAttributedString {
+    
+    static var spacer: NSAttributedString {
+        NSAttributedString(string: "\u{205F}")
+    }
+    
+    @available(iOS 13.0, *)
+    static func validationAS(_ text:String, config: ValidationConfiguration) -> NSAttributedString {
+        
+        let completeText = NSMutableAttributedString(string: "")
+        
+        if let imageName = config.imageName {
+            let imageAttachment = NSTextAttachment()
+            if let textStyle = config.textStyle {
+                let symbolConfig = UIImage.SymbolConfiguration(textStyle: textStyle)
+                let image = UIImage(systemName: imageName, withConfiguration: symbolConfig)
+                imageAttachment.image = image?.withTintColor(
+                    config.messageColor ?? UIColor.FormKit.text,
+                    renderingMode: .alwaysTemplate
+                )
+            } else {
+                let image = UIImage(systemName: imageName)
+                imageAttachment.image = image?.withTintColor(
+                    config.messageColor ?? UIColor.FormKit.text,
+                    renderingMode: .alwaysTemplate
+                )
+            }
+            let attachmentString = NSAttributedString(attachment: imageAttachment)
+            completeText.append(attachmentString)
+            
+            completeText.append(.spacer)
+        }
+        
+        var font = UIFont.preferredFont(forTextStyle: config.textStyle ?? .caption1)
+        if let fontWeight = config.fontWeight {
+            
+            if fontWeight == .bold {
+                font = font.with(.traitBold)
+            }
+        }
+  
+        // Add your text to mutable string
+        let textAfterIcon = NSAttributedString(
+            string: text,
+            attributes: [ .font : font, .foregroundColor : config.messageColor ?? UIColor.FormKit.text ])
+        completeText.append(textAfterIcon)
+        return completeText
+    }
+    
+    
+    
+    @available(iOS 13.0, *)
+    static func errorIcon(_ iconName:String,_ text:String) -> NSAttributedString {
+        let imageAttachment = NSTextAttachment()
+        
+        let symbolConfig = UIImage.SymbolConfiguration(textStyle: .caption1)
+        let image = UIImage(systemName: iconName, withConfiguration: symbolConfig)
+        imageAttachment.image = image?.withTintColor(.warning, renderingMode: .alwaysTemplate)
+        
+        // Create string with attachment
+        let attachmentString = NSAttributedString(attachment: imageAttachment)
+        // Initialize mutable string
+        let completeText = NSMutableAttributedString(string: "")
+        // Add image to mutable string
+        completeText.append(attachmentString)
+        
+        let spacer = NSAttributedString(string: "\u{2007}")
+        completeText.append(spacer)
+        
+        let descriptor = UIFont.preferredFont(forTextStyle: .caption1).fontDescriptor.withSymbolicTraits(.traitBold)!
+        let font = UIFont(descriptor: descriptor, size: 0)
+        
+        // Add your text to mutable string
+        let textAfterIcon = NSAttributedString(
+            string: text,
+            attributes: [.font : font ])
+        completeText.append(textAfterIcon)
+        return completeText
+    }
+    
+}
+
+
+@available(iOS 13.0, *)
+extension Array where Element == String {
+    
+    
+    func generateErrorsAttributedString() -> NSAttributedString {
+        let completeText = NSMutableAttributedString(string: "")
+        
+        var a = self
+        let last = a.popLast()
+        
+        a.map({ NSAttributedString.errorIcon("exclamationmark.triangle.fill", "\($0)\n") })
+            .forEach({
+                completeText.append($0)
+            })
+        
+
+        if let last = last {
+            completeText.append(
+                NSAttributedString.errorIcon("exclamationmark.triangle.fill", "\(last)")
+            )
+        }
+        
+        return completeText
+    }
+    
+    
+    
+    func renderValidationAttributedStringWith(_ config: ValidationConfiguration) -> NSAttributedString {
+        let completeText = NSMutableAttributedString(string: "")
+        
+        var a = self
+        let last = a.popLast()
+        
+        a.map({ NSAttributedString.validationAS("\($0)\n", config: config) })
+            .forEach({
+                completeText.append($0)
+            })
+        
+
+        if let last = last {
+            completeText.append(
+                NSAttributedString.validationAS(last, config: config)
+            )
+        }
+        
+        return completeText
+    }
+    
+    
+    
+    
+
+    
+    
+    
+}
+
+
+
 
 
 
@@ -275,6 +538,49 @@ public extension UIViewController {
     }
     
 }
+
+
+// MARK: - UIFont -
+public extension UIFont {
+    
+    var bold: UIFont {
+        return with(.traitBold)
+    }
+
+    var italic: UIFont {
+        return with(.traitItalic)
+    }
+
+    var boldItalic: UIFont {
+        return with([.traitBold, .traitItalic])
+    }
+    
+    var digit: UIFont {
+        with(.traitMonoSpace)
+    }
+    
+    var boldDigit: UIFont {
+        with([.traitBold, .traitMonoSpace])
+    }
+
+
+
+    func with(_ traits: UIFontDescriptor.SymbolicTraits...) -> UIFont {
+        guard let descriptor = self.fontDescriptor.withSymbolicTraits(UIFontDescriptor.SymbolicTraits(traits).union(self.fontDescriptor.symbolicTraits)) else {
+            return self
+        }
+        return UIFont(descriptor: descriptor, size: 0)
+    }
+
+    func without(_ traits: UIFontDescriptor.SymbolicTraits...) -> UIFont {
+        guard let descriptor = self.fontDescriptor.withSymbolicTraits(self.fontDescriptor.symbolicTraits.subtracting(UIFontDescriptor.SymbolicTraits(traits))) else {
+            return self
+        }
+        return UIFont(descriptor: descriptor, size: 0)
+    }
+}
+
+
 
 
 

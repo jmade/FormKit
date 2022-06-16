@@ -482,9 +482,12 @@ extension InputValueCell: UITextFieldDelegate {
         
         switch inputValue.type {
         case .phoneNumber, .cellPhoneNumber:
+            //return PhoneNumberFormatter.textField(textField, shouldChangeCharactersIn: range, replacementString: string)
+            
             guard CharacterSet.decimalDigits.isSuperset(of: CharacterSet(charactersIn: string)) else {
                 return false
             }
+            
         case .zipcode:
             guard CharacterSet.decimalDigits.isSuperset(of: CharacterSet(charactersIn: string)) else {
                 return false
