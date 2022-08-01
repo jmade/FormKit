@@ -15,6 +15,8 @@ public class FormDataSource {
     
     public var storage:[String:Any] = [:]
     
+    public var itemStore:[String:FormItem] = [:]
+    
     public var additionalParameters:[String:String] = [:]
     
     public var yOffset:Double = 0.0
@@ -31,7 +33,6 @@ public class FormDataSource {
             update()
         }
     }
-    
     
     private func update() {
         let copy = self
@@ -395,13 +396,13 @@ extension FormDataSource {
     
     
     
-    
-    
-    public func logParams() {
+    public var dataDescription:String {
+        let line = "-------------\n"
+        
         var report = "\n"
-        report += "-------------\n"
+        report += line
         report += "Form: \(title)\n"
-        report += "-------------\n"
+        report += line
         
         for (i,section) in sections.enumerated() {
             //report += "-------------"
@@ -412,9 +413,13 @@ extension FormDataSource {
             }
         }
      
-        report += "-------------\n"
-        print(report)
-
+        report += line
+        
+        return report
+    }
+    
+    public func logParams() {
+        print(dataDescription)
     }
     
     
@@ -770,6 +775,20 @@ extension FormDataSource {
     
     public func item(for row:Int,in sectionIndex:Int) -> FormItem? {
         return self.section(for: sectionIndex)?.row(for: row)
+    }
+    
+    
+    public func item(for key:String) -> FormItem? {
+        for section in sections {
+            for row in section.rows {
+                if let rowKey = row.encodedKey {
+                    if rowKey == key {
+                        return row
+                    }
+                }
+            }
+        }
+        return nil
     }
     
     

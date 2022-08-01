@@ -38,6 +38,14 @@ public enum FormItem {
     case token(TokenValue)
 }
 
+extension FormItem {
+    
+    static var empty:FormItem {
+        .readOnly(ReadOnlyValue(centeredValue: ""))
+    }
+}
+
+
 // MARK: - CellDescriptable -
 extension FormItem: FormCellDescriptable {
     /// extend the value type with a `CellDescriptor` var to add support for initialization of each cell type

@@ -6,8 +6,6 @@
 //
 
 import Foundation
-
-
  
 // MARK: - SectionTapDelegate -
 public protocol SectionTapDelegate: AnyObject  {
@@ -208,6 +206,23 @@ extension FormSection {
         h.subtitle = subtitle
         self._headerValue = h
         self.footer = FooterValue(footer)
+    }
+    
+    
+    public convenience init(title:String?,subtitle:String?,footer:String?,formItems:[FormItem]) {
+        self.init()
+        self.rows = formItems
+        self.title = title ?? ""
+        self.subtitle = subtitle ?? ""
+        
+        var h = HeaderValue(title: title ?? "", section: -1)
+        h.subtitle = subtitle
+        self._headerValue = h
+        
+        if let footer = footer {
+            self.footer = FooterValue(footer)
+        }
+        
     }
     
 }

@@ -2045,7 +2045,7 @@ extension FormController {
     public func changeLastSection(_ newSection:FormSection,_ activate:Bool = false) {
         
        
-        changeSection(newSection, at: IndexPath(row: 0, section: dataSource.sections.count-1),activate)
+        changeSection(newSection, at: IndexPath(row: 0, section: dataSource.sections.count-1),activate,.fade)
     }
     
     
