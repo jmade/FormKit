@@ -595,7 +595,7 @@ extension String {
         guard self.count > count else {
             return self
         }
-        let usableIndex = self.index(self.startIndex, offsetBy: String.IndexDistance(clamping: count))
+        let usableIndex = self.index(self.startIndex, offsetBy: count)
         return String(self.prefix(upTo: usableIndex))
     }
     

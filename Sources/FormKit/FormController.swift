@@ -448,14 +448,15 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     
     public var usesContextMenus: Bool = false
     
-    
+    /*
     @available(iOS 13.0, *)
     public typealias ContextMenuClosure = ( (FormController,FormItem,IndexPath) -> UIMenu?)
     
     
     @available(iOS 13.0, *)
     private(set) lazy var contextMenuClosure:ContextMenuClosure = {_,_,_ in return nil}
-   
+    */
+     
     public var allowModalDismissal:Bool = false {
         didSet {
             if #available(iOS 13.0, *) {
@@ -905,7 +906,7 @@ extension FormController {
 }
 
 
-
+/*
 @available(iOS 13.0, *)
 extension FormController {
     
@@ -915,7 +916,7 @@ extension FormController {
     }
     
 }
-
+*/
 
 
 // MARK: - BarItem -
@@ -1666,7 +1667,8 @@ extension FormController {
     
     // MARK: - Context Menu -
     func makeContextMenu(_ formItem:FormItem,_ indexPath: IndexPath) -> UIMenu? {
-        contextMenuClosure(self,formItem,indexPath)
+        return nil
+        //contextMenuClosure(self,formItem,indexPath)
         
         /*
         if let providedContextMenu = contextMenuClosure(self,formItem,indexPath) {
