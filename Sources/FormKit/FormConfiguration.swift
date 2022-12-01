@@ -32,7 +32,7 @@ public protocol FormControllerConfigurable {
 
 
 
-public struct FormControllerConfiguration: FormControllerConfigurable {
+public struct FormControllerConfiguration {
     
     public var showsCancelButton: Bool = false
     
@@ -44,13 +44,48 @@ public struct FormControllerConfiguration: FormControllerConfigurable {
     
     public var validationClosure: FormValidationClosure?
     
-    
-    
     public var loadingMessage: String?
     
     public var loadingClosure: FormController.FormDataLoadingClosure?
     
     public var updateClosure: FormDataSourceUpdateClosure?
+}
+
+public extension FormControllerConfiguration {
+    
+    init(_ showsDoneButton:Bool,_ loadingClosure: FormController.FormDataLoadingClosure?) {
+        self.showsDoneButton = showsDoneButton
+        self.loadingClosure = loadingClosure
+    }
+    
+    init(_ showsCancelButton:Bool,_ loadingMessage:String,loadingClosure: @escaping FormController.FormDataLoadingClosure) {
+        self.showsCancelButton = showsCancelButton
+        self.loadingClosure = loadingClosure
+        self.loadingMessage = loadingMessage
+    }
+    
+}
+
+
+//public extension FormControllerConfiguration {
+//
+//    init(showsCancelButton: Bool = false, showsDoneButton: Bool = false, title: String? = nil, dismissalClosure: FormControllerDismissalClosure? = nil, validationClosure: FormValidationClosure? = nil, loadingMessage: String? = nil, loadingClosure: FormController.FormDataLoadingClosure? = nil, updateClosure: FormDataSourceUpdateClosure? = nil) {
+//        self.showsCancelButton = showsCancelButton
+//        self.showsDoneButton = showsDoneButton
+//        self.title = title
+//        self.dismissalClosure = dismissalClosure
+//        self.validationClosure = validationClosure
+//        self.loadingMessage = loadingMessage
+//        self.loadingClosure = loadingClosure
+//        self.updateClosure = updateClosure
+//    }
+//
+//}
+
+
+
+extension FormControllerConfiguration: FormControllerConfigurable {
+    
 }
 
 

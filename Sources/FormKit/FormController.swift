@@ -514,9 +514,17 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
         self.loadingMessage = configuration.loadingMessage
         self.loadingClosure = configuration.loadingClosure
         self.validationClosure = configuration.validationClosure
-        self.showsDoneButton = configuration.showsDoneButton
-        self.showsCancelButton = configuration.showsCancelButton
+        
+        if configuration.showsDoneButton {
+            barItems.append(doneBarItem)
+        }
+        
+        if configuration.showsCancelButton {
+            barItems.append(cancelBarItem)
+        }
+        
         self.dataSource.updateClosure = configuration.updateClosure
+        
     }
     
  
@@ -631,7 +639,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     
     // MARK: - setupUI -
     private func setupUI() {
-        
+        didLoad = true
         if #available(iOS 15.0, *) {
             tableView.sectionHeaderTopPadding = 0
         }
@@ -650,7 +658,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
         tableView.estimatedRowHeight = 44.0
         tableView.rowHeight = UITableView.automaticDimension
 
-        checkBarItems()
+        //checkBarItems()
             
         if shouldRefresh {
             let refreshControl = UIRefreshControl()
@@ -679,6 +687,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
         }
         
         didLoad = true
+        checkBarItems()
     }
     
     
@@ -795,8 +804,10 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     
     open override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        checkBarItems()
         checkForActiveInput()
         runValidation()
+        
     }
     
     
