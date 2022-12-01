@@ -190,8 +190,7 @@ public final class SwitchCell: UITableViewCell {
     private func selectionOccured() {
         performFeedback()
         guard let switchValue = formValue else { return }
-        var newSwitchValue = SwitchValue(switchValue.title, value: switchControl.isOn)
-        newSwitchValue.customKey = switchValue.customKey
+        let newSwitchValue = switchValue.newToggled()
         updateFormValueDelegate?.updatedFormValue(
             newSwitchValue,
             indexPath

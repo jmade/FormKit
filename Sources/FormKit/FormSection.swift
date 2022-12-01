@@ -326,6 +326,53 @@ extension FormSection {
 
 extension FormSection {
     
+    public func formItems() -> [FormItem] {
+        self.rows
+    }
+    
+    
+    public func newAddingItem(_ formItem:FormItem,at: IndexPath) -> FormSection {
+        
+        var newRows:[FormItem] = []
+        for (i,row) in self.rows.enumerated() {
+            if i == at.row {
+                newRows.append(formItem)
+            }
+            newRows.append(row)
+        }
+        
+        let new = FormSection(
+            self.title,
+            newRows
+        )
+        new._headerValue = self._headerValue
+        new.updateClosure = self.updateClosure
+        new.footer = self.footer
+        return new
+    }
+    
+    
+    public func newRemovingItemAt(_ path:IndexPath) -> FormSection {
+        let _ = self.rows.remove(at: path.row)
+         
+        let new = FormSection(
+            self.title,
+            self.rows
+        )
+        new._headerValue = self._headerValue
+        new.updateClosure = self.updateClosure
+        new.footer = self.footer
+        return new
+    }
+}
+
+
+
+
+
+
+extension FormSection {
+    
     public class func Random() -> FormSection {
         
         let randomFormItems:[FormItem] = stride(from: 0, to: Int.random(in: 2...6), by: 1).map({ _ in return FormItem.Random() })

@@ -443,6 +443,7 @@ public final class NumericalCell: UITableViewCell, Activatable {
                 
                 if let formatPattern = numericalValue.inputFormatPattern {
                     formatter = DefaultTextInputFormatter(textPattern: formatPattern)
+                    //DefaultTextInputFormatter
                 }
                 
                 contentView.layoutSubviews()
@@ -457,7 +458,7 @@ public final class NumericalCell: UITableViewCell, Activatable {
         let stack = UIStackView()
         stack.axis = .vertical
         stack.distribution = .fillProportionally
-        stack.spacing = 2.0
+        //stack.spacing = 2.0
         stack.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(stack)
         NSLayoutConstraint.activate([
@@ -488,6 +489,7 @@ public final class NumericalCell: UITableViewCell, Activatable {
         
         textField.delegate = self
         textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
+        
     }
     
     override public func prepareForReuse() {
@@ -511,7 +513,7 @@ public final class NumericalCell: UITableViewCell, Activatable {
         let stack = UIStackView()
         stack.axis = axis
         stack.distribution = .fillProportionally
-        stack.spacing = 2.0
+        //stack.spacing = 2.0
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }
@@ -634,6 +636,7 @@ public final class NumericalCell: UITableViewCell, Activatable {
         super.setSelected(selected, animated: false)
         if selected {
             textField.becomeFirstResponder()
+            textField.selectAll(nil)
         }
     }
   
@@ -675,6 +678,7 @@ public final class NumericalCell: UITableViewCell, Activatable {
     
     public func activate(){
         textField.becomeFirstResponder()
+        textField.selectAll(nil)
     }
     
     
@@ -782,7 +786,7 @@ extension NumericalCell: UITextFieldDelegate {
         if let formatter = formatter {
             let result = formatter.formatInput(currentText: textField.text ?? "", range: range, replacementString: string)
             
-            //print("Result Formatted Text: '\(result.formattedText)'")
+            print("Result Formatted Text: '\(result.formattedText)'")
             
             
             /// here we need to switch over the count and creat a double less than 0 for a count of 2 or less.

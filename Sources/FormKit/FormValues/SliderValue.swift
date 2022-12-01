@@ -4,6 +4,9 @@ import UIKit
 
 // MARK: - SliderValue -
 public struct SliderValue {
+    
+    public var title:String = "Slider"
+    public var value:Double = 22.0
 
     // MARK: - ValueType -
     public enum ValueType {
@@ -12,10 +15,11 @@ public struct SliderValue {
     public var valueType:ValueType = .float
     public var decimalNumbers: Int = 2
     public var sliderConfig: (UISlider) -> Void = { slider in slider.minimumValue = 0.0; slider.maximumValue = 100.0 }
-    public var title:String = "Slider"
-    public var value:Double = 22.0
+    
     public var customKey:String? = nil
     public var validators: [Validator] = []
+    
+    public var valueChangedClosure: ( (FormController,IndexPath,SliderValue) -> Void )?
 }
 
 
@@ -138,7 +142,8 @@ extension SliderValue {
                                valueType: .int,
                                decimalNumbers: self.decimalNumbers,
                                sliderConfig: self.sliderConfig,
-                               customKey: self.customKey
+                               customKey: self.customKey,
+                               valueChangedClosure: self.valueChangedClosure
             )
         case .float:
             return SliderValue(title: self.title,
@@ -146,7 +151,8 @@ extension SliderValue {
                                valueType: .float,
                                decimalNumbers: self.decimalNumbers,
                                sliderConfig: self.sliderConfig,
-                               customKey: self.customKey
+                               customKey: self.customKey,
+                               valueChangedClosure: self.valueChangedClosure
             )
         }
     }

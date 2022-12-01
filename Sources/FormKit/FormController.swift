@@ -2,6 +2,11 @@ import UIKit
 import QuickLook
 
 
+
+
+
+
+
 // MARK: - FormValidationClosure -
 public typealias FormValidationClosure = ( (FormDataSource,FormController) -> Void )
 
@@ -496,6 +501,24 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     
     // MARK: - INIT -
     required public init?(coder aDecoder: NSCoder) {fatalError()}
+    
+    
+    public init(configuration:FormControllerConfigurable) {
+        if #available(iOS 13.0, *) {
+            super.init(style: .insetGrouped)
+        } else {
+            super.init(style: .grouped)
+        }
+        
+        self.title = configuration.title
+        self.loadingMessage = configuration.loadingMessage
+        self.loadingClosure = configuration.loadingClosure
+        self.validationClosure = configuration.validationClosure
+        self.showsDoneButton = configuration.showsDoneButton
+        self.showsCancelButton = configuration.showsCancelButton
+        self.dataSource.updateClosure = configuration.updateClosure
+    }
+    
  
     public init(formData: FormDataSource) {
         if #available(iOS 13.0, *) {
@@ -1624,7 +1647,7 @@ extension FormController {
 extension FormController {
     
     private func contextualDeleteAction(forRowAtIndexPath indexPath: IndexPath) -> UIContextualAction {
-        generateHapticFeedback(.success)
+        //generateHapticFeedback(.success)
         
         // 2
         let action =  UIContextualAction(style: .destructive, title: "Delete") { [weak self] (action, view, handler:(Bool) -> Void) in
@@ -1643,6 +1666,7 @@ extension FormController {
                 self.tableView.deleteRows(at: [indexPath], with: .fade)
             }
             
+            /*
             self.dataSource.lastPath = (indexPath.row,indexPath.section)
             let r = self.tableView.rect(forSection: indexPath.section)
             self.dataSource.lastRect = (
@@ -1651,6 +1675,7 @@ extension FormController {
                 Double(r.size.width),
                 Double(r.size.height)
             )
+            */
             
             self.generateHapticFeedback(.impact)
             handler(true)
@@ -2383,6 +2408,7 @@ extension FormController: UpdateFormValueDelegate {
                         if pickerSelectionValue != pickerSelection {
                             handleUpdatedFormValue(pickerSelectionValue , at: path)
                             tableView.reloadRows(at: [path], with: .fade)
+                            pickerSelectionValue.selectedValueClosure?(self,path,pickerSelectionValue.selectedValue())
                         }
                     }
                 case .action(let actionValue):
@@ -2417,6 +2443,7 @@ extension FormController: UpdateFormValueDelegate {
                     if let sliderInputValue = formValue as? SliderValue {
                         if sliderInputValue != sliderValue {
                             handleUpdatedFormValue(sliderInputValue , at: path)
+                            sliderInputValue.valueChangedClosure?(self,path,sliderInputValue)
                         }
                     }
                 case .map(let mapValue):

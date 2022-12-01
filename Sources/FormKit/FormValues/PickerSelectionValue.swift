@@ -1,7 +1,7 @@
 import UIKit
 
 // MARK: - PickerValue -
-public struct PickerSelectionValue: Equatable, Hashable {
+public struct PickerSelectionValue {
     
     public var title:String
     public var values:[String]
@@ -17,6 +17,27 @@ public struct PickerSelectionValue: Equatable, Hashable {
     public var customKey: String? = nil
     public let identifier = UUID()
     public var validators: [Validator] = []
+    
+    public var selectionChangedClosure: ( (FormController,IndexPath,PickerSelectionValue) -> Void )?
+    public var selectedValueClosure: ( (FormController,IndexPath,String?) -> Void )?
+}
+
+
+extension PickerSelectionValue: Equatable, Hashable {
+    
+    public static func == (lhs: PickerSelectionValue, rhs: PickerSelectionValue) -> Bool {
+        lhs.computedID == rhs.computedID
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(computedID)
+    }
+    
+    
+    var computedID:String {
+        "\(title),\(values),\(selectedIndex),\(mode),\(customKey ?? "-")"
+    }
+    
 }
 
 
@@ -69,7 +90,9 @@ extension PickerSelectionValue {
             selectedIndex: newSelectedIndex,
             selectionMessage: self.selectionMessage,
             mode: .display,
-            customKey: self.customKey
+            customKey: self.customKey,
+            selectionChangedClosure: self.selectionChangedClosure,
+            selectedValueClosure: self.selectedValueClosure
         )
         
         new.ids = self.ids
@@ -84,7 +107,9 @@ extension PickerSelectionValue {
             selectedIndex: self.selectedIndex,
             selectionMessage: self.selectionMessage,
             mode: (self.mode == .selection) ? .display : .selection,
-            customKey: self.customKey
+            customKey: self.customKey,
+            selectionChangedClosure: self.selectionChangedClosure,
+            selectedValueClosure: self.selectedValueClosure
         )
         
         new.ids = self.ids
@@ -176,9 +201,13 @@ extension PickerSelectionValue: FormValueDisplayable {
     }
     
     public func didSelect(_ formController: Controller, _ path: IndexPath) {
-        formController.dataSource.sections[path.section].rows[path.row] = self.newToggled().formItem
+        let newToggled = self.newToggled()
+        
+        formController.dataSource.sections[path.section].rows[path.row] = newToggled.formItem
+        
         /// TODO: Adjust contentInset here or fitting new content policy
         formController.tableView.reloadRows(at: [path], with: .automatic)
+        newToggled.selectionChangedClosure?(formController,path,newToggled)
     }
     
     public var cellDescriptor: FormCellDescriptor {
@@ -359,9 +388,10 @@ public final class PickerSelectionCell: UITableViewCell {
             self.title.isHidden = false
             self.selectedValue.isHidden = false
             self.selectedBottomConstraint.isActive = true
-            self.pickerView.isHidden = true
+            
             self.standardHeightConstraint.isActive = true
             self.pickerBottomConstriant.isActive = false
+            self.pickerView.isHidden = true
         }.startAnimation()
     }
     
