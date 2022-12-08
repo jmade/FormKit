@@ -20,6 +20,9 @@ public struct SliderValue {
     public var validators: [Validator] = []
     
     public var valueChangedClosure: ( (FormController,IndexPath,SliderValue) -> Void )?
+    
+    public var valueTransportClosure: ( (Double) -> String? )?
+    
 }
 
 
@@ -143,7 +146,8 @@ extension SliderValue {
                                decimalNumbers: self.decimalNumbers,
                                sliderConfig: self.sliderConfig,
                                customKey: self.customKey,
-                               valueChangedClosure: self.valueChangedClosure
+                               valueChangedClosure: self.valueChangedClosure,
+                               valueTransportClosure: self.valueTransportClosure
             )
         case .float:
             return SliderValue(title: self.title,
@@ -152,19 +156,27 @@ extension SliderValue {
                                decimalNumbers: self.decimalNumbers,
                                sliderConfig: self.sliderConfig,
                                customKey: self.customKey,
-                               valueChangedClosure: self.valueChangedClosure
+                               valueChangedClosure: self.valueChangedClosure,
+                               valueTransportClosure: self.valueTransportClosure
             )
         }
     }
     
     
     var interpretedValue: String {
-        switch self.valueType {
-        case .int:
-            return "\(Int(value))"
-        case .float:
-            return String(format: valueFormatString, value)
+        guard
+            let closure = valueTransportClosure,
+            let transportValue = closure(value)
+        else {
+            switch self.valueType {
+            case .int:
+                return "\(Int(value))"
+            case .float:
+                return String(format: valueFormatString, value)
+            }
         }
+        
+        return transportValue
     }
     
     
@@ -198,6 +210,7 @@ extension SliderValue {
 // MARK: - FormValue -
 
 extension SliderValue: FormValue, TableViewSelectable {
+    
     public func encodedValue() -> [String : String] {
            return [ (customKey ?? title) : "\(interpretedValue)" ]
        }
@@ -263,7 +276,7 @@ public final class SliderCell: UITableViewCell {
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
+        //label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
         label.textAlignment = .left
         label.translatesAutoresizingMaskIntoConstraints = false
         self.contentView.addSubview(label)
@@ -273,6 +286,9 @@ public final class SliderCell: UITableViewCell {
     private lazy var valueLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: .body)
+        if #available(iOS 13.0, *) {
+            label.textColor = .secondaryLabel
+        }
         label.text = "-"
         label.textAlignment = .right
         label.translatesAutoresizingMaskIntoConstraints = false

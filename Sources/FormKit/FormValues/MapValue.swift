@@ -1,9 +1,44 @@
 import UIKit
 import MapKit
 
-
 public typealias MapKitOverlayRendererClosure = ((MKMapView,MKOverlay) -> MKOverlayRenderer)
 public typealias MapKitAnnotationViewClosure = ((MKMapView,MKAnnotation) -> MKAnnotationView?)
+public typealias MapViewConigurationClosure = ((MKMapView) -> Void)
+
+public struct MapData {
+    public var polygon:MKPolygon?
+    public var overlay:MKOverlay?
+    public var annotation:MKAnnotation?
+    public var region:MKCoordinateRegion?
+    public var mapRect:MKMapRect?
+    public var camera:MKMapCamera?
+    public var overlayRendererClosure: MapKitOverlayRendererClosure?
+    public var annotationViewClosure: MapKitAnnotationViewClosure?
+    public var mapConfiguration: MapViewConigurationClosure?
+}
+
+
+public extension MapData {
+    
+    init(_ polygon: MKPolygon? = nil,_ overlay: MKOverlay? = nil,_ annotation: MKAnnotation? = nil, _ region: MKCoordinateRegion? = nil,_ mapRect: MKMapRect? = nil,_ camera:MKMapCamera? = nil,_ overlayRendererClosure: MapKitOverlayRendererClosure? = nil,_ annotationViewClosure: MapKitAnnotationViewClosure? = nil,_ mapConfiguration: MapViewConigurationClosure? = nil) {
+        self.polygon = polygon
+        self.overlay = overlay
+        self.annotation = annotation
+        self.region = region
+        self.mapRect = mapRect
+        self.camera = camera
+        self.overlayRendererClosure = overlayRendererClosure
+        self.annotationViewClosure = annotationViewClosure
+        self.mapConfiguration = mapConfiguration
+    }
+    
+}
+
+
+
+
+
+
 
 // MARK: - MapValue -
 public struct MapValue {
@@ -13,6 +48,7 @@ public struct MapValue {
     var lng: Double? = nil
     var radius: Double? = nil
     
+    /*
     public struct MapData {
         public var polygon:MKPolygon?
         public var overlay:MKOverlay?
@@ -22,6 +58,7 @@ public struct MapValue {
         public var overlayRendererClosure: MapKitOverlayRendererClosure?
         public var annotationViewClosure: MapKitAnnotationViewClosure?
         
+        /*
         public init(polygon:MKPolygon?,overlay:MKOverlay?,annotation:MKAnnotation?,region:MKCoordinateRegion?,mapRect:MKMapRect?,overlayRendererClosure: MapKitOverlayRendererClosure?,annotationViewClosure: MapKitAnnotationViewClosure?) {
             self.polygon = polygon
             self.overlay = overlay
@@ -31,8 +68,9 @@ public struct MapValue {
             self.overlayRendererClosure = overlayRendererClosure
             self.annotationViewClosure = annotationViewClosure
         }
+        */
     }
-    
+    */
     
     public var mapData: MapData?
     public var validators: [Validator] = []
@@ -233,7 +271,7 @@ public final class MapValueCell: UITableViewCell {
 
 extension MapValueCell {
     
-    private func handleMapData(_ data:MapValue.MapData) {
+    private func handleMapData(_ data:MapData) {
         guard let mapView = mapView else {return}
         
         if !mapView.annotations.isEmpty {
@@ -244,6 +282,7 @@ extension MapValueCell {
             mapView.removeOverlays(mapView.overlays)
         }
         
+        data.mapConfiguration?(mapView)
         
         if let polygon = data.polygon {
             mapView.addOverlay(polygon)
@@ -266,9 +305,20 @@ extension MapValueCell {
             )
         }
         
+        
         if let region = data.region {
             mapView.setRegion(region, animated: true)
         }
+        
+        if let cam = data.camera {
+            
+            UIViewPropertyAnimator(duration: 1.0, dampingRatio: 0.5) { [weak self] in
+                           guard let self = self else { return }
+                           self.mapView?.camera = cam
+            }.startAnimation()
+            
+        }
+        
         
     }
     
@@ -325,6 +375,19 @@ extension MapValueCell: MKMapViewDelegate  {
         
     }
     
+    public func mapView(_ mapView: MKMapView, didAdd views: [MKAnnotationView]) {
+        print("didAdd: \(views)")
+        
+        for view in views {
+            view.setSelected(true, animated: true)
+        }
+    }
+    
+    
+    public func mapView(_ mapView: MKMapView, didSelect annotation: MKAnnotation) {
+        print("didSelect anno: \(annotation)")
+    }
+    
     
     public func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         
@@ -363,8 +426,6 @@ extension MapValueCell: MKMapViewDelegate  {
         }
         
         
-        
-
         if overlay is MKCircle {
             let renderer = MKCircleRenderer(overlay: overlay)
             renderer.lineWidth = 8.0
@@ -380,6 +441,8 @@ extension MapValueCell: MKMapViewDelegate  {
 
         return MKOverlayRenderer()
     }
+    
+    
     
     public func mapViewDidFinishLoadingMap(_ mapView: MKMapView) {
         DispatchQueue.main.async(execute: { [weak self] in

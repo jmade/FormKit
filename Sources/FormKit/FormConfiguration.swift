@@ -1,9 +1,3 @@
-//
-//  File.swift
-//  
-//
-//  Created by Justin Madewell on 12/1/22.
-//
 
 import Foundation
 
@@ -31,7 +25,6 @@ public protocol FormControllerConfigurable {
 }
 
 
-
 public struct FormControllerConfiguration {
     
     public var showsCancelButton: Bool = false
@@ -49,7 +42,13 @@ public struct FormControllerConfiguration {
     public var loadingClosure: FormController.FormDataLoadingClosure?
     
     public var updateClosure: FormDataSourceUpdateClosure?
+    
+    public var activatesInputOnAppear: Bool = false
+    
+    public var allowModalDismissal: Bool = true
 }
+
+
 
 public extension FormControllerConfiguration {
     
@@ -67,28 +66,28 @@ public extension FormControllerConfiguration {
 }
 
 
-//public extension FormControllerConfiguration {
-//
-//    init(showsCancelButton: Bool = false, showsDoneButton: Bool = false, title: String? = nil, dismissalClosure: FormControllerDismissalClosure? = nil, validationClosure: FormValidationClosure? = nil, loadingMessage: String? = nil, loadingClosure: FormController.FormDataLoadingClosure? = nil, updateClosure: FormDataSourceUpdateClosure? = nil) {
-//        self.showsCancelButton = showsCancelButton
-//        self.showsDoneButton = showsDoneButton
-//        self.title = title
-//        self.dismissalClosure = dismissalClosure
-//        self.validationClosure = validationClosure
-//        self.loadingMessage = loadingMessage
-//        self.loadingClosure = loadingClosure
-//        self.updateClosure = updateClosure
-//    }
-//
-//}
+extension FormControllerConfiguration {
 
+    public init(_ showsCancelButton: Bool = false,
+                _ showsDoneButton: Bool = false,
+                _ activatesInputOnAppear: Bool = false,
+                _ allowModalDismissal: Bool = true,
+                _ title: String? = nil,
+                _ dismissalClosure: FormControllerDismissalClosure? = nil,
+                _ validationClosure: FormValidationClosure? = nil,
+                _ loadingMessage: String? = nil,
+                _ loadingClosure: FormController.FormDataLoadingClosure? = nil,
+                _ updateClosure: FormDataSourceUpdateClosure? = nil) {
+        self.showsCancelButton = showsCancelButton
+        self.showsDoneButton = showsDoneButton
+        self.activatesInputOnAppear = activatesInputOnAppear
+        self.allowModalDismissal = allowModalDismissal
+        self.title = title
+        self.dismissalClosure = dismissalClosure
+        self.validationClosure = validationClosure
+        self.loadingMessage = loadingMessage
+        self.loadingClosure = loadingClosure
+        self.updateClosure = updateClosure
+    }
 
-
-extension FormControllerConfiguration: FormControllerConfigurable {
-    
 }
-
-
-
-
-

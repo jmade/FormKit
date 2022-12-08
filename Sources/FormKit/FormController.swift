@@ -331,6 +331,8 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
                 return
             }
             
+            
+            
             tableView.tableFooterView = nil
             
             guard tableView.window != nil else {
@@ -503,7 +505,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     required public init?(coder aDecoder: NSCoder) {fatalError()}
     
     
-    public init(configuration:FormControllerConfigurable) {
+    public init(configuration:FormControllerConfiguration) {
         if #available(iOS 13.0, *) {
             super.init(style: .insetGrouped)
         } else {
@@ -523,6 +525,8 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
             barItems.append(cancelBarItem)
         }
         
+        self.activatesInputOnAppear = configuration.activatesInputOnAppear
+        self.allowModalDismissal = configuration.allowModalDismissal
         self.dataSource.updateClosure = configuration.updateClosure
         
     }
@@ -885,7 +889,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
             }
         }
         
-    }
+    2}
     
     
     
@@ -1529,15 +1533,22 @@ extension FormController {
         
     }
 
-    /*
-    open override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        if dataSource.sections[section].title.isEmpty {
-            return UITableView.automaticDimension
-        } else {
-            return UITableView.automaticDimension
-        }
-    }
-    */
+    
+//    open override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+//
+//        if !dataSource.sections[section].title.isEmpty {
+//            return 0
+//        } else {
+//            return UITableView.automaticDimension
+//        }
+//
+////        if dataSource.sections[section].title.isEmpty {
+////            return 0
+////        } else {
+////            return UITableView.automaticDimension
+////        }
+//    }
+    
     
     open override func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
         44.0
