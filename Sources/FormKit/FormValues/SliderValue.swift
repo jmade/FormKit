@@ -23,6 +23,10 @@ public struct SliderValue {
     
     public var valueTransportClosure: ( (Double) -> String? )?
     
+    public var enableAlertInput: Bool = false
+    
+    public var incrementAmount: Double = 1.0
+    
 }
 
 
@@ -33,14 +37,14 @@ extension SliderValue: Hashable {
     }
     
     public var hash: Int {
-        return "\(title)+\(value)+\(valueType)+\(decimalNumbers)".hashValue
+        return "\(title)+\(value)+\(valueType)+\(decimalNumbers)+\(incrementAmount)".hashValue
     }
     
 }
 
 extension SliderValue: Equatable {
     public static func == (lhs: SliderValue, rhs: SliderValue) -> Bool {
-        lhs.title == rhs.title && lhs.valueType == rhs.valueType && lhs.decimalNumbers == rhs.decimalNumbers && lhs.value == rhs.value && lhs.customKey == rhs.customKey
+        lhs.title == rhs.title && lhs.valueType == rhs.valueType && lhs.decimalNumbers == rhs.decimalNumbers && lhs.value == rhs.value && lhs.customKey == rhs.customKey && lhs.incrementAmount == rhs.incrementAmount && lhs.enableAlertInput == rhs.enableAlertInput
     }
     
     
@@ -126,7 +130,6 @@ extension SliderValue {
         Float(value)
     }
     
-    
     public var valueFormatString: String {
         switch valueType {
         case .int:
@@ -137,7 +140,7 @@ extension SliderValue {
     }
     
     
-    func newWith(_ value:Float) -> SliderValue {
+   public func newWith(_ value:Float) -> SliderValue {
         switch self.valueType {
         case .int:
             return SliderValue(title: self.title,
@@ -147,7 +150,8 @@ extension SliderValue {
                                sliderConfig: self.sliderConfig,
                                customKey: self.customKey,
                                valueChangedClosure: self.valueChangedClosure,
-                               valueTransportClosure: self.valueTransportClosure
+                               valueTransportClosure: self.valueTransportClosure,
+                               incrementAmount: self.incrementAmount
             )
         case .float:
             return SliderValue(title: self.title,
@@ -157,10 +161,42 @@ extension SliderValue {
                                sliderConfig: self.sliderConfig,
                                customKey: self.customKey,
                                valueChangedClosure: self.valueChangedClosure,
-                               valueTransportClosure: self.valueTransportClosure
+                               valueTransportClosure: self.valueTransportClosure,
+                               incrementAmount: self.incrementAmount
             )
         }
     }
+    
+    
+    public func newWith(_ value:Double) -> SliderValue {
+         switch self.valueType {
+         case .int:
+             return SliderValue(title: self.title,
+                                value: value,
+                                valueType: .int,
+                                decimalNumbers: self.decimalNumbers,
+                                sliderConfig: self.sliderConfig,
+                                customKey: self.customKey,
+                                valueChangedClosure: self.valueChangedClosure,
+                                valueTransportClosure: self.valueTransportClosure,
+                                enableAlertInput: self.enableAlertInput,
+                                incrementAmount: self.incrementAmount
+             )
+         case .float:
+             return SliderValue(title: self.title,
+                                value: value,
+                                valueType: .float,
+                                decimalNumbers: self.decimalNumbers,
+                                sliderConfig: self.sliderConfig,
+                                customKey: self.customKey,
+                                valueChangedClosure: self.valueChangedClosure,
+                                valueTransportClosure: self.valueTransportClosure,
+                                enableAlertInput: self.enableAlertInput,
+                                incrementAmount: self.incrementAmount
+             )
+         }
+         
+     }
     
     
     var interpretedValue: String {
@@ -183,7 +219,7 @@ extension SliderValue {
     public func displayValue(_ newValue:Float) -> String {
         switch self.valueType {
         case .int:
-            return String(format: valueFormatString, Int(newValue))
+            return "\(Int(value))" //String(format: valueFormatString, Int(newValue))
         case .float:
             return String(format: valueFormatString, newValue)
         }
@@ -276,7 +312,6 @@ public final class SliderCell: UITableViewCell {
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
-        //label.font = UIFont(descriptor: UIFont.preferredFont(forTextStyle: .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0)
         label.textAlignment = .left
         label.translatesAutoresizingMaskIntoConstraints = false
         self.contentView.addSubview(label)
@@ -292,6 +327,12 @@ public final class SliderCell: UITableViewCell {
         label.text = "-"
         label.textAlignment = .right
         label.translatesAutoresizingMaskIntoConstraints = false
+        
+        label.isUserInteractionEnabled = true
+        label.addGestureRecognizer(
+            UITapGestureRecognizer(target: self, action: #selector(handleTap))
+        )
+        
         self.contentView.addSubview(label)
         return label
     }()
@@ -304,8 +345,7 @@ public final class SliderCell: UITableViewCell {
         return slider
     }()
     
-    
-    
+
     var formValue : SliderValue? {
         didSet {
             guard let sliderValue = formValue else { return }
@@ -313,14 +353,16 @@ public final class SliderCell: UITableViewCell {
                 self.selectionStyle = .none
             }
             
-            if oldValue == nil {
-                sliderValue.sliderConfig(slider)
-                titleLabel.text = sliderValue.title
-                slider.setValue(sliderValue.sliderValue, animated: true)
-                valueLabel.text = sliderValue.displayValue(slider.value)
-            }
+            sliderValue.sliderConfig(slider)
+            titleLabel.text = sliderValue.title
+            slider.setValue(sliderValue.sliderValue, animated: true)
+            lastValue = sliderValue.sliderValue
+            valueLabel.text = sliderValue.displayValue(slider.value)
         }
     }
+    
+    
+    private var lastValue:Float = .zero
     
     
     required init?(coder aDecoder: NSCoder) {fatalError()}
@@ -353,13 +395,74 @@ public final class SliderCell: UITableViewCell {
 
 extension SliderCell {
     
+    @objc private func handleTap() {
+        guard let sliderValue = formValue else { return }
+        
+        guard sliderValue.enableAlertInput else {
+            return
+        }
+        
+        
+        let gen = UIImpactFeedbackGenerator()
+        gen.prepare()
+        
+        let slider = self.slider
+        
+        let alert = UIAlertController(title: sliderValue.title, message: "New Value", preferredStyle: .alert)
+        
+        alert.addTextField( configurationHandler: {
+            $0.keyboardType = .decimalPad
+            $0.placeholder = "\(Int(slider.value))"
+        })
+        
+        let submitAction = UIAlertAction(title: "Save", style: .default) { [weak self] _ in
+            guard let tf = alert.textFields?.first else {
+                return
+            }
+            
+            if let text = tf.text {
+                if let convertedValue = Float(text) {
+                    slider.setValue(convertedValue, animated: true)
+                    self?.lastValue = convertedValue
+                    self?.handleValueChange(convertedValue)
+                }
+            }
+            
+        }
+        
+        alert.addAction(submitAction)
+        
+        alert.addAction(.init(title: "Cancel", style: .cancel))
+        
+        if #available(iOS 13.0, *) {
+            gen.impactOccurred(intensity: 1.0)
+        }
+        
+        UIApplication.shared.keyWindow?.rootViewController?.show(alert, sender: nil)
+        
+    }
+    
     @objc private func handleSlider(_ slider:UISlider) {
         interperateValue(slider.value)
     }
     
     private func interperateValue(_ value:Float) {
+        var diff: Float = 0.0
+        if value > lastValue {
+            diff = value - lastValue
+        }
+        if lastValue > value {
+            diff = lastValue - value
+        }
+        if diff > 0.99 {
+            handleValueChange(value)
+            lastValue = value
+        }
+    }
+    
+    private func handleValueChange(_ value:Float) {
         guard let sliderValue = formValue else { return }
-        if sliderValue.matches(value) == false {
+        if !sliderValue.matches(value) {
             let newSliderValue = sliderValue.newWith(value)
             valueLabel.text = newSliderValue.displayValue(value)
             feedbackGenerator.selectionChanged()

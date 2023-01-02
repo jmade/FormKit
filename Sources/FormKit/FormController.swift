@@ -499,6 +499,17 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     
     private var displayStyle:FormDisplayStyle = .modern
     
+    private var colorSelectedClosure:( (UIColor?) -> Void)?
+    
+    private var pickedColor:UIColor? {
+        didSet {
+            colorSelectedClosure?(pickedColor)
+        }
+    }
+    
+    
+    public var scrollsWithSectionExpansion: Bool = true
+    
     
     
     // MARK: - INIT -
@@ -888,8 +899,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
                 }
             }
         }
-        
-    2}
+    }
     
     
     
@@ -2034,6 +2044,26 @@ extension FormController {
     }
     
     
+    public func addFormItems(_ formItems:[FormItem],toBottomOfSection section:Int) {
+        //let existingRowCount = tableView.numberOfRows(inSection: section)
+        //let newRow = tableView.numberOfRows(inSection: section)
+        
+        guard !formItems.isEmpty else { return }
+
+        var paths:[IndexPath] = []
+        var row = tableView.numberOfRows(inSection: section)
+        for formItem in formItems {
+            dataSource.sections[section].rows.append(formItem)
+            paths.append(
+                IndexPath(row: row, section: section)
+            )
+            row += 1
+        }
+        
+        tableView.insertRows(at: paths, with: .top)
+    }
+    
+    
     
     public func addFormItem(_ formItem:FormItem,toBottomOfSection section:Int) {
         let newRow = tableView.numberOfRows(inSection: section)
@@ -2455,17 +2485,16 @@ extension FormController: UpdateFormValueDelegate {
                             handleUpdatedFormValue(timeInputValue , at: path)
                         }
                     }
-                case .switchValue(let switchValue):
+                case .switchValue(_):
                     if let switchInputValue = formValue as? SwitchValue {
-                        if switchInputValue != switchValue {
-                            handleUpdatedFormValue(switchInputValue , at: path)
-                        }
+                        switchInputValue.valueChangedClosure?(switchInputValue,self,path)
+                        handleUpdatedFormValue(switchInputValue , at: path)
                     }
                 case .slider(let sliderValue):
                     if let sliderInputValue = formValue as? SliderValue {
                         if sliderInputValue != sliderValue {
-                            handleUpdatedFormValue(sliderInputValue , at: path)
                             sliderInputValue.valueChangedClosure?(self,path,sliderInputValue)
+                            handleUpdatedFormValue(sliderInputValue , at: path)
                         }
                     }
                 case .map(let mapValue):
@@ -2524,7 +2553,14 @@ extension FormController: UpdateFormValueDelegate {
                             handleUpdatedFormValue(tokenValue, at: path)
                         }
                     }
-                    
+                case .color(let color):
+                    if let colorValue = formValue as? ColorValue {
+                        if colorValue != color {
+                            handleUpdatedFormValue(colorValue, at: path)
+                            tableView.reloadRows(at: [path], with: .automatic)
+                            colorValue.formClosure?(colorValue,self,path)
+                        }
+                    }
                 }
             }
         }
@@ -2569,7 +2605,7 @@ extension FormController: UpdateFormValueDelegate {
 extension FormController {
     
     public func performLiveUpdates(_ stopAnimation:Bool = false) {
-        //print("[FormKit] (performLiveUpdates) stopAnimation: \(stopAnimation)")
+
         DispatchQueue.main.async(execute: { [weak self] in
             guard let self = self else { return }
             
@@ -2662,8 +2698,11 @@ extension FormController: SectionTapDelegate {
             tableView.deleteRows(at: formSection.indexPaths(section), with: .fade)
         case .expanded:
             tableView.insertRows(at: formSection.indexPaths(section), with: .fade)
-            if let last = formSection.indexPaths(section).last {
-                tableView.scrollToRow(at: last, at: .bottom, animated: true)
+            
+            if scrollsWithSectionExpansion {
+                if let last = formSection.indexPaths(section).last {
+                    tableView.scrollToRow(at: last, at: .bottom, animated: true)
+                }
             }
             
         }
@@ -2708,6 +2747,45 @@ extension FormController: UIDocumentInteractionControllerDelegate {
         }
     }
 
+}
+
+
+
+extension FormController {
+    
+    public func presentColorPicker(_ color:UIColor?,completionHandler: @escaping (UIColor?) -> Void) {
+        
+        if #available(iOS 14.0, *) {
+            
+            
+            let colorPickerController = UIColorPickerViewController()
+            colorPickerController.delegate = self
+            if let color = color {
+                colorPickerController.selectedColor = color
+            }
+            
+            self.colorSelectedClosure = completionHandler
+            present(colorPickerController, animated: true)
+            
+        }
+        
+    }
+    
+}
+
+@available(iOS 14.0, *)
+extension FormController: UIColorPickerViewControllerDelegate {
+    
+    //  Called once you have finished picking the color.
+    public func colorPickerViewControllerDidFinish(_ viewController: UIColorPickerViewController) {
+        pickedColor = viewController.selectedColor
+    }
+
+    
+    public func colorPickerViewController(_ viewController: UIColorPickerViewController, didSelect color: UIColor, continuously: Bool) {
+        pickedColor = color
+    }
+    
 }
 
 
@@ -2799,16 +2877,18 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
         label.translatesAutoresizingMaskIntoConstraints = false
         
         //label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
-        label.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
+        label.setContentCompressionResistancePriority(UILayoutPriority(rawValue: 900) , for: .horizontal)
+        label.setContentCompressionResistancePriority(UILayoutPriority(rawValue: 900), for: .vertical)
         if #available(iOS 13.0, *) {
             label.textColor = .secondaryLabel
         }
         labelContainer.addSubview(label)
         label.leadingAnchor.constraint(equalTo: labelContainer.leadingAnchor).isActive = true
         label.trailingAnchor.constraint(equalTo: labelContainer.trailingAnchor).isActive = true
-        label.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0).isActive = true
-        labelContainer.bottomAnchor.constraint(equalTo: label.bottomAnchor).isActive = true
+        label.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 0).isActive = true
+        label.bottomAnchor.constraint(equalTo: labelContainer.bottomAnchor).isActive = true
+        
+        //labelContainer.bottomAnchor.constraint(equalTo: label.bottomAnchor).isActive = true
         return label
     }()
     

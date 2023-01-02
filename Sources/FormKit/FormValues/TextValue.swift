@@ -381,6 +381,23 @@ public final class TextCell: UITableViewCell, Activatable {
     }()
     
     
+    private lazy var tapView:UIView = {
+        let tapView = UIView()
+        tapView.translatesAutoresizingMaskIntoConstraints = false
+        
+        contentView.addSubview(tapView)
+        tapView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor).isActive = true
+        tapView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
+        tapView.topAnchor.constraint(equalTo: contentView.topAnchor).isActive = true
+        tapView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).isActive = true
+        
+        tapView.addGestureRecognizer(
+            UITapGestureRecognizer(target: self, action: #selector(tapViewTapped))
+        )
+        return tapView
+    }()
+    
+    
     /// CharacterCountDisplayable
     public var maxCharacterCount = 100
     public lazy var characterCountLabel: UILabel = {
@@ -477,6 +494,8 @@ public final class TextCell: UITableViewCell, Activatable {
                 textValue.textConfigurationClosure(textField)
                 
                 contentView.layoutSubviews()
+                contentView.bringSubviewToFront(tapView)
+                
                 
             }
         }
@@ -490,7 +509,7 @@ public final class TextCell: UITableViewCell, Activatable {
         let stack = UIStackView()
         stack.axis = .vertical
         stack.distribution = .fillProportionally
-        stack.spacing = 2.0
+        //stack.spacing = 2.0
         stack.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(stack)
         NSLayoutConstraint.activate([
@@ -502,13 +521,14 @@ public final class TextCell: UITableViewCell, Activatable {
         return stack
     }()
     
+    private var selectAllButton:UIBarButtonItem?
+    
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         textField.delegate = self
         textField.addTarget(self, action: #selector(textFieldTextChanged), for: .editingChanged)
     }
-    
     
     override public func prepareForReuse() {
         super.prepareForReuse()
@@ -517,18 +537,18 @@ public final class TextCell: UITableViewCell, Activatable {
         indexPath = nil
         inputDescriptionLabel.text = nil
         validationLabel.attributedText = nil
+        contentView.bringSubviewToFront(tapView)
     }
     
     func layout() {
         contentStackLayout()
     }
     
-    
     private func makeValueStack(_ axis: NSLayoutConstraint.Axis) -> UIStackView {
         let stack = UIStackView()
         stack.axis = axis
         stack.distribution = .fillProportionally
-        stack.spacing = 2.0
+        stack.spacing = 0
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }
@@ -583,128 +603,7 @@ public final class TextCell: UITableViewCell, Activatable {
         didLayout = true
     }
     
-    /*
-    func originalLayout(){
-        
-        guard let textValue = formValue, didLayout == false else { return }
-        
-        evaluateButtonBar()
-        let margin = contentView.layoutMarginsGuide
-        
-        switch textValue.style {
-        case .horizontal:
-            print("Layout Horizontal")
-            activateDefaultHeightAnchorConstraint()
-            
-            NSLayoutConstraint.activate([
-                titleLabel.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
-                titleLabel.topAnchor.constraint(equalTo: margin.topAnchor),
-                //titleLabel.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
-                
-                textField.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 8.0),
-                
-                
-                //textField.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
-                textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
-                textField.topAnchor.constraint(equalTo: titleLabel.topAnchor),
-                
-                inputDescriptionLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-                inputDescriptionLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-                inputDescriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0),
-                contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: inputDescriptionLabel.bottomAnchor),
-                
-                //textField.widthAnchor.constraint(equalTo: margin.widthAnchor, multiplier: 0.5),
-                //margin.bottomAnchor.constraint(equalTo: textField.bottomAnchor),
-
-                
-                ])
-        case .vertical:
-            NSLayoutConstraint.activate([
-                titleLabel.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
-                titleLabel.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
-                titleLabel.topAnchor.constraint(equalTo: margin.topAnchor),
-                
-                textField.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
-                textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
-                textField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4.0),
-                //margin.bottomAnchor.constraint(equalTo: textField.bottomAnchor, constant: 4.0)
-                
-                inputDescriptionLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-                inputDescriptionLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-                inputDescriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0),
-                contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: inputDescriptionLabel.bottomAnchor),
-                
-                ])
-        case .horizontalDiscrete:
-            print("Horizontal Discrete!")
-            activateDefaultHeightAnchorConstraint()
-           
-            
-            
-            NSLayoutConstraint.activate([
-                titleLabel.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
-                titleLabel.topAnchor.constraint(equalTo: margin.topAnchor),
-                //titleLabel.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
-                
-                textField.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 8.0),
-                
-                
-                //textField.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
-                textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
-                textField.topAnchor.constraint(equalTo: titleLabel.topAnchor),
-                
-                
-                //textField.widthAnchor.constraint(equalTo: margin.widthAnchor, multiplier: 0.5),
-               // margin.bottomAnchor.constraint(equalTo: textField.bottomAnchor),
-                
-                /*
-                titleLabel.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
-                titleLabel.topAnchor.constraint(equalTo: margin.topAnchor),
-                //titleLabel.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
-                textField.centerYAnchor.constraint(equalTo: margin.centerYAnchor),
-                textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
-                textField.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 8.0),
-                */
-                
-                inputDescriptionLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-                inputDescriptionLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-                inputDescriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2.0),
-                contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: inputDescriptionLabel.bottomAnchor),
-                
-            ])
-            
-            textField.textAlignment = .right
-            textField.borderStyle = .none
-            textField.clearButtonMode = .never
-            textField.font = UIFont.preferredFont(forTextStyle: .body)
-            textField.textColor = UIColor.FormKit.valueText
-            
-            //titleLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
-        
-        case .writeIn:
-            activateDefaultHeightAnchorConstraint()
-            
-            NSLayoutConstraint.activate([
-                textField.leadingAnchor.constraint(equalTo: margin.leadingAnchor),
-                textField.trailingAnchor.constraint(equalTo: margin.trailingAnchor),
-                textField.topAnchor.constraint(equalTo: margin.topAnchor),
-                textField.bottomAnchor.constraint(equalTo: margin.bottomAnchor),
-            ])
-            
-            titleLabel.text = nil
-            textField.textAlignment = .left
-            textField.borderStyle = .none
-            textField.clearButtonMode = .never
-            textField.font = UIFont.preferredFont(forTextStyle: .body)
    
-        }
-    
-        
-        //titleLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-        didLayout = true
-    }
-    */
-    
     func evaluateButtonBar() {
         guard let textValue = formValue else { return }
         
@@ -725,6 +624,8 @@ public final class TextCell: UITableViewCell, Activatable {
                     )
                     
                     barItems.append(.flexible)
+                    
+                    
                     
                     barItems.append(
                         UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
@@ -767,11 +668,23 @@ public final class TextCell: UITableViewCell, Activatable {
                 barItems.append(.flexible)
             }
             
+            
+            if #available(iOS 16.0, *) {
+                selectAllButton = .selectAll(self,#selector(performSelectAll(_:)))
+                
+                if let text = textField.text {
+                    selectAllButton!.isHidden = text.isEmpty
+                }
+                
+                barItems.append(selectAllButton!)
+                barItems.append(.flexible)
+            }
+            
             barItems.append(
                 UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
             )
             
-            let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: 44.0)))
+            let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: 1000, height: 44.0)))
             bar.items = barItems
             bar.sizeToFit()
             
@@ -823,8 +736,27 @@ public final class TextCell: UITableViewCell, Activatable {
     }
     
     @objc
+    func performSelectAll(_ sender:UIBarButtonItem) {
+        
+        if let title = sender.title {
+            if title == .selectAll {
+                UIViewPropertyAnimator(duration: 1/3, curve: .easeInOut) {
+                    sender.title = .deselectAll
+                }.startAnimation()
+                textField.selectAll(nil)
+            } else {
+                UIViewPropertyAnimator(duration: 1/3, curve: .easeInOut) {
+                    sender.title = .selectAll
+                }.startAnimation()
+                textField.setCursorLocation((textField.text ?? "").count)
+            }
+        }
+    }
+    
+    @objc
     func doneAction(){
         endTextEditing()
+        contentView.bringSubviewToFront(tapView)
     }
     
     @objc
@@ -832,6 +764,8 @@ public final class TextCell: UITableViewCell, Activatable {
         if let path = indexPath {
             updateFormValueDelegate?.toggleTo(.previous, path)
         }
+        contentView.bringSubviewToFront(tapView)
+        selectAllButton?.title = .selectAll
     }
     
     @objc
@@ -839,6 +773,15 @@ public final class TextCell: UITableViewCell, Activatable {
         if let path = indexPath {
             updateFormValueDelegate?.toggleTo(.next, path)
         }
+        contentView.bringSubviewToFront(tapView)
+        selectAllButton?.title = .selectAll
+    }
+    
+    @objc
+    func tapViewTapped(){
+        contentView.sendSubviewToBack(tapView)
+        selectAllButton?.title = .selectAll
+        activate()
     }
     
     public func activate(){
@@ -848,6 +791,14 @@ public final class TextCell: UITableViewCell, Activatable {
     @objc
     func textFieldTextChanged() {
         if let text = textField.text {
+            
+            if #available(iOS 16.0, *) {
+                selectAllButton?.isHidden = text.isEmpty
+                if text.isEmpty {
+                    selectAllButton?.title = .selectAll
+                }
+            }
+            
             guard let textValue = formValue else { return }
             if textValue.characterCount != nil {
                 updateCharacterCount(text.count)
@@ -858,6 +809,8 @@ public final class TextCell: UITableViewCell, Activatable {
     
     private func endTextEditing(){
         textField.resignFirstResponder()
+        contentView.bringSubviewToFront(tapView)
+        selectAllButton?.title = .selectAll
     }
     
     
@@ -897,7 +850,7 @@ extension TextCell: UITextFieldDelegate {
                 var newText = ""
                 string.forEach { (char) in
                     if (existingText + newText).count+1 <= maxChars {
-                        print("Its Safe: \(String(char))")
+                        //print("Its Safe: \(String(char))")
                         newText.append(char)
                     }
                 }

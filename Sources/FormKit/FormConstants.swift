@@ -3,6 +3,34 @@ import UIKit
 
 
 
+extension UIBarButtonItem {
+    
+    static func selectAll(_ target: Any?,_ selector:Selector) -> UIBarButtonItem {
+        UIBarButtonItem(title: .selectAll, style: .plain, target: target, action: selector)
+    }
+    
+    static var flex:UIBarButtonItem {
+        UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+    }
+    
+}
+
+
+extension String {
+    
+    static var selectAll:String {
+        "Select All"
+    }
+    
+    static var deselectAll:String {
+        "Deselect All"
+    }
+    
+}
+
+
+
+
 // MARK: - ValidationConfiguration -
 public struct ValidationConfiguration {
     public var messageColor: UIColor?

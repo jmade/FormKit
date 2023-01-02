@@ -406,7 +406,7 @@ extension FormDataSource {
         
         for (i,section) in sections.enumerated() {
             //report += "-------------"
-            report += "-- Section [\(i)]: \(section.title) --\n"
+            report += "-- Section (\(i)) \(section.title) --\n"
             
             for (i,row) in section.rows.enumerated() {
                 report += "  [\(i)] \(row.encodedValues)\n"
@@ -418,8 +418,53 @@ extension FormDataSource {
         return report
     }
     
-    public func logParams() {
-        print(dataDescription)
+    
+    private var additionalParamsDescriptor: String {
+        
+        var report = ""
+        
+        report += "-------------\n"
+        report += "-- Additional Parameters --\n"
+        
+        var idx = 0
+        for (k,v) in additionalParameters {
+            report += "  [\(idx)] [\"\(k)\" : \"\(v)\"]\n"
+            idx += 1
+        }
+        report += "-------------\n"
+        
+        return report
+        
+    }
+    
+    
+    public func logParams(_ section:Int? = nil) {
+        if let sec = section {
+            var report = "\n"
+            report += "-------------\n"
+            report += "Form: \(title)\n"
+            report += "-------------\n"
+            
+            for (i,section) in sections.enumerated() {
+                if sec == i {
+                    report += "...\n"
+                    report += "-- Section [\(i)]: \(section.title) --\n"
+                    
+                    for (i,row) in section.rows.enumerated() {
+                        report += "  [\(i)] \(row.encodedValues)\n"
+                    }
+                    report += "...\n"
+                }
+            }
+         
+            report += "-------------\n"
+            print(report)
+            print(additionalParamsDescriptor)
+        } else {
+            print(dataDescription)
+            print(additionalParamsDescriptor)
+        }
+
     }
     
     

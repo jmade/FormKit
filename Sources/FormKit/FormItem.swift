@@ -36,6 +36,7 @@ public enum FormItem {
     case push(PushValue)
     case dateTime(DateTimeValue)
     case token(TokenValue)
+    case color(ColorValue)
 }
 
 extension FormItem {
@@ -99,6 +100,8 @@ extension FormItem: FormCellDescriptable {
             return dateTimeValue.cellDescriptor
         case .token(let tokenValue):
             return tokenValue.cellDescriptor
+        case .color(let colorValue):
+            return colorValue.cellDescriptor
         }
     }
 }
@@ -160,6 +163,8 @@ extension FormItem: Hashable, Equatable {
             return dateTimeValue.hashValue
         case .token(let tokenValue):
             return tokenValue.hashValue
+        case .color(let colorValue):
+            return colorValue.hashValue
         }
     }
     
@@ -223,6 +228,8 @@ extension FormItem {
             return dateTimeValue.encodedValue()
         case .token(let tokenValue):
             return tokenValue.encodedValue()
+        case .color(let colorValue):
+            return colorValue.encodedValue()
         }
     }
     
@@ -282,7 +289,10 @@ extension FormItem {
             return [dateTimeValue.title : dateTimeValue.encodedValue().values.first!]
         case .token(let tokenValue):
             return [tokenValue.title : tokenValue.encodedValue().values.first!]
+        case .color(let colorValue):
+            return [colorValue.title : colorValue.encodedValue().values.first!]
         }
+            
         
     }
     
@@ -403,6 +413,17 @@ extension FormItem {
     }
     
     
+    public func asSliderValue() -> SliderValue? {
+        switch self {
+        case .slider(let slider):
+            return slider
+        default:
+            break
+        }
+        return nil
+    }
+    
+    
     public func isValid() -> Bool {
         switch self {
         case .action(let action):
@@ -477,6 +498,8 @@ extension FormItem: Validatable {
             return dateTimeValue.validators
         case .token(let tokenValue):
             return tokenValue.validators
+        case .color(let colorValue):
+            return colorValue.validators
         }
     }
 }

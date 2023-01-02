@@ -9,6 +9,8 @@ public struct SwitchValue {
     public var value:Bool = false
     public var customKey:String? = nil
     public var validators: [Validator] = []
+    
+    public var valueChangedClosure: ( (SwitchValue,FormController,IndexPath) -> Void)?
 }
 
 
@@ -53,7 +55,25 @@ extension SwitchValue: Hashable, Equatable {
 extension SwitchValue {
     
     public func newToggled() -> SwitchValue {
-        SwitchValue(identifier: UUID(), title: self.title, value: !self.value, customKey: self.customKey)
+        var newVal = self
+        
+        if self.value {
+            newVal.value = false
+        } else {
+            newVal.value = true
+        }
+        return newVal
+        
+        /*
+        SwitchValue(
+            identifier: UUID(),
+            title: self.title,
+            value: !self.value,
+            customKey: self.customKey,
+            validators: self.validators,
+            valueChangedClosure: self.valueChangedClosure
+        )
+        */
     }
     
 }
@@ -190,9 +210,10 @@ public final class SwitchCell: UITableViewCell {
     private func selectionOccured() {
         performFeedback()
         guard let switchValue = formValue else { return }
-        let newSwitchValue = switchValue.newToggled()
+        var newValue = switchValue
+        newValue.value = switchControl.isOn
         updateFormValueDelegate?.updatedFormValue(
-            newSwitchValue,
+            newValue,
             indexPath
         )
     }

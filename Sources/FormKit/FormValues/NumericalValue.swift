@@ -326,6 +326,8 @@ public final class NumericalCell: UITableViewCell, Activatable {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: .body)
         label.textAlignment = .left
+        label.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         return label
     }()
     
@@ -335,6 +337,8 @@ public final class NumericalCell: UITableViewCell, Activatable {
         textField.returnKeyType = .done
         textField.textAlignment = .left
         textField.font = UIFont.preferredFont(forTextStyle: .headline)
+        textField.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        textField.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         return textField
     }()
     
@@ -472,6 +476,8 @@ public final class NumericalCell: UITableViewCell, Activatable {
     
     
     private var didLayout:Bool = false
+    
+    private var selectAllButton:UIBarButtonItem?
     
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -636,23 +642,67 @@ public final class NumericalCell: UITableViewCell, Activatable {
         super.setSelected(selected, animated: false)
         if selected {
             textField.becomeFirstResponder()
-            textField.selectAll(nil)
+            //textField.selectAll(nil)
         }
     }
   
     func evaluateButtonBar(){
         guard let numericalValue = formValue else { return }
+        
+    
+        
+        
+        var barItems:[UIBarButtonItem] = []
+        
         if numericalValue.useDirectionButtons {
             // Toolbar
-            let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: 44.0)))
-            let previous = UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction))
-            let next = UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction))
-            let spacer = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-            let done = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
-            bar.items = [previous,next,spacer,done]
+            barItems = [
+                UIBarButtonItem(image: Image.Chevron.previousChevron, style: .plain, target: self, action: #selector(previousAction)),
+                UIBarButtonItem(image: Image.Chevron.nextChevron, style: .plain, target: self, action: #selector(nextAction)),
+                .flexible
+            ]
+        }
+        
+        
+        if #available(iOS 16.0, *) {
+            selectAllButton = .selectAll(self,#selector(performSelectAll(_:)))
             
-            bar.sizeToFit()
-            textField.inputAccessoryView = bar
+            if let text = textField.text {
+                selectAllButton!.isHidden = text.isEmpty
+            }
+            
+            barItems.append(selectAllButton!)
+            barItems.append(.flexible)
+        }
+        
+        
+        barItems.append(
+            UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneAction))
+        )
+        
+        
+        let bar = UIToolbar(frame: CGRect(.zero, CGSize(width: contentView.frame.size.width, height: 44.0)))
+        bar.items = barItems
+        bar.sizeToFit()
+        textField.inputAccessoryView = bar
+    }
+    
+    
+    @objc
+    func performSelectAll(_ sender:UIBarButtonItem) {
+        
+        if let title = sender.title {
+            if title == .selectAll {
+                UIViewPropertyAnimator(duration: 1/3, curve: .easeInOut) {
+                    sender.title = .deselectAll
+                }.startAnimation()
+                textField.selectAll(nil)
+            } else {
+                UIViewPropertyAnimator(duration: 1/3, curve: .easeInOut) {
+                    sender.title = .selectAll
+                }.startAnimation()
+                textField.setCursorLocation((textField.text ?? "").count)
+            }
         }
     }
     
@@ -667,6 +717,7 @@ public final class NumericalCell: UITableViewCell, Activatable {
         if let path = indexPath {
             updateFormValueDelegate?.toggleTo(.previous, path)
         }
+        selectAllButton?.title = .selectAll
     }
     
     @objc
@@ -674,11 +725,12 @@ public final class NumericalCell: UITableViewCell, Activatable {
         if let path = indexPath {
             updateFormValueDelegate?.toggleTo(.next, path)
         }
+        selectAllButton?.title = .selectAll
     }
     
     public func activate(){
         textField.becomeFirstResponder()
-        textField.selectAll(nil)
+        //textField.selectAll(nil)
     }
     
     
@@ -686,6 +738,14 @@ public final class NumericalCell: UITableViewCell, Activatable {
         guard let currentValue = formValue else { return }
         
         if let text = textField.text {
+            
+            if #available(iOS 16.0, *) {
+                selectAllButton?.isHidden = text.isEmpty
+                if text.isEmpty {
+                    selectAllButton?.title = .selectAll
+                }
+            }
+            
             let newValue = currentValue.newWith(text)
             
             let becameValid = currentValue.formItem.invalid && newValue.formItem.valid
@@ -713,7 +773,10 @@ public final class NumericalCell: UITableViewCell, Activatable {
     
     private func endTextEditing(){
         textField.resignFirstResponder()
+        selectAllButton?.title = .selectAll
     }
+    
+    
     
 }
 
