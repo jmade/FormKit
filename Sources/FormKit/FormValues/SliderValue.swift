@@ -27,6 +27,7 @@ public struct SliderValue {
     
     public var incrementAmount: Double = 1.0
     
+    private var isHueSlider: Bool = false
 }
 
 
@@ -52,6 +53,10 @@ extension SliderValue: Equatable {
 
 
 extension SliderValue {
+    
+    var hueValue: Bool {
+        isHueSlider
+    }
     
     public init(_ title:String,value:Double) {
         self.title = title
@@ -117,6 +122,19 @@ extension SliderValue {
         self.valueType = valueType
         self.decimalNumbers = decimalNumbers
         self.sliderConfig = sliderConfig
+        self.customKey = customKey
+    }
+    
+    public init(title:String,hue:Int,_ customKey:String?) {
+        self.isHueSlider = true
+        self.title = title
+        self.value = Double(hue)
+        self.valueType = .int
+        self.decimalNumbers = 0
+        self.sliderConfig = {
+            $0.minimumValue = 0
+            $0.maximumValue = 359
+        }
         self.customKey = customKey
     }
 
@@ -340,6 +358,10 @@ public final class SliderCell: UITableViewCell {
     private lazy var slider: UISlider = {
         let slider = UISlider()
         slider.addTarget(self, action: #selector(handleSlider(_:)), for: .valueChanged)
+        //slider.addTarget(self, action: #selector(handleSliderTap(_:)), for: .touchUpInside)
+        slider.addGestureRecognizer(
+            UITapGestureRecognizer(target: self, action: #selector(handleSliderTap(_:)))
+        )
         slider.translatesAutoresizingMaskIntoConstraints = false
         self.contentView.addSubview(slider)
         return slider
@@ -353,13 +375,51 @@ public final class SliderCell: UITableViewCell {
                 self.selectionStyle = .none
             }
             
-            sliderValue.sliderConfig(slider)
+            if sliderValue.hueValue {
+                slider.isHidden = true
+                gradientSlider.isHidden = false
+                
+                let hueValue = CGFloat(sliderValue.value/255.0)
+                gradientSlider.thumbColor = UIColor(hue: hueValue, saturation: 1.0, brightness: 1.0, alpha: 1.0)
+                gradientSlider.setValue(hueValue)
+                valueLabel.text = "\(Int(sliderValue.value))"
+                lastValue = Float(hueValue)
+            } else {
+                slider.isHidden = false
+                gradientSlider.isHidden = true
+                
+                sliderValue.sliderConfig(slider)
+                slider.setValue(sliderValue.sliderValue, animated: true)
+                valueLabel.text = sliderValue.displayValue(slider.value)
+                lastValue = sliderValue.sliderValue
+            }
             titleLabel.text = sliderValue.title
-            slider.setValue(sliderValue.sliderValue, animated: true)
-            lastValue = sliderValue.sliderValue
-            valueLabel.text = sliderValue.displayValue(slider.value)
         }
     }
+    
+    private lazy var gradientSlider: GradientSlider = {
+       let slider = GradientSlider()
+        slider.minColor = .blue
+        slider.hasRainbow = true
+        slider.actionBlock = { slider, value, finished in
+            //First disable animations so we get instantaneous updates
+            CATransaction.begin()
+            CATransaction.setValue(true, forKey: kCATransactionDisableActions)
+            //Update hueSlider's thumb color to match our new value
+            slider.thumbColor = UIColor(hue: value, saturation: 1.0, brightness: 1.0, alpha: 1.0)
+            // (Note: We use the slider variable passed instead of 'hueSlide' to avoid retain cycles)
+            CATransaction.commit()
+            
+        }
+        slider.translatesAutoresizingMaskIntoConstraints = false
+        self.contentView.addSubview(slider)
+        slider.addTarget(self, action: #selector(handleHueSlider(_:)), for: .valueChanged)
+        //slider.addTarget(self, action: #selector(handleHueSliderTap(_:)), for: .touchUpInside)
+        slider.addGestureRecognizer(
+            UITapGestureRecognizer(target: self, action: #selector(handleHueSliderTap(_:)))
+        )
+        return slider
+    }()
     
     
     private var lastValue:Float = .zero
@@ -376,6 +436,11 @@ public final class SliderCell: UITableViewCell {
             valueLabel.topAnchor.constraint(equalTo: titleLabel.topAnchor),
             valueLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
             
+            gradientSlider.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12.0),
+            gradientSlider.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            gradientSlider.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            gradientSlider.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16.0),
+            
             slider.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12.0),
             slider.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
             slider.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
@@ -391,6 +456,7 @@ public final class SliderCell: UITableViewCell {
     }
     
 }
+
 
 
 extension SliderCell {
@@ -442,9 +508,47 @@ extension SliderCell {
         
     }
     
+    
+    
+    
+    @objc private func handleSliderTap(_ tap:UITapGestureRecognizer) {
+        let tapLoc = tap.location(in: slider)
+        let tapPercentage = tapLoc.x/slider.bounds.width
+        let sliderRange = CGFloat(slider.maximumValue) - CGFloat(slider.minimumValue)
+        let newValue = sliderRange * tapPercentage
+        
+        slider.setValue(Float(newValue), animated: true)
+        interperateValue(Float(newValue))
+    }
+    
     @objc private func handleSlider(_ slider:UISlider) {
         interperateValue(slider.value)
     }
+    
+    @objc private func handleHueSliderTap(_ tap:UITapGestureRecognizer) {
+        let tapLoc = tap.location(in: gradientSlider)
+        let tapPercentage = tapLoc.x/gradientSlider.bounds.width
+        let sliderRange = gradientSlider.maximumValue - gradientSlider.minimumValue
+        let newValue = sliderRange * tapPercentage
+
+        gradientSlider.setValue(newValue, animated: true)
+        interperateValue(
+            Float(
+                newValue * 255.0
+            )
+        )
+        gradientSlider.thumbColor = UIColor(hue: newValue, saturation: 1.0, brightness: 1.0, alpha: 1.0)
+    }
+    
+    
+    @objc private func handleHueSlider(_ slider:GradientSlider) {
+        interperateValue(
+            Float(
+                slider.value * 255.0
+            )
+        )
+    }
+    
     
     private func interperateValue(_ value:Float) {
         var diff: Float = 0.0
@@ -474,4 +578,12 @@ extension SliderCell {
     }
     
     
+}
+
+
+fileprivate extension CGFloat {
+    func map(fromStart: CGFloat, fromEnd: CGFloat, toStart: CGFloat, toEnd: CGFloat) -> CGFloat {
+        let result = ((self - fromStart) / (fromEnd - fromStart)) * (toEnd - toStart) + toStart
+        return result
+    }
 }

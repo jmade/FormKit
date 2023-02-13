@@ -211,12 +211,6 @@ public final class StepperCell: UITableViewCell {
                 stepperLabel.text = String(Int(stepperValue.value))
                 titleLabel.text = stepperValue.title
                 infoLabel.text = stepperValue.info
-                
-                print(" contentView.bounds.width -> \(contentView.bounds.width) ")
-                
-//                if contentView.bounds.width < 500 {
-//                    titleLabel.preferredMaxLayoutWidth = contentView.bounds.width * 0.5
-//                }
                 if stepperValue.isSelectable == false {
                     self.selectionStyle = .none
                 }

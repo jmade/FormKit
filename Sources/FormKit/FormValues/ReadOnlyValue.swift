@@ -1,19 +1,41 @@
 import UIKit
 
 // MARK: - ReadOnlyValue -
-public struct ReadOnlyValue: Equatable, Hashable {
+public struct ReadOnlyValue {
     
     public enum ValueDisplayStyle {
-        case code, digit, bold, `default`, valueOnly, centered
+        case code, digit, bold, `default`, valueOnly, centered, valueOnlyInfo
     }
     
     public var valueDisplayStyle:ValueDisplayStyle = .default
+    
+    public var valueDisplayClosure: ((UILabel) -> Void)?
     
     public let title:String
     public let value:String
     public var isDisabled:Bool = true
     public var customKey:String? = nil
     public var validators: [Validator] = []
+    
+}
+
+
+extension ReadOnlyValue: Equatable, Hashable {
+    
+    public static func == (lhs: ReadOnlyValue, rhs: ReadOnlyValue) -> Bool {
+        lhs.title == rhs.title &&
+        lhs.value == rhs.value &&
+        lhs.isDisabled == rhs.isDisabled &&
+        lhs.customKey == rhs.customKey
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(title)
+        hasher.combine(value)
+        hasher.combine(isDisabled)
+        hasher.combine(customKey)
+    }
+    
 }
 
 
@@ -111,7 +133,13 @@ public extension ReadOnlyValue {
                               value: UIFont(descriptor: UIFont.preferredFont(forTextStyle:  .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0),
                               range: NSRange(location: 0, length: value.count)
             )
-        case .code, .default, .valueOnly:
+        case .default:
+            mutableAttribString
+               .addAttribute(.font,
+                             value: UIFont.preferredFont(forTextStyle: .body),
+                             range: NSRange(location: 0, length: value.count)
+           )
+        case .code, .valueOnly:
              mutableAttribString
                 .addAttribute(.font,
                               value: digitFont,
@@ -129,6 +157,12 @@ public extension ReadOnlyValue {
                               value: UIFont(descriptor: UIFont.preferredFont(forTextStyle:  .body).fontDescriptor.withSymbolicTraits(.traitBold)!, size: 0),
                               range: NSRange(location: 0, length: value.count)
             )
+        case .valueOnlyInfo:
+            mutableAttribString
+               .addAttribute(.font,
+                             value: UIFont.preferredFont(forTextStyle: .caption1),
+                             range: NSRange(location: 0, length: value.count)
+           )
         }
         
         return
@@ -307,7 +341,7 @@ final class ReadOnlyValueView: UIView {
             }
             
             switch readOnlyValue.valueDisplayStyle {
-            case .valueOnly:
+            case .valueOnly, .valueOnlyInfo:
                 titleLabel.isHidden = true
                 valueLabel.isHidden = true
                 valueOnlyLabel.isHidden = false
