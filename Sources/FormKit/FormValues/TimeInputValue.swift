@@ -62,6 +62,9 @@ public struct TimeInputValue {
     public var highlightWhenSelected = true
     public var validators: [Validator] = []
     
+    public var minDate:Date?
+    public var maxDate:Date?
+    
 }
 
 
@@ -132,7 +135,6 @@ extension TimeInputValue {
         self.customKey = customKey
     }
     
-    
     public init(_ title:String,_ customKey:String,_ displayTimeFormat:TimeFormat,_ exportTimeFormat:TimeFormat,_ time:String) {
         self.title = title
         self.time = time
@@ -181,7 +183,9 @@ extension TimeInputValue {
                        displayTimeFormat: self.displayTimeFormat,
                        exportTimeFormat: self.exportTimeFormat,
                        isValid: self.isValid,
-                       highlightWhenSelected: self.highlightWhenSelected
+                       highlightWhenSelected: self.highlightWhenSelected,
+                       minDate: self.minDate,
+                       maxDate: self.maxDate
         )
     }
     
@@ -195,7 +199,9 @@ extension TimeInputValue {
                        displayTimeFormat: self.displayTimeFormat,
                        exportTimeFormat: self.exportTimeFormat,
                        isValid: self.isValid,
-                       highlightWhenSelected: self.highlightWhenSelected
+                       highlightWhenSelected: self.highlightWhenSelected,
+                       minDate: self.minDate,
+                       maxDate: self.maxDate
         )
     }
     
@@ -209,7 +215,9 @@ extension TimeInputValue {
                        displayTimeFormat: self.displayTimeFormat,
                        exportTimeFormat: self.exportTimeFormat,
                        isValid: false,
-                       highlightWhenSelected: self.highlightWhenSelected
+                       highlightWhenSelected: self.highlightWhenSelected,
+                       minDate: self.minDate,
+                       maxDate: self.maxDate
         )
     }
     
@@ -223,7 +231,9 @@ extension TimeInputValue {
                        displayTimeFormat: self.displayTimeFormat,
                        exportTimeFormat: self.exportTimeFormat,
                        isValid: true,
-                       highlightWhenSelected: self.highlightWhenSelected
+                       highlightWhenSelected: self.highlightWhenSelected,
+                       minDate: self.minDate,
+                       maxDate: self.maxDate
         )
     }
     
@@ -984,6 +994,39 @@ extension TimeInputKeyboard {
         
         return data
     }
+    
+    
+    /*
+    private func generateMinMaxDataSource() -> [[String]] {
+        
+        guard
+            let timeValue = timeValue,
+            let start = timeValue.minDate,
+            let end = timeValue.maxDate
+        else { return [] }
+        
+        var data:[[String]] = []
+        
+        start.interval(ofComponent: .hour, fromDate: end)
+        
+        start.getHour()
+        start.getMins()
+        
+        print("Start: \(start.getHour()):\(start.getMins()) | End: \(end.getHour()):\(end.getMins()) ")
+        end.getHour()
+        end.getMins()
+        
+        
+        
+        
+        
+        
+        
+        
+        return data
+        
+    }
+    */
 }
 
 
@@ -1000,6 +1043,7 @@ extension TimeInputKeyboard: UIPickerViewDataSource {
     public func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
         return dataSource[component].count
     }
+    
 }
 
 
@@ -1012,6 +1056,11 @@ extension TimeInputKeyboard: UIPickerViewDelegate {
     
     public func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
         resolvePicker()
+        
+        /*
+        pickerView.selectRow(row-1, inComponent: component, animated: true)
+        */
+        
     }
     
     

@@ -595,6 +595,7 @@ extension ListSelectionValue: FormValue {
         return nil
     }
     
+    public static let DefaultSeparator = "FormKit.ListSelectionValue.Token.Separator"
     
     private var encodedSelectedValues:String? {
         if let firstItemStore = listItemStores.first {
@@ -604,10 +605,10 @@ extension ListSelectionValue: FormValue {
                 if titles.isEmpty {
                     return nil
                 } else {
-                    return titles.joined(separator: ",")
+                    return titles.joined(separator: ListSelectionValue.DefaultSeparator)
                 }
             } else {
-                return identifiers.joined(separator: ",")
+                return identifiers.joined(separator: ListSelectionValue.DefaultSeparator)
             }
         } else {
             let identifiers = listItems.filter({ $0.selected }).compactMap({ $0.identifier })
@@ -616,10 +617,10 @@ extension ListSelectionValue: FormValue {
                 if titles.isEmpty {
                     return nil
                 } else {
-                    return titles.joined(separator: ",")
+                    return titles.joined(separator: ListSelectionValue.DefaultSeparator)
                 }
             } else {
-                return identifiers.joined(separator: ",")
+                return identifiers.joined(separator: ListSelectionValue.DefaultSeparator)
             }
         }
     }
@@ -659,7 +660,6 @@ extension ListSelectionValue {
     
     
     public func newWith(_ selectedValues:[String]) -> ListSelectionValue {
-        
         var newSelectedIndicies: [Int] = []
         for selected in selectedValues {
             if let index = values.firstIndex(of: selected) {
@@ -891,7 +891,6 @@ extension ListSelectionValue {
     
     
     public func newWith(_ listItems:[ListSelectViewController.ListItem],_ underlyingObjects:[Any]) -> ListSelectionValue  {
-        
         
           var screenedListItems = listItems
           var newSelectedIndicies: [Int] = []
