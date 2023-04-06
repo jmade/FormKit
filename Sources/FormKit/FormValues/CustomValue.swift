@@ -3,16 +3,22 @@ import UIKit
 
 // MARK: - CustomValue -
 public struct CustomValue {
+    
     var identifier: UUID = UUID()
     public var customKey:String? = "CustomValue"
     
-    public typealias CellConfigurationClosure = (CustomValueCell) -> Void
+    public typealias CellConfigurationClosure = (CustomValue,CustomValueCell) -> Void
     public var cellConfigurationClosure:CellConfigurationClosure? = nil
     
-    public typealias CellDidTapClosure = (CustomValueCell) -> Bool
+    public typealias CustomValueSelectionClosure = ( (CustomValue,FormController,IndexPath) -> Void )
+    public var selectionClosure:CustomValueSelectionClosure? = nil
+    
+    public typealias CellDidTapClosure = (CustomValue,CustomValueCell) -> Bool
     public var cellDidTapClosure:CellDidTapClosure? = nil
     
     public var validators: [Validator] = []
+    
+    public var customStore:[String:Any] = [:]
     
 }
 
@@ -21,11 +27,26 @@ public struct CustomValue {
 
 public extension CustomValue {
     
-    init(cellConfiguration: @escaping CellConfigurationClosure,cellDidTap: @escaping CellDidTapClosure) {
+    init(cellConfiguration: @escaping CellConfigurationClosure) {
+        self.cellConfigurationClosure = cellConfiguration
+    }
+    
+    init(cellConfiguration: @escaping CellConfigurationClosure, cellDidTap: @escaping CellDidTapClosure) {
         self.cellConfigurationClosure = cellConfiguration
         self.cellDidTapClosure = cellDidTap
     }
-
+    
+    init(cellConfiguration: @escaping CellConfigurationClosure, selectionClosure: @escaping CustomValueSelectionClosure) {
+        self.cellConfigurationClosure = cellConfiguration
+        self.selectionClosure = selectionClosure
+    }
+    
+    func withNewIdentifier() -> CustomValue {
+        var copy = self
+        copy.identifier = UUID()
+        return copy
+    }
+    
 }
 
 
@@ -53,20 +74,24 @@ extension CustomValue: FormValueDisplayable {
     }
     
     public func didSelect(_ formController: Controller, _ path: IndexPath) {
-        /*  */
+        if let selectedFormItem = formController.dataSource.itemAt(path) {
+            switch selectedFormItem {
+            case .custom(let customValue):
+                selectionClosure?(customValue,formController,path)
+            default:
+                break
+            }
+        }
     }
     
     public func configureCell(_ formController: Controller, _ cell: Cell, _ path: IndexPath) {
         cell.formValue = self
         cell.indexPath = path
         cell.updateFormValueDelegate = formController
+        cell.tableView = formController.tableView
     }
     
-    
 }
-
-
-
 
 
 
@@ -84,12 +109,6 @@ extension CustomValue: Hashable, Equatable {
 }
 
 
-
-public class CustomView: UIView {
-    
-}
-
-
 //: MARK: CustomValueCell
 public final class CustomValueCell: UITableViewCell {
     
@@ -98,14 +117,14 @@ public final class CustomValueCell: UITableViewCell {
     var formValue : CustomValue? {
         didSet {
             guard let customValue = formValue else { return }
-            customValue.cellConfigurationClosure?(self)
+            customValue.cellConfigurationClosure?(customValue,self)
         }
     }
     
-    public var customView:CustomView? = nil
-    
     weak var updateFormValueDelegate: UpdateFormValueDelegate?
+    
     var indexPath:IndexPath?
+    var tableView: UITableView?
     
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -118,26 +137,30 @@ public final class CustomValueCell: UITableViewCell {
             subView.removeFromSuperview()
         }
         formValue = nil
-        customView = nil
     }
-    
     
     public override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
+        
+        guard let customValue = formValue else { return }
+        
         if selected {
-            
-            if let customValue = formValue {
-                if let closure = customValue.cellDidTapClosure {
-                    let closureResult = closure(self)
-                    if closureResult {
-                        if let path = indexPath {
-                            updateFormValueDelegate?.updatedFormValue(customValue, path)
-                        }
-                    }
+            if let closure = customValue.cellDidTapClosure {
+                if closure(customValue,self) {
+                    handleHeightUpdates()
                 }
             }
-            //formValue?.cellDidTapClosure?(self)
         }
+        
+    }
+    
+    
+    private func handleHeightUpdates() {
+        self.tableView?.beginUpdates()
+        for subView in contentView.subviews {
+            subView.sizeToFit()
+        }
+        self.tableView?.endUpdates()
     }
     
 }

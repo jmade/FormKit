@@ -1806,7 +1806,6 @@ protocol ExpandingCellDelegate: UIViewController {
 extension FormController: ExpandingCellDelegate {
     func cellNeedsToExpand(at path: IndexPath) {
         if let _ = tableView.cellForRow(at: path) {
-            print("Reloading Row!")
             tableView.reloadRows(at: [path], with: .automatic)
             
             /*
@@ -1925,31 +1924,35 @@ extension FormController {
     }
     
     
-    public func updateValue(_ formValue:FormValue, at path:IndexPath) {
+    public func updateValue(_ formValue:FormValue, at path:IndexPath,_ animated:Bool = true) {
         if let section = dataSource.section(for: path.section) {
             if let _ = section.itemForRowAt(path.row) {
                 dataSource.sections[path.section].rows[path.row] = formValue.formItem
-                tableView.reloadRows(at: [path], with: .fade)
+                if animated {
+                    tableView.reloadRows(at: [path], with: .fade)
+                } else {
+                    tableView.reloadRows(at: [path], with: .none)
+                }
             }
         }
     }
     
     
-    public func updateSection(_ newSection:FormSection, at path:IndexPath,_ activateInputs:Bool = true) {
-        self.update(newSection, path: path, activateInputs: activateInputs, preservingTitle: false)
+    public func updateSection(_ newSection:FormSection, at path:IndexPath,_ activateInputs:Bool = true,_ animated:Bool = true) {
+        self.update(newSection, path: path, activateInputs: activateInputs, preservingTitle: false, animated)
     }
     
-    public func reloadSection(_ newSection:FormSection, at path:IndexPath, preservingTitle:Bool,_ activateInputs:Bool = true) {
-        self.update(newSection, path: path, activateInputs: activateInputs, preservingTitle: preservingTitle)
+    public func reloadSection(_ newSection:FormSection, at path:IndexPath, preservingTitle:Bool,_ activateInputs:Bool = true,_ animated:Bool = true) {
+        self.update(newSection, path: path, activateInputs: activateInputs, preservingTitle: preservingTitle, animated)
     }
     
-    public func reloadSection(_ newSection:FormSection, at path:IndexPath) {
-        self.update(newSection, path: path, activateInputs: true, preservingTitle: true)
+    public func reloadSection(_ newSection:FormSection, at path:IndexPath, _ animated:Bool = true) {
+        self.update(newSection, path: path, activateInputs: true, preservingTitle: true, animated)
     }
     
     
     // Update
-    private func update(_ newSection:FormSection, path:IndexPath, activateInputs:Bool = true, preservingTitle:Bool) {
+    private func update(_ newSection:FormSection, path:IndexPath, activateInputs:Bool = true, preservingTitle:Bool, _ animated:Bool = true) {
         // Title
         var section = newSection
         
@@ -1961,13 +1964,11 @@ extension FormController {
         
         dataSource.sections[path.section] = section
         
-        if preservingTitle {
+        if animated {
             tableView.reloadSections(IndexSet(integer: path.section), with: .automatic)
         } else {
-            tableView.reloadSections(IndexSet(integer: path.section), with: .automatic)
+            tableView.reloadSections(IndexSet(integer: path.section), with: .none)
         }
-        
-        
         
         guard activateInputs else {
             return
