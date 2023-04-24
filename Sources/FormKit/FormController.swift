@@ -2086,6 +2086,37 @@ extension FormController {
     }
     
     
+    public func addFormValue(_ formValue:FormValue,toTopOf section:Int) {
+        
+        guard !dataSource.isEmpty else {
+            return
+        }
+        
+        dataSource.sections[section].rows.insert(formValue.formItem, at: 0)
+        tableView.insertRows(at: [IndexPath(row: 0, section: section)], with: .automatic)
+    }
+    
+    public func addFormValues(_ formValues:[FormValue],toTopOf section:Int) {
+        var paths:[IndexPath] = []
+        var row = 0
+        for formValue in formValues {
+            paths.append(
+                IndexPath(row: row, section: section)
+            )
+            dataSource.sections[section].rows.insert(formValue.formItem, at: 0)
+            row += 1
+        }
+        tableView.insertRows(at: paths, with: .automatic)
+    }
+    
+    
+    public func addFormItem(_ formItem:FormItem,toTopOf section:Int) {
+        dataSource.sections[section].rows.insert(formItem, at: 0)
+        tableView.insertRows(at: [IndexPath(row: 0, section: section)], with: .automatic)
+    }
+    
+    
+    
 }
 
 
