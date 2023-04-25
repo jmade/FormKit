@@ -782,10 +782,8 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
             } else {
                 
                 if self.preferredContentSize.height != newContentSize.height {
-                    //print("ContentSizeIncomingHeight: \(tv.contentSize.height) | Inset Height:\(tv.contentInset.top + tv.contentInset.bottom)")
                     self.preferredContentSize = CGSize(width: self.preferredContentSize.width, height: newContentSize.height)
                     self.view.setNeedsLayout()
-                    //self.preferredContentSize = newContentSize
                 }
                 
                
@@ -824,7 +822,6 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     
     
     open override func viewDidAppear(_ animated: Bool) {
-        print("[FormController \(identifier)] viewDidAppear")
         super.viewDidAppear(animated)
         
         loadingClosure?(self)
@@ -2198,7 +2195,6 @@ extension FormController {
             for row in rows {
                 if visiblePaths.contains(row) {
                     if let actionCell = tableView.cellForRow(at: row) as? ActionCell {
-                        //print("Changing Action Cell at:\(row) | \(actionCell)")
                         enabled ? actionCell.setEnabled() : actionCell.setDisabled()
                     }
                 }
