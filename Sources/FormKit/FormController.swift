@@ -478,6 +478,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     
     private var alertTextFieldInput: String? = nil
     
+    private var identifier:String = UUID().uuidString
     
     
     // MARK: - FormDisplayStyle -
@@ -511,7 +512,12 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     public var scrollsWithSectionExpansion: Bool = true
     
     
+    // Notification center support
+    public typealias NotificationClosure = (FormController,Notification) -> Void
+    public var notificationHandler:NotificationClosure?
+    private var notificationName:Notification.Name?
     
+
     // MARK: - INIT -
     required public init?(coder aDecoder: NSCoder) {fatalError()}
     
@@ -539,6 +545,8 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
         self.activatesInputOnAppear = configuration.activatesInputOnAppear
         self.allowModalDismissal = configuration.allowModalDismissal
         self.dataSource.updateClosure = configuration.updateClosure
+        self.notificationName = configuration.notificationName
+        self.notificationHandler = configuration.notificationHandler
         
     }
     
@@ -654,6 +662,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     
     // MARK: - setupUI -
     private func setupUI() {
+        
         didLoad = true
         if #available(iOS 15.0, *) {
             tableView.sectionHeaderTopPadding = 0
@@ -683,14 +692,12 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
         
         setupToolBar()
         
-        if let closure = loadingClosure {
+        if let _ = loadingClosure {
             tableView.tableFooterView = ItemsLoadingView(
                 message: loadingMessage ?? "Loading",
                 textStyle: .body,
                 color: UIColor.FormKit.text
             )
-            
-            closure(self)
         } else {
             if let loadingMessage = loadingMessage {
                 tableView.tableFooterView = ItemsLoadingView(
@@ -703,6 +710,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
         
         didLoad = true
         checkBarItems()
+        startNotificationCenterObservation()
     }
     
     
@@ -758,10 +766,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
         if didLoad == false {
             setupUI()
         }
-        
-        
-        
-        
+
         contentSizeObserver = tableView.observe(\.contentSize) { [weak self] tv, _ in
             guard let self = self else { return }
         
@@ -792,6 +797,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     }
     
     
+    
     override open func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
@@ -818,12 +824,48 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     
     
     open override func viewDidAppear(_ animated: Bool) {
+        print("[FormController \(identifier)] viewDidAppear")
         super.viewDidAppear(animated)
+        
+        loadingClosure?(self)
+        
         checkBarItems()
         checkForActiveInput()
         runValidation()
-        
     }
+    
+    
+    
+    // MARK: - Notification -
+
+    public func setNotificationObservation(_ name:String,notificationClosure: @escaping NotificationClosure) {
+        self.notificationName = Notification.Name(name)
+        self.notificationHandler = notificationClosure
+        startNotificationCenterObservation()
+    }
+    
+    public func setNotificationObservation(_ notificationName:Notification.Name,notificationClosure: @escaping NotificationClosure) {
+        self.notificationName = notificationName
+        self.notificationHandler = notificationClosure
+        startNotificationCenterObservation()
+    }
+    
+    @objc func handleNotification(_ notification:Notification) {
+        notificationHandler?(self,notification)
+    }
+    
+    private func startNotificationCenterObservation() {
+        if let notificationName = notificationName {
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(handleNotification(_:)),
+                name: notificationName,
+                object: nil
+            )
+        }
+    }
+    
+    
     
     
     private func itemsToReload(new:[FormDataSource.InvalidItem]) -> [FormDataSource.InvalidItem] {
@@ -2086,13 +2128,23 @@ extension FormController {
     }
     
     
-    public func addFormValue(_ formValue:FormValue,toTopOf section:Int) {
+    public func addFormValue(_ formValue:FormValue,toTopOf section:Int,_ title:String? = nil) {
         
         guard !dataSource.isEmpty else {
             return
         }
         
         dataSource.sections[section].rows.insert(formValue.formItem, at: 0)
+        
+        if let title = title {
+            var headerValue = dataSource.sections[0].headerValue
+            headerValue.title = title
+            
+            if let headerView = tableView.headerView(forSection: 0) as? FormHeaderCell  {
+                headerView.headerValue = headerValue
+            }
+        }
+        
         tableView.insertRows(at: [IndexPath(row: 0, section: section)], with: .automatic)
     }
     
@@ -2112,6 +2164,10 @@ extension FormController {
     
     public func addFormItem(_ formItem:FormItem,toTopOf section:Int) {
         dataSource.sections[section].rows.insert(formItem, at: 0)
+        
+       
+        
+        
         tableView.insertRows(at: [IndexPath(row: 0, section: section)], with: .automatic)
     }
     
@@ -2239,6 +2295,7 @@ public struct FormAlertAction {
     let title:String
     let action: (() -> Void)
     var actionText: ((String?) -> Void)? = nil
+    var isDestructive: Bool = false
 }
 
 
@@ -2265,7 +2322,12 @@ extension FormAlertAction {
     }
     
     var soundsDestructive: Bool {
-        destructiveExamples.contains(title)
+        if isDestructive {
+            return true
+        } else {
+           return destructiveExamples.contains(title)
+        }
+        
     }
     
     var alertAction: UIAlertAction {
@@ -2295,9 +2357,8 @@ extension FormController {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         alert.addAction(action.alertAction)
-        present(alert, animated: true) { [weak self] in
-            self?.generateHapticFeedback(.heavyImpact)
-        }
+        generateHapticFeedback(.mediumImpact)
+        present(alert, animated: true,completion: nil)
     }
     
     
@@ -2306,10 +2367,35 @@ extension FormController {
         actions.forEach({
             alert.addAction($0.alertAction)
         })
-        present(alert, animated: true) { [weak self] in
-            self?.generateHapticFeedback(.heavyImpact)
-        }
+        generateHapticFeedback(.mediumImpact)
+        present(alert, animated: true,completion: nil)
     }
+    
+    
+    public func showDestructiveSheet(_ title:String,_ message:String = "",_ destructiveOptionTitle:String,actionHandler: @escaping (() -> Void)) {
+        let alert = makeAlertController(title, message)
+        
+        var formAlertAction = FormAlertAction(destructiveOptionTitle, action: actionHandler)
+        formAlertAction.isDestructive = true
+        alert.addAction(formAlertAction.alertAction)
+ 
+        generateHapticFeedback(.mediumImpact)
+        present(alert, animated: true,completion: nil)
+    }
+    
+    
+    public func showDestructiveAlert(_ title:String,_ message:String = "",_ destructiveOptionTitle:String,actionHandler: @escaping (() -> Void)) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        
+        var formAlertAction = FormAlertAction(destructiveOptionTitle, action: actionHandler)
+        formAlertAction.isDestructive = true
+        alert.addAction(formAlertAction.alertAction)
+ 
+        generateHapticFeedback(.mediumImpact)
+        present(alert, animated: true,completion: nil)
+    }
+    
+    
     
     // MARK: - AlertEditingText -
     public func showAlertEditingText(_ title:String,_ message:String? = nil, placeholderText:String, with actions:[FormAlertAction]) {
@@ -2334,9 +2420,8 @@ extension FormController {
             }
         })
         
-        present(alert, animated: true) { [weak self] in
-            self?.generateHapticFeedback(.heavyImpact)
-        }
+        generateHapticFeedback(.mediumImpact)
+        present(alert, animated: true,completion: nil)
         
     }
     

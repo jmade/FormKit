@@ -46,6 +46,10 @@ public struct FormControllerConfiguration {
     public var activatesInputOnAppear: Bool = false
     
     public var allowModalDismissal: Bool = true
+    
+    public var notificationName: Notification.Name?
+    
+    public var notificationHandler: FormController.NotificationClosure?
 }
 
 
@@ -77,7 +81,10 @@ extension FormControllerConfiguration {
                 _ validationClosure: FormValidationClosure? = nil,
                 _ loadingMessage: String? = nil,
                 _ loadingClosure: FormController.FormDataLoadingClosure? = nil,
-                _ updateClosure: FormDataSourceUpdateClosure? = nil) {
+                _ updateClosure: FormDataSourceUpdateClosure? = nil,
+                _ notificationName: Notification.Name? = nil,
+                _ notificaitonHandler: FormController.NotificationClosure? = nil
+    ) {
         self.showsCancelButton = showsCancelButton
         self.showsDoneButton = showsDoneButton
         self.activatesInputOnAppear = activatesInputOnAppear
