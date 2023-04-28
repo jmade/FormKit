@@ -386,6 +386,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     /// Loading
     public typealias FormDataLoadingClosure = (FormController) -> Void
     public var loadingClosure: FormDataLoadingClosure? = nil
+    private var loadingClosureCalled = false
     private var didLoad = false
     
     private var loadingMessage: String? = nil
@@ -809,7 +810,6 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
             setupUI()
         }
         
-        
     }
     
     
@@ -824,7 +824,10 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     open override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        loadingClosure?(self)
+        if loadingClosureCalled == false {
+            loadingClosureCalled = true
+            loadingClosure?(self)
+        }
         
         checkBarItems()
         checkForActiveInput()
@@ -973,6 +976,27 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
         previewController!.dataSource = self
         previewItem = FKPreview(title ?? "", url)
         navigationController?.pushViewController(previewController!, animated: true)
+    }
+    
+    
+    public func addFormValue(_ formValue:FormValue,toTopOf section:Int,_ title:String? = nil) {
+        
+        guard !dataSource.isEmpty else {
+            return
+        }
+        
+        dataSource.sections[section].rows.insert(formValue.formItem, at: 0)
+        
+        if let title = title {
+            var headerValue = dataSource.sections[0].headerValue
+            headerValue.title = title
+            
+            if let headerView = tableView.headerView(forSection: 0) as? FormHeaderCell  {
+                headerView.headerValue = headerValue
+            }
+        }
+        
+        tableView.insertRows(at: [IndexPath(row: 0, section: section)], with: .automatic)
     }
 
     
@@ -2124,7 +2148,7 @@ extension FormController {
        
     }
     
-    
+    /*
     public func addFormValue(_ formValue:FormValue,toTopOf section:Int,_ title:String? = nil) {
         
         guard !dataSource.isEmpty else {
@@ -2144,7 +2168,8 @@ extension FormController {
         
         tableView.insertRows(at: [IndexPath(row: 0, section: section)], with: .automatic)
     }
-    
+    */
+     
     public func addFormValues(_ formValues:[FormValue],toTopOf section:Int) {
         var paths:[IndexPath] = []
         var row = 0
@@ -2941,7 +2966,7 @@ public final class FormHeaderCell: UITableViewHeaderFooterView {
     
     public weak var delegate:SectionTapDelegate?
     
-    var headerValue:HeaderValue? {
+    public  var headerValue:HeaderValue? {
         didSet {
             if let header = headerValue {
                 applyHeader(header)
