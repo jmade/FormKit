@@ -48,6 +48,8 @@ public struct TextValue {
     public var inputConfiguration: InputConfiguration?
     public var validationRules:[StringRule] = []
     
+    public var attributedValue:NSAttributedString?
+    
 }
 
 
@@ -276,6 +278,7 @@ extension TextValue {
         newValue.inputDescription = self.inputDescription
         newValue.allowedChars = self.allowedChars
         newValue.inputConfiguration = self.inputConfiguration
+        newValue.attributedValue = self.attributedValue
         return newValue
         
     }
@@ -494,7 +497,7 @@ public final class TextCell: UITableViewCell, Activatable {
                 textValue.textConfigurationClosure(textField)
                 
                 contentView.layoutSubviews()
-                contentView.bringSubviewToFront(tapView)
+                contentView.bringSubviewToFront(tapView) //
                 
                 
             }
@@ -523,6 +526,8 @@ public final class TextCell: UITableViewCell, Activatable {
     
     private var selectAllButton:UIBarButtonItem?
     
+    public var didResignActiveClosure: (() -> Void)?
+    
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -534,6 +539,7 @@ public final class TextCell: UITableViewCell, Activatable {
         super.prepareForReuse()
         textField.text = nil
         titleLabel.text = nil
+        titleLabel.attributedText = nil
         indexPath = nil
         inputDescriptionLabel.text = nil
         validationLabel.attributedText = nil
@@ -756,7 +762,7 @@ public final class TextCell: UITableViewCell, Activatable {
     @objc
     func doneAction(){
         endTextEditing()
-        contentView.bringSubviewToFront(tapView)
+        resignActive()
     }
     
     @objc
@@ -764,7 +770,7 @@ public final class TextCell: UITableViewCell, Activatable {
         if let path = indexPath {
             updateFormValueDelegate?.toggleTo(.previous, path)
         }
-        contentView.bringSubviewToFront(tapView)
+        resignActive()
         selectAllButton?.title = .selectAll
     }
     
@@ -773,7 +779,7 @@ public final class TextCell: UITableViewCell, Activatable {
         if let path = indexPath {
             updateFormValueDelegate?.toggleTo(.next, path)
         }
-        contentView.bringSubviewToFront(tapView)
+        resignActive()
         selectAllButton?.title = .selectAll
     }
     
@@ -809,10 +815,15 @@ public final class TextCell: UITableViewCell, Activatable {
     
     private func endTextEditing(){
         textField.resignFirstResponder()
-        contentView.bringSubviewToFront(tapView)
+        resignActive()
         selectAllButton?.title = .selectAll
     }
     
+    
+    private func resignActive() {
+        didResignActiveClosure?()
+        contentView.bringSubviewToFront(tapView)
+    }
     
 }
 

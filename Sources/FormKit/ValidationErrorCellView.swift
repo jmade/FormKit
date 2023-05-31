@@ -117,7 +117,6 @@ final class ValidationErrorCellView: UIView {
     
     
     public func set(_ errors:[String],_ image:UIImage? = nil) {
-        print("Getting Set with: \(errors)")
         if let image = image {
             iconImage = image
         }
@@ -153,8 +152,6 @@ final class ValidationErrorCellView: UIView {
             label
         )
         
-        
-        print("makeEntryStack: \(message)")
         return stack
     }
     

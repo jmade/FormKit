@@ -2,6 +2,65 @@
 import UIKit
 
 
+extension NSAttributedString {
+    
+    
+    static func icon(_ imageName:String,textStyle:UIFont.TextStyle,tintColor:UIColor?) -> NSAttributedString {
+        
+        let completeText = NSMutableAttributedString(string: "")
+       
+        
+        let imageAttachment = NSTextAttachment()
+        if #available(iOS 13.0, *) {
+            let symbolConfig = UIImage.SymbolConfiguration(textStyle: textStyle)
+            if let image = UIImage(systemName: imageName, withConfiguration: symbolConfig) {
+                imageAttachment.image = image.withTintColor(
+                    tintColor ?? .label,
+                    renderingMode: .alwaysTemplate
+                )
+                
+                let attachmentString = NSAttributedString(attachment: imageAttachment)
+                completeText.append(attachmentString)
+                completeText.append(NSAttributedString(string: "\u{205F}"))
+            }
+        }
+        
+        return completeText
+        
+    }
+    
+    
+    static func addIconTo(_ attribedString:NSAttributedString?,_ imageName:String) -> NSAttributedString {
+
+        
+        let completeText = NSMutableAttributedString(string: "")
+       
+        
+        let imageAttachment = NSTextAttachment()
+        if #available(iOS 13.0, *) {
+            let symbolConfig = UIImage.SymbolConfiguration(textStyle: .subheadline)
+            if let image = UIImage(systemName: imageName, withConfiguration: symbolConfig) {
+                imageAttachment.image = image.withTintColor(
+                    .label,
+                    renderingMode: .alwaysTemplate
+                )
+                
+                let attachmentString = NSAttributedString(attachment: imageAttachment)
+                completeText.append(attachmentString)
+                completeText.append(NSAttributedString(string: "\u{205F}"))
+            }
+        }
+        if let attribedString {
+            completeText.append(attribedString)
+        }
+        
+        
+        return completeText
+    }
+    
+}
+
+
 
 extension UIBarButtonItem {
     

@@ -197,6 +197,12 @@ public final class ListSelectViewController: UITableViewController {
             return copy
         }
         
+        public func asSelected() -> ListItem {
+            var copy = self
+            copy.selected = true
+            return copy
+        }
+        
     }
     
     
@@ -249,48 +255,117 @@ public final class ListSelectViewController: UITableViewController {
     }
     
     enum WriteInState {
-        case display, input
+        case display, input, create
     }
     
-    private var writeInState:WriteInState = .input
+    private var writeInState:WriteInState = .create
     
     
     private var textValue:TextValue?
+    
+    private var searchQueryInput = ""
+    
+    private var createNewLabel:String {
+        "New: "
+        /*
+        var newMessage = "New: "
+        if let contentTypeName  = _formValue?.writeInConfiguration?.contentTypeName {
+            newMessage += " \(contentTypeName): "
+        }
+        return newMessage
+        */
+    }
+    
+    private var writeInAttributedString:NSAttributedString? {
+        guard !searchQueryInput.isEmpty else {
+            return nil
+        }
+
+        let mutableAS = NSMutableAttributedString()
+        
+        if #available(iOS 13.0, *) {
+            
+            mutableAS.append(
+                .icon("plus.circle", textStyle: .body, tintColor: .systemGreen)
+            )
+            
+            mutableAS.append(
+                NSAttributedString(string: createNewLabel, attributes: [
+                    .foregroundColor : UIColor.secondaryLabel
+                ])
+            )
+            
+            mutableAS.append(
+                NSAttributedString(string: "'\(searchQueryInput)'", attributes: [
+                    .foregroundColor : UIColor.label
+                ])
+            )
+        }
+        
+        return NSAttributedString(attributedString: mutableAS)
+    }
+    
+    private var createNewAttributedString:NSAttributedString {
+        let mutableAS = NSMutableAttributedString()
+        
+        let style = NSMutableParagraphStyle()
+        style.alignment = .center
+        
+        if #available(iOS 13.0, *) {
+            
+            mutableAS.append(
+                .icon("plus.circle", textStyle: .body, tintColor: .systemGreen)
+            )
+            
+            mutableAS.append(
+                NSAttributedString(string: createNewLabel, attributes: [
+                    .foregroundColor : UIColor.secondaryLabel,
+                    .paragraphStyle : style
+                ])
+            )
+        }
+        
+        return NSAttributedString(attributedString: mutableAS)
+    }
     
     
     private var loadedTextValue:TextValue? {
         return _formValue?.writeInConfiguration?.textValue
     }
     
-    private lazy var textV:TextValue = {
-        
-        if let loaded = loadedTextValue {
-            if let loadedConfifg = loaded.inputConfiguration {
-                let newConfig = TextValue.InputConfiguration(loadedConfifg.displaysInputBar,
-                                                             loadedConfifg.useDirectionButtons,
-                                                             loadedConfifg.returnKeyType) { [weak self] in
-                    loadedConfifg.returnPressedClosure?($0)
+    private func generateWriteInTextValue() -> TextValue {
+         
+        func inputConfiguration() -> TextValue.InputConfiguration {
+            if let loadedConfig = loadedTextValue?.inputConfiguration {
+                let newConfig = TextValue.InputConfiguration(loadedConfig.displaysInputBar,
+                                                             loadedConfig.useDirectionButtons,
+                                                             loadedConfig.returnKeyType) { [weak self] in
+                    loadedConfig.returnPressedClosure?($0)
                     self?.returnPressed($0.value)
                 }
-                var value = loaded
-                value.inputConfiguration = newConfig
-                return value
+                return newConfig
             } else {
-                var value = loaded
-                value.inputConfiguration = TextValue.InputConfiguration(false, false, .done, { [weak self] in
+                let newConfig = TextValue.InputConfiguration(true, false, .done) { [weak self] in
                     self?.returnPressed($0.value)
-                })
-                return value
+                }
+                return newConfig
             }
         }
         
-        var tv = TextValue("", "✍🏻", "Custom")
-        tv.inputConfiguration = TextValue.InputConfiguration(false, false, .done, { [weak self] in
-            self?.returnPressed($0.value)
-        })
+        var tv = loadedTextValue ?? TextValue("", "✍🏻", "Custom")
+        tv.inputConfiguration = inputConfiguration()
+        if tv.allowedChars == nil {
+            tv.allowedChars = "'%#,"
+        }
+        
         tv.style = .writeIn
+        
+        if !searchQueryInput.isEmpty {
+            tv.value = searchQueryInput
+        }
+        
         return tv
-    }()
+    }
     
     
     enum WriteInStyle {
@@ -455,6 +530,10 @@ public final class ListSelectViewController: UITableViewController {
     }
     
     
+    private var shouldSwitchWriteInStateToCreate = true
+    
+    private let feedbackGenerator = UIImpactFeedbackGenerator()
+    
     
     // MARK: - Init -
     required init?(coder aDecoder: NSCoder) {fatalError()}
@@ -464,9 +543,9 @@ public final class ListSelectViewController: UITableViewController {
         super.init(style: listSelectValue.makeDescriptor().tableViewStyle)
         tableView.register(ListItemCell.self, forCellReuseIdentifier: ListItemCell.ReuseID)
         tableView.register(WriteInCell.self, forCellReuseIdentifier: WriteInCell.ReuseID)
+        tableView.register(CreateNewCell.self, forCellReuseIdentifier: CreateNewCell.ReuseID)
         tableView.register(TextCell.self, forCellReuseIdentifier: TextCell.ReuseID)
         tableView.register(FormHeaderCell.self, forHeaderFooterViewReuseIdentifier: FormHeaderCell.identifier)
-        
         
         if #available(iOS 15.0, *) {
             tableView.sectionHeaderTopPadding = 0
@@ -580,7 +659,38 @@ public final class ListSelectViewController: UITableViewController {
     }
     
     
+    private func textValueDidResignActive() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { [weak self] in
+            guard let self = self else { return }
+            self.checkWriteInState()
+        }
+    }
+    
+    private func checkWriteInState() {
+        guard shouldSwitchWriteInStateToCreate else {
+            return
+        }
+        if self.writeInState == .input {
+            self.writeInState = .create
+            performFeedback(0.25)
+            tableView.reloadRows(at: [IndexPath(row: 0, section: 0)], with: .fade)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { [weak self] in
+                self?.performFeedback(0.67)
+            }
+        }
+    }
+    
+    
+    private func performFeedback(_ intensity:CGFloat) {
+        if #available(iOS 13.0, *) {
+            feedbackGenerator.prepare()
+            feedbackGenerator.impactOccurred(intensity:intensity)
+        }
+    }
+    
+    
     private func returnPressed(_ value:String?) {
+        shouldSwitchWriteInStateToCreate = false
         
         guard let listSelctionValue = formValue, let t = textValue, !t.value.isEmpty else {
             return
@@ -608,6 +718,36 @@ public final class ListSelectViewController: UITableViewController {
             )
         }
 
+    }
+    
+    
+    private func writeInSelectedWhileSearching(_ writtenValue:String) {
+        
+        guard let listSelctionValue = formValue, !writtenValue.isEmpty else {
+            return
+        }
+        
+        var writeItem = ListItem(writtenValue)
+        writeItem.selected = true
+        
+        if allowsMultipleSelection {
+            crawlDelegate(
+                listSelctionValue.newWith(
+                    [ [writeItem], listSelctionValue.listItems ].reduce([],+)
+                )
+            )
+        } else {
+            var nonSelected:[ListItem] = listSelctionValue.listItems
+            for (i,_) in nonSelected.enumerated() {
+                nonSelected[i].selected = false
+            }
+            
+            crawlDelegate(
+                listSelctionValue.newWith(
+                    [ [writeItem], nonSelected ].reduce([],+)
+                )
+            )
+        }
     }
     
     
@@ -692,6 +832,19 @@ public final class ListSelectViewController: UITableViewController {
     
     private func writeInTapped() {
         switch writeInState {
+        case .create:
+            if searchQueryInput.isEmpty {
+                self.writeInState = .input
+                tableView.reloadRows(at: [IndexPath(row: 0, section: 0)], with: .fade)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.10) { [weak self] in
+                        guard let self = self else { return }
+                        if let textCell = self.tableView.cellForRow(at: IndexPath(row: 0, section: 0)) as? TextCell {
+                            textCell.activate()
+                        }
+                }
+            } else {
+                writeInSelectedWhileSearching(searchQueryInput)
+            }
         case .display:
             self.writeInState = .input
             tableView.reloadRows(at: [IndexPath(row: 0, section: 0)], with: .fade)
@@ -1100,8 +1253,6 @@ public final class ListSelectViewController: UITableViewController {
         
         tableView.beginUpdates()
         
-        //tableView.headerView(forSection: allowsWriteIn ? 1 : 0)?.textLabel?.text = firstSectionTitle()
-        
         if let headerCell = tableView.headerView(forSection: allowsWriteIn ? 1 : 0) as? FormHeaderCell {
             headerCell.headerValue = headerValue()
         }
@@ -1186,31 +1337,39 @@ public final class ListSelectViewController: UITableViewController {
     }
 
     
+    
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         if allowsWriteIn {
             
             if indexPath == writeInPath {
+
                 switch writeInState {
+                case .create:
+                    if let cell = tableView.dequeueReusableCell(withIdentifier: CreateNewCell.ReuseID, for: indexPath) as? CreateNewCell {
+                        if let writeInAttributedString {
+                            cell.setValue(writeInAttributedString)
+                        } else {
+                            cell.setValue(createNewAttributedString)
+                        }
+                        return cell
+                    }
                 case .display:
                     if let cell = tableView.dequeueReusableCell(withIdentifier: WriteInCell.ReuseID, for: indexPath) as? WriteInCell {
                         return cell
                     }
                 case .input:
                     if let cell = tableView.dequeueReusableCell(withIdentifier: TextCell.ReuseID, for: indexPath) as? TextCell {
-                        
-                        if textValue == nil {
-                            self.textValue = self.textV
-                        }
-                        
-                        cell.formValue = self.textValue
+                        cell.formValue = generateWriteInTextValue()
                         cell.updateFormValueDelegate = self
                         cell.indexPath = indexPath
+                        cell.didResignActiveClosure = { [weak self] in
+                            self?.textValueDidResignActive()
+                        }
                         return cell
                     }
                 }
             } else {
-                
                 switch writeInStyle {
                 case .topSection:
                     if indexPath.section == 1 {
@@ -1232,49 +1391,13 @@ public final class ListSelectViewController: UITableViewController {
                         }
                     }
                 }
-                
-               
             }
-            
-            
-            /*
-            switch indexPath.section {
-            case 0:
-                switch writeInState {
-                case .display:
-                    if let cell = tableView.dequeueReusableCell(withIdentifier: WriteInCell.ReuseID, for: indexPath) as? WriteInCell {
-                        return cell
-                    }
-                case .input:
-                    if let cell = tableView.dequeueReusableCell(withIdentifier: TextCell.ReuseID, for: indexPath) as? TextCell {
-                        
-                        if textValue == nil {
-                            self.textValue = TextValue("", "writeIn", "Add Material")
-                        }
-                        
-                        cell.formValue = self.textValue
-                        cell.updateFormValueDelegate = self
-                        cell.indexPath = indexPath
-                        return cell
-                    }
-                }
-            case 1:
-                if let cell = tableView.dequeueReusableCell(withIdentifier: ListItemCell.ReuseID, for: indexPath) as? ListItemCell {
-                    cell.configureCell(dataSource[indexPath.row])
-                    return cell
-                }
-            default:
-                break
-            }
-            */
         } else {
             if let cell = tableView.dequeueReusableCell(withIdentifier: ListItemCell.ReuseID, for: indexPath) as? ListItemCell {
                 cell.configureCell(dataSource[indexPath.row])
                 return cell
             }
         }
-        
-       
         return .init()
     }
     
@@ -1350,11 +1473,9 @@ extension ListSelectViewController: UpdateFormValueDelegate {
     
     
     public func updatedFormValue(_ formValue:FormValue,_ indexPath:IndexPath?) {
-        
         if let textValue = formValue as? TextValue {
             self.textValue = textValue
         }
-        
     }
     
     public func toggleTo(_ direction:Direction,_ from:IndexPath) {
@@ -1421,6 +1542,8 @@ extension ListSelectViewController: UISearchControllerDelegate, UISearchBarDeleg
 
     
     private func handleSearchQuery(_ query:String) {
+        
+        searchQueryInput = query
         
         if allowsWriteIn {
             
@@ -1551,7 +1674,6 @@ extension ListSelectViewController {
         guard let listSelect = formValue else { return }
         
         guard listSelect.listItemStores.count >= index else {
-            print("[FormKit](ListSelectViewController) No `listItemStore` found at index: \(index)")
             return
         }
         
@@ -1564,8 +1686,6 @@ extension ListSelectViewController {
                 }
             }
         }
-        
-        
         
         completeDataSource = newItems
         handleSearchQuery(searchText ?? "")
@@ -1605,29 +1725,26 @@ final class ListItemCell: UITableViewCell {
     
     
     required init?(coder aDecoder: NSCoder) {fatalError()}
-       
-       override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-           super.init(style: style, reuseIdentifier: reuseIdentifier)
-          
-            activateDefaultHeightAnchorConstraint()
+    
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-           NSLayoutConstraint.activate([
+        activateDefaultHeightAnchorConstraint()
+        
+        NSLayoutConstraint.activate([
             
-               primaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-               primaryTextLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-               primaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-               
-               secondaryTextLabel.topAnchor.constraint(equalTo: primaryTextLabel.bottomAnchor),
-               secondaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-               secondaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-               
-              // contentView.bottomAnchor.constraint(equalTo: secondaryTextLabel.bottomAnchor, constant: 8.0),
+            primaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            primaryTextLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            primaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            
+            secondaryTextLabel.topAnchor.constraint(equalTo: primaryTextLabel.bottomAnchor),
+            secondaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            secondaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
             
             contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: secondaryTextLabel.bottomAnchor),
-               
-           ])
-           
-       }
+        ])
+        
+    }
     
     
     public override func prepareForReuse() {
@@ -1649,7 +1766,7 @@ final class ListItemCell: UITableViewCell {
 
 
 
-
+// MARK: - WriteInCell -  
 final class WriteInCell: UITableViewCell {
     
     static let ReuseID = "FormKit.WriteInCell"
@@ -1671,22 +1788,22 @@ final class WriteInCell: UITableViewCell {
     
     required init?(coder aDecoder: NSCoder) {fatalError()}
        
-       override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-           super.init(style: style, reuseIdentifier: reuseIdentifier)
-          
-            activateDefaultHeightAnchorConstraint()
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-           NSLayoutConstraint.activate([
+        activateDefaultHeightAnchorConstraint()
+        
+        NSLayoutConstraint.activate([
             
-               primaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-               primaryTextLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-               primaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-
+            primaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            primaryTextLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            primaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            
             contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: primaryTextLabel.bottomAnchor),
-               
-           ])
-           
-       }
+            
+        ])
+        
+    }
     
     
     public override func prepareForReuse() {
@@ -1697,3 +1814,40 @@ final class WriteInCell: UITableViewCell {
 }
 
 
+
+
+// MARK: - CreateNewCell -
+final class CreateNewCell: UITableViewCell {
+    
+    static let ReuseID = "FormKit.ListSelect.CreateNewCell"
+    
+    private lazy var primaryTextLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(label)
+        return label
+    }()
+    
+    required init?(coder aDecoder: NSCoder) {fatalError()}
+    
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        activateDefaultHeightAnchorConstraint()
+        NSLayoutConstraint.activate([
+            primaryTextLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            primaryTextLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            primaryTextLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: primaryTextLabel.bottomAnchor),
+        ])
+    }
+    
+    public override func prepareForReuse() {
+        super.prepareForReuse()
+        primaryTextLabel.attributedText = nil
+    }
+    
+    public func setValue(_ value:NSAttributedString) {
+        primaryTextLabel.attributedText = value
+    }
+    
+}

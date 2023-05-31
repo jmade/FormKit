@@ -114,6 +114,7 @@ public struct ListSelectionValue {
         public var preventValueUpdate:Bool = false
         public var textValue:TextValue?
         public var placement: Placement = .topRow
+        public var contentTypeName: String?
         
     }
     public var writeInConfiguration: WriteInConfiguration?
@@ -173,11 +174,13 @@ extension ListSelectionValue.WriteInConfiguration {
     public init(_ placeholder:String?,_ preventValueUpdate:Bool = false) {
         self.preventValueUpdate = preventValueUpdate
         self.textValue = TextValue(placeholder)
+        self.contentTypeName = placeholder
     }
     
     public init(_ placeholder:String?,_ placement: Placement) {
         self.placement = placement
         self.textValue = TextValue(placeholder)
+        self.contentTypeName = placeholder
     }
     
     public init(_ textValue:TextValue? = nil,_ placement: Placement) {
