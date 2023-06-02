@@ -18,17 +18,34 @@ extension UITableView {
     
     public func indexPathOfFirstResponder() -> IndexPath? {
         
-        for section in Array(0...numberOfSections) {
-            for row in Array(0...numberOfRows(inSection: section)) {
-                if let cell = cellForRow(at: IndexPath(row: row, section: section)) {
+        if let visiblePaths = indexPathsForVisibleRows {
+            for path in visiblePaths {
+                if let cell = cellForRow(at: path) {
                     for view in cell.contentView.subviews {
                         if view.isFirstResponder {
-                            return IndexPath(row: row, section: section)
+                            return path
                         }
                     }
                 }
             }
         }
+        
+     
+        
+//        for section in Array(0...numberOfSections) {
+//            for row in Array(0...numberOfRows(inSection: section)) {
+//                if let cell = cellForRow(at: IndexPath(row: row, section: section)) {
+//                    for view in cell.contentView.subviews {
+//                        if view.isFirstResponder {
+//
+//                            return IndexPath(row: row, section: section)
+//                        }
+//                    }
+//                }
+//            }
+//        }
+        
+        
         return nil
         
     }
@@ -247,7 +264,19 @@ extension BarItem {
 
 
 
+extension UIView {
+    var firstResponder: UIView? {
+        guard !isFirstResponder else { return self }
 
+        for subview in subviews {
+            if let firstResponder = subview.firstResponder {
+                return firstResponder
+            }
+        }
+
+        return nil
+    }
+}
 
 
 
@@ -518,6 +547,11 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     public var notificationHandler:NotificationClosure?
     private var notificationName:Notification.Name?
     
+    
+    public var lastSegmentValue:SegmentValue?
+    
+    public var activeIndexPath:IndexPath?
+    private var keyboardIsShowing:Bool = false
 
     // MARK: - INIT -
     required public init?(coder aDecoder: NSCoder) {fatalError()}
@@ -767,7 +801,9 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
         if didLoad == false {
             setupUI()
         }
-
+        
+        
+        addKeyboardListeners()
         contentSizeObserver = tableView.observe(\.contentSize) { [weak self] tv, _ in
             guard let self = self else { return }
         
@@ -799,7 +835,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     
     override open func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        //print("[FormKit] (FormController) viewWillAppear")
         
         if toolbarItems != nil {
             self.navigationController?.setToolbarHidden(false, animated: false)
@@ -809,6 +845,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
         if didLoad == false {
             setupUI()
         }
+        
         
     }
     
@@ -823,6 +860,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     
     open override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        //print("[FormKit] (FormController) viewDidAppear")
         
         if loadingClosureCalled == false {
             loadingClosureCalled = true
@@ -831,6 +869,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
         
         checkBarItems()
         checkForActiveInput()
+        checkActiveIndexPath()
         runValidation()
     }
     
@@ -866,7 +905,18 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     }
     
     
+    private func addKeyboardListeners() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
+    }
     
+    @objc private func keyboardWillShow() {
+        keyboardIsShowing = true
+    }
+    
+    @objc private func keyboardWillHide() {
+        keyboardIsShowing = false
+    }
     
     private func itemsToReload(new:[FormDataSource.InvalidItem]) -> [FormDataSource.InvalidItem] {
         
@@ -926,6 +976,18 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     
     
     
+    private func checkActiveIndexPath() {
+        guard activeIndexPath == nil else {
+            if let activePath = activeIndexPath {
+                if let activeCell = tableView.cellForRow(at: activePath) {
+                    if let activatabelCell = activeCell as? Activatable {
+                        activatabelCell.activate()
+                    }
+                }
+            }
+            return
+        }
+    }
     
     
     private func checkForActiveInput() {
@@ -1558,6 +1620,19 @@ extension FormController {
     override open func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         selectedIndexPath = indexPath
         
+        if keyboardIsShowing {
+            if let firstResponder = view.window?.firstResponder {
+                if let containingCell = firstResponder.superview?.superview?.superview?.superview as? UITableViewCell {
+                    if let containingCellPath = tableView.indexPath(for: containingCell) {
+                        activeIndexPath = containingCellPath
+                    }
+                }
+            }
+            self.tableView.endEditing(true)
+        } else {
+            activeIndexPath = nil
+        }
+        
         if let item = dataSource.itemAt(indexPath) {
             item.cellDescriptor.didSelect(self,indexPath)
         }
@@ -1565,7 +1640,6 @@ extension FormController {
         dataSource.lastPath = (indexPath.row,indexPath.section)
         tableView.deselectRow(at: indexPath, animated: true)
     }
-    
     
     
     override open func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
@@ -2569,6 +2643,7 @@ extension FormController: UpdateFormValueDelegate {
                 case .segment(let segment):
                     if let segmentValue = formValue as? SegmentValue {
                         if segmentValue.selectedValue != segment.selectedValue {
+                            lastSegmentValue = segment
                             handleUpdatedFormValue(segmentValue , at: path)
                             segmentValue.valueChangeClosure?(segmentValue,self,path)
                             runValidation()

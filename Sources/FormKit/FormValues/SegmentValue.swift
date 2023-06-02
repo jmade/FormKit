@@ -89,6 +89,161 @@ extension SegmentValue {
 }
 
 
+extension Array where Element == SegmentValue.SegmentValueOption {
+    
+    var selectedValue:Int {
+        for (index,opiton) in self.enumerated() {
+            if opiton.selected {
+                return index
+            }
+        }
+        return 0
+    }
+    
+    var values:[String] {
+        self.map({  $0.title })
+    }
+}
+
+
+extension Array where Element == SegmentValue.FormValuesOption {
+    
+    var selectedValue:Int {
+        for (index,opiton) in self.enumerated() {
+            if opiton.selected {
+                return index
+            }
+        }
+        return 0
+    }
+    
+    var values:[String] {
+        self.map({  $0.title })
+    }
+}
+
+
+public extension SegmentValue {
+    
+    struct SegmentValueOption {
+        public var title:String
+        public var selected: Bool
+        public var valueChange: SegmentValue.SegmentValueChangeClosure
+    }
+    
+    init(options:[SegmentValueOption]) {
+        self.uuid = UUID().uuidString
+        self.values = options.values
+        self.selectedValue = options.selectedValue
+        self.valueChangeClosure = SegmentValue.ValueChangeUsingOptions(options: options)
+    }
+    
+    
+    
+    static func ValueChangeUsingOptions(options:[SegmentValueOption]) -> SegmentValue.SegmentValueChangeClosure {
+        { (segmentValue,form,path) in
+            
+            let selectedOption = options[segmentValue.selectedValue]
+            selectedOption.valueChange(segmentValue,form,path)
+        }
+    }
+    
+    
+    static func ValueChangeUsingFormValuesOptions(options:[FormValuesOption]) -> SegmentValue.SegmentValueChangeClosure {
+        { (segmentValue,form,path) in
+            
+            guard let section = form.dataSource.section(for: path.section) else  { return }
+            
+            if let lastSegmentValue = form.lastSegmentValue {
+                let lastSelectedValue = lastSegmentValue.selectedValue
+                let lastSelectedOption = options[lastSelectedValue]
+                
+                var newRows = lastSelectedOption.formValues
+                newRows.insert(segmentValue, at: 0)
+                form.dataSource.storage["CustomRows"] = Array(section.rows.dropFirst())
+            }
+            
+            let selectedValue = segmentValue.selectedValue
+            let selectedOption = options[selectedValue]
+            
+            var newRows = selectedOption.formValues
+            newRows.insert(segmentValue, at: 0)
+            
+            
+            
+            
+            let newData = form.dataSource.newWith([
+                section.newWithRows(
+                    newRows.map({ $0.formItem })
+                ),
+            ])
+            
+            newData.storage["lastSection"] = section
+            
+            form.setNewData(
+                form.dataSource.newWith([
+                    section.newWithRows(
+                        newRows.map({ $0.formItem })
+                    ),
+                ])
+            )
+            
+            
+        }
+    }
+    
+    
+    struct FormValuesOption {
+        public var title: String
+        public var selected: Bool
+        public var formValues: [FormValue]
+    }
+    
+    init(formValueOptions options:[FormValuesOption]) {
+        self.uuid = UUID().uuidString
+        self.values = options.values
+        self.selectedValue = options.selectedValue
+        self.valueChangeClosure = SegmentValue.ValueChangeUsingFormValuesOptions(options: options)
+    }
+    
+}
+
+
+public extension SegmentValue.SegmentValueOption {
+    
+    init(_ title:String,_ valueChangeClosure: @escaping SegmentValue.SegmentValueChangeClosure) {
+        self.title = title
+        self.selected = false
+        self.valueChange = valueChangeClosure
+    }
+    
+    init(_ title:String,_ selected:Bool,_ valueChangeClosure: @escaping SegmentValue.SegmentValueChangeClosure) {
+        self.title = title
+        self.selected = selected
+        self.valueChange = valueChangeClosure
+    }
+    
+}
+
+
+public extension SegmentValue.FormValuesOption {
+    
+    init(_ title:String,_ formValues:[FormValue]) {
+        self.title = title
+        self.selected = false
+        self.formValues = formValues
+    }
+    
+    init(selectedTitle:String,_ formValues:[FormValue]) {
+        self.title = selectedTitle
+        self.selected = true
+        self.formValues = formValues
+    }
+    
+}
+
+
+
 extension SegmentValue: FormValueDisplayable {
     
     public typealias Cell = SegmentCell

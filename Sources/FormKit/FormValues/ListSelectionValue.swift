@@ -975,10 +975,11 @@ extension ListSelectionValue: FormValueDisplayable {
         cell.indexPath = path
         cell.updateFormValueDelegate = formController
     }
-
+    
     public func didSelect(_ formController: Controller, _ path: IndexPath) {
         let listVC = ListSelectViewController(self, at: path)
         listVC.formDelegate = formController
+        
         formController.navigationController?.pushViewController(
             listVC,
             animated: true
