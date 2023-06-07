@@ -600,6 +600,7 @@ extension ListSelectionValue: FormValue {
     
     public static let DefaultSeparator = "FormKit.ListSelectionValue.Token.Separator"
     
+    
     private var encodedSelectedValues:String? {
         if let firstItemStore = listItemStores.first {
             let identifiers = firstItemStore.listItems.filter({ $0.selected }).compactMap({ $0.identifier })
@@ -608,10 +609,14 @@ extension ListSelectionValue: FormValue {
                 if titles.isEmpty {
                     return nil
                 } else {
-                    return titles.joined(separator: ListSelectionValue.DefaultSeparator)
+                    let joinedValues = titles.joined(separator: ListSelectionValue.DefaultSeparator)
+                    let csvString = joinedValues.replacingOccurrences(of: ListSelectionValue.DefaultSeparator, with: ",")
+                    return csvString
                 }
             } else {
-                return identifiers.joined(separator: ListSelectionValue.DefaultSeparator)
+                let joinedValues = identifiers.joined(separator: ListSelectionValue.DefaultSeparator)
+                let csvString = joinedValues.replacingOccurrences(of: ListSelectionValue.DefaultSeparator, with: ",")
+                return csvString
             }
         } else {
             let identifiers = listItems.filter({ $0.selected }).compactMap({ $0.identifier })
@@ -620,10 +625,14 @@ extension ListSelectionValue: FormValue {
                 if titles.isEmpty {
                     return nil
                 } else {
-                    return titles.joined(separator: ListSelectionValue.DefaultSeparator)
+                    let joinedValues = titles.joined(separator: ListSelectionValue.DefaultSeparator)
+                    let csvString = joinedValues.replacingOccurrences(of: ListSelectionValue.DefaultSeparator, with: ",")
+                    return csvString
                 }
             } else {
-                return identifiers.joined(separator: ListSelectionValue.DefaultSeparator)
+                let joinedValues = identifiers.joined(separator: ListSelectionValue.DefaultSeparator)
+                let csvString = joinedValues.replacingOccurrences(of: ListSelectionValue.DefaultSeparator, with: ",")
+                return csvString
             }
         }
     }

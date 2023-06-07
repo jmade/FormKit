@@ -545,15 +545,28 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     // Notification center support
     public typealias NotificationClosure = (FormController,Notification) -> Void
     public var notificationHandler:NotificationClosure?
+    
     private var notificationName:Notification.Name?
+    private var notificationSet: Bool = false {
+        didSet {
+            print("Notification Set!")
+        }
+    }
     
     
     public var lastSegmentValue:SegmentValue?
     
     public var activeIndexPath:IndexPath?
     private var keyboardIsShowing:Bool = false
+    
+    // MARK: - deinit -
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    
 
-    // MARK: - INIT -
+    // MARK: - init -
     required public init?(coder aDecoder: NSCoder) {fatalError()}
     
     
@@ -745,7 +758,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
         
         didLoad = true
         checkBarItems()
-        startNotificationCenterObservation()
+        //startNotificationCenterObservation()
     }
     
     
@@ -889,19 +902,22 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
         startNotificationCenterObservation()
     }
     
+    
     @objc func handleNotification(_ notification:Notification) {
         notificationHandler?(self,notification)
     }
     
+    
     private func startNotificationCenterObservation() {
-        if let notificationName = notificationName {
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(handleNotification(_:)),
-                name: notificationName,
-                object: nil
-            )
-        }
+        guard let notificationName = notificationName,notificationSet == false else { return }
+        NotificationCenter.default.removeObserver(self, name: notificationName, object: nil)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleNotification(_:)),
+            name: notificationName,
+            object: nil
+        )
+        notificationSet = true
     }
     
     
