@@ -20,12 +20,21 @@ public struct CustomValue {
     
     public var customStore:[String:Any] = [:]
     
+    public var attributedText:NSAttributedString?
+    
+    public var shouldShowCopyMenu: Bool = false
+    
 }
 
 
 // init
 
 public extension CustomValue {
+    
+    init(attributedText:NSAttributedString?) {
+        self.attributedText = attributedText
+        self.shouldShowCopyMenu = true
+    }
     
     init(cellConfiguration: @escaping CellConfigurationClosure) {
         self.cellConfigurationClosure = cellConfiguration
@@ -57,8 +66,15 @@ extension CustomValue: FormValue {
         .custom(self)
     }
     
+    public var contentValue:String {
+        if let attributedText {
+            return attributedText.string
+        }
+        return ""
+    }
+    
     public func encodedValue() -> [String : String] {
-        [(customKey ?? "CustomValue") : ""]
+        [(customKey ?? "CustomValue") : contentValue]
     }
 }
 
@@ -85,10 +101,10 @@ extension CustomValue: FormValueDisplayable {
     }
     
     public func configureCell(_ formController: Controller, _ cell: Cell, _ path: IndexPath) {
-        cell.formValue = self
         cell.indexPath = path
         cell.updateFormValueDelegate = formController
         cell.tableView = formController.tableView
+        cell.formValue = self
     }
     
 }
@@ -118,6 +134,14 @@ public final class CustomValueCell: UITableViewCell {
         didSet {
             guard let customValue = formValue else { return }
             customValue.cellConfigurationClosure?(customValue,self)
+            if let attributedText = customValue.attributedText {
+                contentHeightContraint.isActive = false
+                attributedLabel.attributedText = attributedText
+            }
+            attributedLabel.isHidden = customValue.attributedText == nil
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.10) { [weak self] in
+                self?.handleHeightUpdates()
+            }
         }
     }
     
@@ -126,9 +150,33 @@ public final class CustomValueCell: UITableViewCell {
     var indexPath:IndexPath?
     var tableView: UITableView?
     
+    private let attributedLabel = UILabel()
+    
+    private var contentHeightContraint: NSLayoutConstraint!
+    
     required init?(coder aDecoder: NSCoder) {fatalError()}
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+        
+        attributedLabel.numberOfLines = 0
+        attributedLabel.lineBreakMode = .byWordWrapping
+        attributedLabel.translatesAutoresizingMaskIntoConstraints = false
+        attributedLabel.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
+        contentView.addSubview(attributedLabel)
+
+        NSLayoutConstraint.activate([
+            attributedLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            attributedLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            contentView.layoutMarginsGuide.trailingAnchor.constraint(equalTo: attributedLabel.trailingAnchor),
+            contentView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: attributedLabel.bottomAnchor),
+        ])
+        attributedLabel.isHidden = true
+        
+        contentHeightContraint = contentView.heightAnchor.constraint(equalToConstant: 44)
+        contentHeightContraint.isActive = true
+        
+        
+        
     }
     
     override public func prepareForReuse() {
@@ -156,11 +204,28 @@ public final class CustomValueCell: UITableViewCell {
     
     
     private func handleHeightUpdates() {
-        self.tableView?.beginUpdates()
-        for subView in contentView.subviews {
-            subView.sizeToFit()
+        
+        guard let customValue = formValue else { return }
+        
+        
+        guard let attributedText = customValue.attributedText else {
+            
+            UIView.setAnimationsEnabled(false)
+            self.tableView?.beginUpdates()
+            for subView in contentView.subviews {
+                subView.sizeToFit()
+            }
+            self.tableView?.endUpdates()
+            UIView.setAnimationsEnabled(true)
+            
+            return
         }
-        self.tableView?.endUpdates()
+        
+        
+        UIViewPropertyAnimator(duration: 0.4, dampingRatio: 0.76) { [weak self] in
+            self?.contentView.layoutIfNeeded()
+        }.startAnimation()
+        
     }
     
 }

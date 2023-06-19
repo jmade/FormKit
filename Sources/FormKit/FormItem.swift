@@ -37,6 +37,7 @@ public enum FormItem {
     case dateTime(DateTimeValue)
     case token(TokenValue)
     case color(ColorValue)
+    case web(WebViewValue)
 }
 
 extension FormItem {
@@ -102,6 +103,8 @@ extension FormItem: FormCellDescriptable {
             return tokenValue.cellDescriptor
         case .color(let colorValue):
             return colorValue.cellDescriptor
+        case .web(let webValue):
+            return webValue.cellDescriptor
         }
     }
 }
@@ -165,6 +168,8 @@ extension FormItem: Hashable, Equatable {
             return tokenValue.hashValue
         case .color(let colorValue):
             return colorValue.hashValue
+        case .web(let webValue):
+            return webValue.hashValue
         }
     }
     
@@ -230,6 +235,8 @@ extension FormItem {
             return tokenValue.encodedValue()
         case .color(let colorValue):
             return colorValue.encodedValue()
+        case .web(let webValue):
+            return webValue.encodedValue()
         }
     }
     
@@ -238,6 +245,10 @@ extension FormItem {
 
 
 extension FormItem {
+    
+    public var copyValue:String {
+        displayValues.first?.value ?? ""
+    }
     
     public var displayValues:[String:String] {
         switch self {
@@ -291,6 +302,8 @@ extension FormItem {
             return [tokenValue.title : tokenValue.encodedValue().values.first!]
         case .color(let colorValue):
             return [colorValue.title : colorValue.encodedValue().values.first!]
+        case .web(let webValue):
+            return ["WebValue" : webValue.encodedValue().values.first! ]
         }
             
         
@@ -424,6 +437,17 @@ extension FormItem {
     }
     
     
+    public func asCustomValue() -> CustomValue? {
+        switch self {
+        case .custom(let custom):
+            return custom
+        default:
+            break
+        }
+        return nil
+    }
+    
+    
     public func isValid() -> Bool {
         switch self {
         case .action(let action):
@@ -500,6 +524,8 @@ extension FormItem: Validatable {
             return tokenValue.validators
         case .color(let colorValue):
             return colorValue.validators
+        case .web(let webValue):
+            return webValue.validators
         }
     }
 }

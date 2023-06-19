@@ -700,6 +700,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
             let existingData = self.dataSource
             newData.updateClosure = existingData.updateClosure
             self.dataSource = newData
+            self.refreshControl?.endRefreshing()
         })
     }
     
@@ -734,6 +735,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
             
         if shouldRefresh {
             let refreshControl = UIRefreshControl()
+            refreshControl.attributedTitle = NSAttributedString(string: "Refreshing...")
             refreshControl.addTarget(self, action: #selector(refresh(_:)), for: .valueChanged)
             tableView.refreshControl = refreshControl
         }
@@ -1538,10 +1540,21 @@ extension FormController {
     
     
     @objc func refresh(_ refreshControl: UIRefreshControl) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {  [weak self] in
-            guard let self = self else { return }
-            //self.dataSource = FormDataSource.Random()
-            self.refreshControl?.endRefreshing()
+        
+        refreshControl.beginRefreshing()
+        
+        if let closure = loadingClosure {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.10) {  [weak self] in
+                guard let self = self else { return }
+                self.generateHapticFeedback(.mediumImpact)
+                closure(self)
+                self.refreshControl?.endRefreshing()
+            }
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {  [weak self] in
+                guard let self = self else { return }
+                self.refreshControl?.endRefreshing()
+            }
         }
     }
     
@@ -1809,20 +1822,38 @@ extension FormController {
 extension FormController {
     
     open override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        
+        guard let formItem = dataSource.itemAt(indexPath) else {
+            return nil
+        }
+
+        
+        if usesContextMenus {
             
-            guard usesContextMenus, let formItem = dataSource.itemAt(indexPath) else {
-                return nil
+            // TODO...
+            
+            
+        } else {
+            
+            if let customValue = formItem.asCustomValue() {
+                
+                if customValue.shouldShowCopyMenu {
+                    let copyMenu = UIMenu(title: "", children: [makeCopyUIAction(customValue.contentValue)])
+                    return UIContextMenuConfiguration(
+                        identifier: nil,
+                        previewProvider: nil,
+                        actionProvider: { suggestedActions in
+                            return copyMenu
+                    })
+                }
+                
+                
             }
             
-            let contextMenu = makeContextMenu(formItem,indexPath)
-            
-            return UIContextMenuConfiguration(
-                identifier: nil,
-                previewProvider: nil,
-                actionProvider: { suggestedActions in
-                    return contextMenu
-            })
-
+        }
+        
+        return nil
+        
         }
     
 }
@@ -1873,7 +1904,49 @@ extension FormController {
         return action
     }
     
-
+    
+    private func contextualCopyAction(forRowAtIndexPath indexPath: IndexPath) -> UIContextualAction {
+        let action =  UIContextualAction(style: .normal, title: "Copy") { [weak self] (action, view, handler:(Bool) -> Void) in
+            guard let self = self else { return }
+            
+            if let formItem = self.dataSource.itemAt(indexPath) {
+                UIPasteboard.general.string = formItem.copyValue
+            }
+            
+            self.generateHapticFeedback(.impact)
+            handler(true)
+        }
+        
+        //
+        action.image = UIImage(systemName: "doc.on.doc")
+        action.backgroundColor = .systemBlue
+        
+        return action
+    }
+    
+    
+    private func makeCopyContextMenu(_ formItem:FormItem,_ indexPath: IndexPath) -> UIMenu {
+        
+        
+        let copy = UIAction(title: "Copy", image: UIImage(systemName: "doc.on.doc")) { action in
+            // Show system share sheet
+            UIPasteboard.general.string = formItem.copyValue
+            
+        }
+        
+        // Create our menu with both the edit menu and the share action
+        return UIMenu(title: "", children: [copy])
+    }
+    
+    
+    private func makeCopyUIAction(_ text:String) -> UIAction {
+        UIAction(title: "Copy", image: UIImage(systemName: "doc.on.doc")) { action in
+            // Show system share sheet
+            UIPasteboard.general.string = text
+        }
+    }
+    
+    
     
     // MARK: - Context Menu -
     func makeContextMenu(_ formItem:FormItem,_ indexPath: IndexPath) -> UIMenu? {
@@ -2788,6 +2861,13 @@ extension FormController: UpdateFormValueDelegate {
                             handleUpdatedFormValue(colorValue, at: path)
                             tableView.reloadRows(at: [path], with: .automatic)
                             colorValue.formClosure?(colorValue,self,path)
+                        }
+                    }
+                case .web(let web):
+                    if let webValue = formValue as? WebViewValue {
+                        if webValue != web {
+                            handleUpdatedFormValue(webValue, at: path)
+                            tableView.reloadRows(at: [path], with: .automatic)
                         }
                     }
                 }
