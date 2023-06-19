@@ -125,9 +125,8 @@ extension FKWebView: WKNavigationDelegate {
     
     private func checkWebView(_ webView: WKWebView) {
         if webView.isLoading == false {
-            webView.evaluateJavaScript("document.body.scrollHeight", completionHandler: { [weak self] (result, error) in
+            webView.evaluateJavaScript("document.body.scrollHeight", completionHandler: { (result, error) in
                 if let height = result as? CGFloat {
-                    print(" height -> \(height) ")
                     webView.frame.size.height += height
                 }
             })

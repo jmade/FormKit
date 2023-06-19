@@ -208,7 +208,7 @@ public final class CustomValueCell: UITableViewCell {
         guard let customValue = formValue else { return }
         
         
-        guard let attributedText = customValue.attributedText else {
+        guard let _ = customValue.attributedText else {
             
             UIView.setAnimationsEnabled(false)
             self.tableView?.beginUpdates()
