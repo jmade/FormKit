@@ -2238,26 +2238,73 @@ extension FormController {
     }
     
     
-    public func addListItemsWithData(_ data:[String:ListItem]) {
-        addListItemsData(data)
+    public func addListItemsWithData(_ data:[String:ListItem],_ insertAtTop:Bool = false) {
+        addListItemsData(data,insertAtTop)
     }
     
     
-    private func addListItemsData(_ data:[String:ListItem]) {
+    private func addListItemsData(_ data:[String:ListItem],_ insertAtTop:Bool = false) {
         
         var vals:[(IndexPath,FormItem)] = []
         
-        for (key,listItem) in data {
+        for (key,newListItem) in data {
             
             if let lsv = dataSource.getListSelectionValueForKey(key) {
-                let existingList = lsv.0
-                let newItems = [[listItem],existingList.listItems]
-                    .reduce([],+)
-                    .sorted { (a, b) -> Bool in
-                    a.title < b.title
+                
+                var existingList = lsv.0
+                
+                if insertAtTop {
+                    existingList.listItems.insert(newListItem, at: 0)
+                    
+                    for (i,_) in existingList.listItemStores.enumerated() {
+                        var store = existingList.listItemStores[i]
+                        store.listItems.insert(newListItem, at: 0)
+                        let newlistItemStore = store.newWithSelectedIndicies([0])
+                        existingList.listItemStores[i] = newlistItemStore
+                    }
+                } else {
+                    let newItems = [[newListItem],existingList.listItems.unselected()]
+                        .reduce([],+)
+                        .sorted { (a, b) -> Bool in
+                        a.title < b.title
+                    }
+                    
+                    var newIndex = 0
+                    for (i,listItem) in newItems.enumerated() {
+                        if listItem.title == newListItem.title {
+                            newIndex = i
+                        }
+                    }
+                    
+                    existingList.listItems = newItems
+                    existingList.selectedIndicies = [newIndex]
+                    
+                    for (i,_) in existingList.listItemStores.enumerated() {
+                        
+                        var store = existingList.listItemStores[i]
+                        let existingListItems = store.listItems.unselected()
+                        
+                        let newItems = [[newListItem],existingListItems]
+                            .reduce([],+)
+                            .sorted { (a, b) -> Bool in
+                            a.title < b.title
+                        }
+                        var newIndex = 0
+                        for (i,listItem) in newItems.enumerated() {
+                            if listItem.title == newListItem.title {
+                                newIndex = i
+                            }
+                        }
+                        
+                        store.listItems = newItems
+                        let newlistItemStore = store.newWithSelectedIndicies([newIndex])
+                        existingList.listItemStores[i] = newlistItemStore
+                    }
                 }
-                let newLSV = existingList.newWith(newItems)
-                vals.append((lsv.1, newLSV.formItem))
+                
+                vals.append((lsv.1, existingList.formItem))
+            } else {
+                print("[FormKit] unable to find `ListSelectionValue` for key: '\(key)'")
             }
             
         }

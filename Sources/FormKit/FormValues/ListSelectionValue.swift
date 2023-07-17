@@ -202,10 +202,13 @@ extension ListSelectionValue.WriteInConfiguration {
 extension ListSelectionValue: CustomStringConvertible {
     public var description: String {
         """
-        Title: \(title)
-        Selected: \(selectedValue ?? "None")
-        Underlying Object Count: \(underlyingObjects.count)
-        Underlying Type: \( (underlyingObjects.count > 0) ? type(of: underlyingObjects[0]) : type(of: underlyingObjects.first) )
+            
+            ---ListSelectionValue---
+            Title: \(title)
+            Selected: \(selectedValue ?? "-")
+            SelectedTitle: '\(selectionTitle)'
+            CustomKey: '\(customKey ?? "-")'
+            ----------------------
         """
     }
 }
@@ -519,6 +522,20 @@ extension ListSelectionValue {
     var selectionTitle: String {
         switch selectionType {
         case .single:
+            if let value = selectedValue {
+                return value
+            } else {
+                var value = ""
+                if let idx = selectedIndicies.first {
+                    if values.count > idx {
+                        value = values[idx]
+                    }
+                }
+                return value
+            }
+            
+
+            /*
             if let idx = selectedIndicies.first {
                 if values.count > idx {
                     return values[idx]
@@ -531,6 +548,7 @@ extension ListSelectionValue {
                 }
                 return ""
             }
+            */
         case .multiple:
             if selectedIndicies.isEmpty {
                 return ""
@@ -672,7 +690,11 @@ extension ListSelectionValue {
     
     
     public func newWith(_ selectedValues:[String]) -> ListSelectionValue {
+        print("[FormKit] ListSelectionValue (newWith) selectedValues: \(selectedValues)")
+        print("[FormKit] existing: \(self)")
+        
         var newSelectedIndicies: [Int] = []
+        
         for selected in selectedValues {
             if let index = values.firstIndex(of: selected) {
                 newSelectedIndicies.append(index)
@@ -697,6 +719,9 @@ extension ListSelectionValue {
         new.valueChangeClosure = self.valueChangeClosure
         new.writeInConfiguration = self.writeInConfiguration
         new.listItemStores = self.listItemStores.map({ $0.newWithSelectedIndicies(newSelectedIndicies) })
+        
+        print("[FormKit] New: \(new)")
+        
         return new
     }
 
@@ -760,6 +785,48 @@ extension ListSelectionValue {
         newValue.listItemStores = newListItemStores
         return newValue
             
+    }
+    
+}
+
+
+extension Array where Element == ListItem {
+    
+    public func unselected() -> [ListItem] {
+        var newItems:[ListItem] = []
+        for item in self {
+            var newItem = item
+            newItem.selected = false
+            newItems.append(
+                newItem
+            )
+        }
+        return newItems
+    }
+    
+    public func allselected() -> [ListItem] {
+        var newItems:[ListItem] = []
+        for item in self {
+            var newItem = item
+            newItem.selected = true
+            newItems.append(
+                newItem
+            )
+        }
+        return newItems
+    }
+    
+    
+    public func withSelected(_ listItem:ListItem) -> [ListItem] {
+        var newItems:[ListItem] = []
+        for item in self {
+            var newItem = item
+            newItem.selected = true
+            newItems.append(
+                newItem
+            )
+        }
+        return newItems
     }
     
 }

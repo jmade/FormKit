@@ -390,6 +390,25 @@ extension FormDataSource {
     }
     
     
+    public func containsItemWithKey(_ key:String) -> Bool {
+        
+        var found = false
+        
+        for section in sections {
+            for row in section.rows {
+                if let rowKey = row.encodedKey {
+                    //print("[FormKit] checking key: '\(rowKey)' matches: '\(key)'? \(rowKey == key)")
+                    if rowKey == key {
+                        found = true
+                    }
+                }
+            }
+        }
+        //print("[FormKit] Found? \(found)")
+        return found
+    }
+    
+    
     public var activeSet: Set<String> {
         Set(Array(activeParams.keys))
     }
