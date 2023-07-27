@@ -787,7 +787,46 @@ extension ListSelectionValue {
             
     }
     
+    public mutating func addListItem(_ newListItem:ListSelectViewController.ListItem,_ insertAtTop:Bool = false) {
+        if insertAtTop {
+            var newListItems = self.listItems
+            if newListItem.selected && self.selectionType == .single {
+                newListItems = newListItems.unselected()
+            }
+            self.listItems = newListItems.newWithFirstListItem(newListItem)
+            
+            for (i,_) in self.listItemStores.enumerated() {
+                let store = self.listItemStores[i]
+                
+                var newListItems = store.listItems
+                if newListItem.selected && self.selectionType == .single {
+                    newListItems = newListItems.unselected()
+                }
+                self.listItemStores[i] = ListItemStore(store.key, newListItems.newWithFirstListItem(newListItem))
+            }
+        } else {
+            var currentListItems = self.listItems
+            if newListItem.selected && self.selectionType == .single {
+                currentListItems = currentListItems.unselected()
+            }
+            self.listItems = currentListItems.newAddingListItem(newListItem)
+            
+            for (i,_) in self.listItemStores.enumerated() {
+                let store = self.listItemStores[i]
+                
+                var currentListItems = store.listItems
+                if newListItem.selected && self.selectionType == .single {
+                    currentListItems = currentListItems.unselected()
+                }
+                self.listItemStores[i] = ListItemStore(store.key, currentListItems.newAddingListItem(newListItem))
+            }
+        }
+        
+    }
+    
 }
+
+
 
 
 extension Array where Element == ListItem {
@@ -829,10 +868,37 @@ extension Array where Element == ListItem {
         return newItems
     }
     
+    
+    
+    public func newWithFirstListItem(_ newListItem:ListItem) -> [ListItem] {
+        var newItems = self
+        newItems.insert(newListItem, at: 0)
+        return newItems
+    }
+    
+    
+    public func newAddingListItem(_ newListItem:ListItem) -> [ListItem] {
+        var newItems = self
+        newItems.append(newListItem)
+        newItems = newItems.sorted {
+            $0.title < $1.title
+        }
+        return newItems
+    }
+    
+    
+    
 }
 
 
 extension ListSelectionValue.ListItemStore {
+    
+    public func newAddingListItem(_ listItem:ListItem) -> ListSelectionValue.ListItemStore {
+        var currentItems = self.listItems
+        currentItems.append(listItem)
+        return .init(self.key, currentItems)
+    }
+    
      
     public func newWithSelectedIndicies(_ indicies:[Int]) -> ListSelectionValue.ListItemStore {
         var newItems:[ListItem] = []

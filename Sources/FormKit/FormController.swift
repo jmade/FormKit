@@ -2222,6 +2222,27 @@ extension FormController {
     
     
     // MARK: - ListItem Update -
+    public func addListItemsToListSelectValues(_ listItemsData:[String:ListItem]) {
+        
+        var vals:[(IndexPath,FormItem)] = []
+        
+        for (key,newListItem) in listItemsData {
+            if let lsv = dataSource.getListSelectionValueForKey(key) {
+                var existingList = lsv.0
+                existingList.addListItem(newListItem)
+                vals.append((lsv.1, existingList.formItem))
+            }
+        }
+        
+        for item in vals {
+            dataSource.sections[item.0.section].rows[item.0.row] = item.1
+        }
+        
+        tableView.reloadRows(at: vals.map({ $0.0 }), with: .none)
+    }
+    
+    
+    
     public func addListItems(_ listItems:[ListItem],withKeys keys:[String]) {
         var listItemsData:[String:ListItem] = [:]
         
@@ -2250,6 +2271,9 @@ extension FormController {
         for (key,newListItem) in data {
             
             if let lsv = dataSource.getListSelectionValueForKey(key) {
+                
+                print("List Item: \(lsv)")
+                
                 
                 var existingList = lsv.0
                 
