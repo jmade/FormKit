@@ -38,6 +38,8 @@ public struct NumericalValue {
     */
     public var inputFormatPattern: String?
     
+    public var valueChangedClosure: ( (NumericalValue,FormController,IndexPath) -> Void)?
+    
     
 }
 
@@ -252,7 +254,8 @@ extension NumericalValue {
                 floatValidationRules: self.floatValidationRules,
                 intValidationRules: self.intValidationRules,
                 textConfigurationClosure: self.textConfigurationClosure,
-                inputFormatPattern: self.inputFormatPattern
+                inputFormatPattern: self.inputFormatPattern,
+                valueChangedClosure: self.valueChangedClosure
         )
     }
     

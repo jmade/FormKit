@@ -559,6 +559,8 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     public var activeIndexPath:IndexPath?
     private var keyboardIsShowing:Bool = false
     
+    private var imageResultClosure:((UIImage?) -> ())?
+    
     // MARK: - deinit -
     deinit {
         NotificationCenter.default.removeObserver(self)
@@ -2812,6 +2814,7 @@ extension FormController: UpdateFormValueDelegate {
                 case .numerical(let numerical):
                     if let numericalValue = formValue as? NumericalValue {
                         if numericalValue != numerical {
+                            numericalValue.valueChangedClosure?(numericalValue,self,path)
                             handleUpdatedFormValue(numericalValue, at: path)
                         }
                     }
@@ -3167,6 +3170,37 @@ extension FormController: UIColorPickerViewControllerDelegate {
     }
     
 }
+
+
+
+extension FormController: UIImagePickerControllerDelegate {
+    
+    public func showImagePicker(_ imageClosure:((UIImage?) -> ())?) {
+        self.imageResultClosure = imageClosure
+        
+        let vc = UIImagePickerController()
+        vc.sourceType = .camera
+        vc.allowsEditing = true
+        vc.delegate = self
+        present(vc, animated: true)
+    }
+    
+    
+    public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        
+        picker.dismiss(animated: true)
+        
+        guard let image = info[.editedImage] as? UIImage else {
+            print("No image found")
+            return
+        }
+        
+        imageResultClosure?(image)
+    }
+}
+
+
+extension FormController: UINavigationControllerDelegate { }
 
 
 
