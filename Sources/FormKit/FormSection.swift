@@ -310,6 +310,7 @@ extension FormSection {
     
     
     public func newWithRows(_ newRows:[FormItem]) -> FormSection {
+        /*
         let new =  FormSection(
             self.title,
             newRows
@@ -317,7 +318,11 @@ extension FormSection {
         new._headerValue = self._headerValue
         new.updateClosure = self.updateClosure
         new.footer = self.footer
-        return new
+        */
+        self.rows = newRows
+        return self
+        
+        //return new
     }
     
 }
@@ -503,6 +508,30 @@ public extension FormSection {
         return row(for: 3)
     }
     
+    var fifthRow:FormItem? {
+        return row(for: 4)
+    }
+    
+    var sixthRow:FormItem? {
+        return row(for: 5)
+    }
+    
+    var seventhRow:FormItem? {
+        return row(for: 6)
+    }
+    
+    var eightRow:FormItem? {
+        return row(for: 7)
+    }
+    
+    var ninethRow:FormItem? {
+        return row(for: 8)
+    }
+    
+    var tenthRow:FormItem? {
+        return row(for: 9)
+    }
+    
     
     
     var lastRow:FormItem? {
@@ -515,6 +544,10 @@ public extension FormSection {
     
     var thirdToLastRow:FormItem? {
         return row(for: rows.count-3)
+    }
+    
+    var fourthToLastRow:FormItem? {
+        return row(for: rows.count-4)
     }
     
     

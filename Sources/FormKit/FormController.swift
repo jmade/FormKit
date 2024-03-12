@@ -2647,6 +2647,7 @@ extension FormController {
         var formAlertAction = FormAlertAction(destructiveOptionTitle, action: actionHandler)
         formAlertAction.isDestructive = true
         alert.addAction(formAlertAction.alertAction)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
  
         generateHapticFeedback(.mediumImpact)
         present(alert, animated: true,completion: nil)
@@ -2865,6 +2866,7 @@ extension FormController: UpdateFormValueDelegate {
                     if let switchInputValue = formValue as? SwitchValue {
                         switchInputValue.valueChangedClosure?(switchInputValue,self,path)
                         handleUpdatedFormValue(switchInputValue , at: path)
+                        self.dataSource.setNeedsUpdate()
                     }
                 case .slider(let sliderValue):
                     if let sliderInputValue = formValue as? SliderValue {
