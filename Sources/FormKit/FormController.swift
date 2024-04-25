@@ -2529,6 +2529,7 @@ extension FormController {
                     handleActionCellChanging(for: changingRows, enabled: true)
                 }
             } else {
+                /*
                 tableView.reload(changes: changes,
                                  section: path.section,
                                  insertionAnimation: animation,
@@ -2536,6 +2537,8 @@ extension FormController {
                                  replacementAnimation: animation,
                                  completion: activateInput ? myCompletion : nil
                 )
+                */
+                tableView.reloadData()
             }
         }
     }
