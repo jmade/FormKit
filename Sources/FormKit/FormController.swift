@@ -354,24 +354,19 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     
     // MARK: - DataSource -
     public var dataSource = FormDataSource() {
+       
         didSet {
+            //print("ds: didSet")
             
-            guard !dataSource.isEmpty else {
+            guard !dataSource.isEmpty, tableView.window != nil else {
                 return
             }
-            
-            
             
             tableView.tableFooterView = nil
-            
-            guard tableView.window != nil else {
-                return
-            }
             
             self.title = self.dataSource.title
             
             if oldValue.isEmpty {
-                
                 DispatchQueue.main.async(execute: { [weak self] in
                     guard let self = self else { return }
                     if self.tableView.numberOfSections == 0 {
@@ -382,12 +377,11 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
                     } else {
                         self.tableView.reloadSections(
                             IndexSet(integersIn: 0...(self.dataSource.sections.count-1)),
-                            with: .automatic
+                            with: .fade
                         )
                     }
                 })
             } else {
-                
                 handleDataEvaluation(
                     FormDataSource.evaluate(oldValue, new: dataSource)
                 )
@@ -396,6 +390,8 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
             runValidation()
         }
     }
+    
+    private var isEvaluating: Bool = false
     
     
     private var headers:[HeaderValue] {
@@ -697,13 +693,13 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     
     
     public func setNewData(_ newData:FormDataSource) {
-        DispatchQueue.main.async(execute: { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.10) { [weak self] in
             guard let self = self else { return }
             let existingData = self.dataSource
             newData.updateClosure = existingData.updateClosure
             self.dataSource = newData
             self.refreshControl?.endRefreshing()
-        })
+        }
     }
     
    
@@ -776,34 +772,119 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
         self.tableView.separatorEffect = UIVibrancyEffect(blurEffect: blurEffect)
     }
 
-
     
-    private func handleDataEvaluation(_ eval:FormDataSource.Evaluation) {
-        DispatchQueue.main.async(execute: { [weak self] in
-            guard let self = self else { return }
-            self.tableView.beginUpdates()
-            self.tableView.insertSections(eval.sets.insert, with: .fade)
-            self.tableView.deleteSections(eval.sets.delete, with: .fade)
-            self.tableView.reloadSections(eval.sets.reload, with: .fade)
-            eval.reloads.forEach({
-                if let sectionHeader = self.tableView.headerView(forSection: $0.section) as? FormHeaderCell {
-                    if let formSection = self.dataSource.section(for: $0.section) {
-                        sectionHeader.configureView(formSection.headerValue)
+    private func _handleDataEvaluation(_ eval:FormDataSource.Evaluation) {
+        
+    }
+    
+    private func processEvaluationReloads(_ eval:FormDataSource.Evaluation, completionHandler: @escaping () -> Void) {
+        
+        
+        guard let tv = self.tableView else {
+            return
+        }
+        let ds = self.dataSource
+        
+        var hasReloaded = false
+        
+        eval.reloads.forEach({
+            //print("Eval Reload Section: \($0.section)")
+            
+            if let sectionHeader = tv.headerView(forSection: $0.section) as? FormHeaderCell {
+                if let formSection = ds.section(for: $0.section) {
+                    sectionHeader.configureView(formSection.headerValue)
+                }
+            }
+            //print(" - header finished")
+            
+            
+            if let changes = $0.changes {
+                //print(" - Changes: \(changes.count)")
+                
+                /*
+                for change in changes {
+                    if let replace = change.replace {
+                        print("\(replace.index) Replace")
+                    }
+                    if let delete = change.delete {
+                        print("\(delete.index) Delete")
+                    }
+                    if let insert = change.insert {
+                        print("\(insert.index) Insert")
+                    }
+                    if let move = change.move {
+                        print("\(move.fromIndex)->\(move.toIndex) Move")
                     }
                 }
-                if let changes = $0.changes {
-                    self.tableView.reload(
+                */
+                 
+                if !changes.isEmpty {
+                    //print(" - Reloading Changes")
+                    hasReloaded = true
+                    tv.reload(
                         changes: changes,
                         section: $0.section,
                         insertionAnimation: .fade,
                         deletionAnimation:  .fade,
                         replacementAnimation:  .fade,
-                        completion: nil
+                        updateData: {  },
+                        completion: { _ in  completionHandler() }
                     )
+                } else {
+                    //print(" - No Changes")
+                    //print(" - Change Operation Complete")
                 }
-            })
-            self.tableView.endUpdates()
+            } else {
+                //print(" - No Changes")
+                //print(" - Change Operation Complete")
+            }
+            
         })
+        
+        
+        if hasReloaded == false {
+            completionHandler()
+        }
+        
+        
+    }
+    
+    
+    
+    
+    
+    private func handleDataEvaluation(_ eval:FormDataSource.Evaluation) {
+        
+        guard isEvaluating == false else {
+            return
+        }
+        
+        isEvaluating = true
+        
+        if eval.isReloadsOnly {
+            processEvaluationReloads(eval, completionHandler: { [weak self] in
+                self?.isEvaluating = false
+            })
+        } else {
+            tableView.performBatchUpdates {
+                
+                if let sections = eval.sets.insert {
+                    tableView.insertSections(sections, with: .fade)
+                }
+                
+                if let sections = eval.sets.delete {
+                    tableView.deleteSections(sections, with: .fade)
+                }
+                
+                if let sections = eval.sets.reload {
+                    tableView.reloadSections(sections, with: .fade)
+                }
+                
+            }
+        }
+        
+        isEvaluating = false
+        
     }
     
 
@@ -969,7 +1050,6 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
         }
         
         setLastSection(dataSource.isValid)
-
     }
     
     
@@ -983,6 +1063,27 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
     private func setLastSection(_ enabled:Bool) {
         if let lastSection = dataSource.lastSection {
             let sectionIdx = dataSource.lastSectionIdx
+            
+            /*
+            var update = false
+            
+            if lastSection.isValid {
+                if enabled == false {
+                    update = true
+                }
+            } else {
+                if enabled {
+                    update = true
+                }
+            }
+            
+            
+            guard update else {
+                print("[FormKit] No need to update last section")
+                return
+            }
+            */
+            
             for (i,formItem) in lastSection.rows.enumerated() {
                 if let actionValue = formItem.asActionValue() {
                     updateActionValue(
@@ -991,6 +1092,7 @@ open class FormController: UITableViewController, CustomTransitionable, QLPrevie
                     )
                 }
             }
+            
         }
     }
     
@@ -2274,7 +2376,7 @@ extension FormController {
             
             if let lsv = dataSource.getListSelectionValueForKey(key) {
                 
-                print("List Item: \(lsv)")
+                //print("List Item: \(lsv)")
                 
                 
                 var existingList = lsv.0
@@ -2500,47 +2602,53 @@ extension FormController {
                                 at path:IndexPath,
                                 activateInput:Bool,
                                 _ animation:UITableView.RowAnimation = .fade) {
-      
-        let myCompletion: ((Bool) -> Void) = { (bool) in
-            
-            if let inputRow = newSection.firstInputRow {
-                let firstInputPath = IndexPath(row: inputRow, section: path.section)
-                if let nextCell = self.tableView.cellForRow(at: firstInputPath) {
-                    if let activatabelCell = nextCell as? Activatable {
-                        self.feedback(.impact)
-                        activatabelCell.activate()
-                    }
-                }
-            }
-        }
-    
+        //print("[FormKit] (_changeSection)")
 
-        if let currentSection = dataSource.section(for: path) {
-            
-            let changes = diff(old: currentSection.rows, new: newSection.rows)
+        guard let currentSection = dataSource.section(for: path) else {
+            return
+        }
+        
+        guard newSection.hasOnlyActionValues == false else {
             dataSource.sections[path.section] = newSection
-            
-            if newSection.hasOnlyActionValues {
-                 let changingRows = Array(0..<newSection.rows.count).map({ IndexPath(row: $0, section: path.section) })
-                
-                if currentSection.isEnabled && !newSection.isEnabled {
-                    handleActionCellChanging(for: changingRows, enabled: false)
-                } else if !currentSection.isEnabled && newSection.isEnabled  {
-                    handleActionCellChanging(for: changingRows, enabled: true)
+            let changingRows = Array(0..<newSection.rows.count).map({ IndexPath(row: $0, section: path.section) })
+            if currentSection.isEnabled && !newSection.isEnabled {
+                handleActionCellChanging(for: changingRows, enabled: false)
+            } else if !currentSection.isEnabled && newSection.isEnabled  {
+                handleActionCellChanging(for: changingRows, enabled: true)
+            }
+            return
+        }
+        
+        dataSource.sections[path.section] = newSection
+
+        /* Sarted crashing in iOS 17 ???
+         tableView.reload(changes: changes,
+                          section: path.section,
+                          insertionAnimation: animation,
+                          deletionAnimation: animation,
+                          replacementAnimation: animation,
+                          updateData: {},
+                          completion: activateInput ? myCompletion : nil
+         )
+         */
+        
+        /// This is the only thing that seems to work.
+        tableView.reloadData()
+        
+        
+        guard activateInput else { return }
+        
+        if let inputRow = newSection.firstInputRow {
+            let firstInputPath = IndexPath(row: inputRow, section: path.section)
+            if let nextCell = self.tableView.cellForRow(at: firstInputPath) {
+                if let activatabelCell = nextCell as? Activatable {
+                    self.feedback(.impact)
+                    activatabelCell.activate()
                 }
-            } else {
-                /*
-                tableView.reload(changes: changes,
-                                 section: path.section,
-                                 insertionAnimation: animation,
-                                 deletionAnimation: animation,
-                                 replacementAnimation: animation,
-                                 completion: activateInput ? myCompletion : nil
-                )
-                */
-                tableView.reloadData()
             }
         }
+       
+         
     }
     
 }
@@ -2812,7 +2920,7 @@ extension FormController: UpdateFormValueDelegate {
                             lastSegmentValue = segment
                             handleUpdatedFormValue(segmentValue , at: path)
                             segmentValue.valueChangeClosure?(segmentValue,self,path)
-                            runValidation()
+                            //runValidation()
                         }
                     }
                 case .numerical(let numerical):

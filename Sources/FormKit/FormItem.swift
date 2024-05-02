@@ -48,6 +48,20 @@ extension FormItem {
 }
 
 
+
+
+extension FormItem: DiffAware {
+    
+    public var diffId: Int {
+        return hash
+    }
+    
+    public static func compareContent(_ a: FormItem, _ b: FormItem) -> Bool {        a.encodedValues == b.encodedValues
+    }
+}
+
+
+
 // MARK: - CellDescriptable -
 extension FormItem: FormCellDescriptable {
     /// extend the value type with a `CellDescriptor` var to add support for initialization of each cell type

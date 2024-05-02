@@ -285,6 +285,8 @@ public final class NewNoteCell: UITableViewCell, Activatable, CharacterCountDisp
         UIBarButtonItem(customView: characterCountLabel)
     }()
     
+    private var pasteButton:UIBarButtonItem?
+    
     
     var formValue : NoteValue? {
         didSet {
@@ -384,7 +386,10 @@ public final class NewNoteCell: UITableViewCell, Activatable, CharacterCountDisp
             )
         }
         
+        pasteButton = .paste(self, #selector(performPaste(_:)))
+        barItems.append(pasteButton!)
         barItems.append(.flexible)
+        
         
         if textValue.characterCount != nil {
             barItems.append(characterCountBarItem)
@@ -401,6 +406,14 @@ public final class NewNoteCell: UITableViewCell, Activatable, CharacterCountDisp
         textView.inputAccessoryView = bar
     }
     
+    
+    @objc
+    func performPaste(_ sender:UIBarButtonItem) {
+        if let pastedText = UIPasteboard.general.string {
+            textView.text = textView.text + pastedText
+            sendTextToDelegate()
+        }
+    }
     
     
     @objc

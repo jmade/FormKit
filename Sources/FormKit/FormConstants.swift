@@ -68,6 +68,15 @@ extension UIBarButtonItem {
         UIBarButtonItem(title: .selectAll, style: .plain, target: target, action: selector)
     }
     
+    
+    static func paste(_ target: Any?,_ selector:Selector) -> UIBarButtonItem {
+        if #available(iOS 13.0, *) {
+            return UIBarButtonItem(image: UIImage(systemName: "doc.on.clipboard"), style: .plain, target: target, action: selector)
+        } else {
+            return UIBarButtonItem(title: "Paste", style: .plain, target: target, action: selector)
+        }
+    }
+    
     static var flex:UIBarButtonItem {
         UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
     }

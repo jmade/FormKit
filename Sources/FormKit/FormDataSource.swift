@@ -880,12 +880,21 @@ extension FormDataSource {
     
    public struct Evaluation {
         struct Sets {
-            let insert: IndexSet
-            let delete: IndexSet
-            let reload: IndexSet
+            var insert: IndexSet?
+            var delete: IndexSet?
+            var reload: IndexSet?
         }
         let sets:Sets
         let reloads: [SectionChange]
+    }
+    
+}
+
+
+extension FormDataSource.Evaluation {
+    
+    var isReloadsOnly:Bool {
+        sets.insert == nil && sets.delete == nil && sets.reload != nil
     }
     
 }
@@ -899,30 +908,78 @@ extension FormDataSource {
 
         var sectionChanges:[SectionChange] = []
         
+        var reloads:[Int] = []
+        var deletes:[Int] = []
+        var inserts:[Int] = []
+        
+        print("\n>>Evaluation")
+        
         for i in 0..<max(old.sections.count, new.sections.count) {
+            
+            print("--\nSection: \(i)")
+            
             let isOldSectionEmpty = old.rowsForSection(i).isEmpty
             let isNewSectionEmpty = new.rowsForSection(i).isEmpty
+            
+            print("OldEmpty? \(isOldSectionEmpty) | NewEmpty? \(isNewSectionEmpty)")
+            
+            
             let changingSection = (isOldSectionEmpty == false) && (isNewSectionEmpty == false)
             let addingSection = (isOldSectionEmpty == true) && (isNewSectionEmpty == false)
             let removingSection = (isOldSectionEmpty == false) && (isNewSectionEmpty == true)
+            
+            print("Changing? \(changingSection)")
+            print("Adding? \(addingSection)")
+            print("Removing? \(removingSection)")
+            
+            
+            var sectionChange: SectionChange? = nil
+            let indexSet = IndexSet(arrayLiteral: i)
+        
             if changingSection {
                 let changes = diff(old: old.rowsForSection(i), new: new.rowsForSection(i))
-                sectionChanges.append(SectionChange(operation: .reloading, section: i, changes: changes, indexSet: nil))
+                //sectionChanges.append(SectionChange(operation: .reloading, section: i, changes: changes, indexSet: nil))
+                sectionChange = SectionChange(operation: .reloading, section: i, changes: changes, indexSet: indexSet)
+                
+                //sectionChanges.append(SectionChange(operation: .reloading, section: i, changes: changes, indexSet: IndexSet(arrayLiteral: i)))
+                print("Changing Section: \(i)")
+                reloads.append(i)
             }
+            
             if addingSection {
-                sectionChanges.append(SectionChange(operation: .adding, section: i, changes: nil, indexSet: IndexSet(arrayLiteral: i)))
+                sectionChange = SectionChange(operation: .adding, section: i, changes: nil, indexSet: indexSet)
+                //sectionChanges.append(SectionChange(operation: .adding, section: i, changes: nil, indexSet: IndexSet(arrayLiteral: i)))
+                print("Adding Section: \(i)")
+                inserts.append(i)
             }
+            
+            
             if removingSection {
-                sectionChanges.append(SectionChange(operation: .deleting, section: i, changes: nil, indexSet: IndexSet(arrayLiteral: i)))
+                sectionChange = SectionChange(operation: .deleting, section: i, changes: nil, indexSet: indexSet)
+                //sectionChanges.append(SectionChange(operation: .deleting, section: i, changes: nil, indexSet: IndexSet(arrayLiteral: i)))
+                print("Removing Section: \(i)")
+                deletes.append(i)
             }
+            
+            
+            if let change = sectionChange {
+                sectionChanges.append(
+                    change
+                )
+            }
+            
+            //IndexSet(arrayLiteral: i))
+            
+            
         }
+        print("--")
         
-        let inserts = sectionChanges.filter({ $0.operation == .adding }).map({$0.section})
-        let deletes = sectionChanges.filter({ $0.operation == .deleting }).map({$0.section})
+        let sectionInserts = sectionChanges.filter({ $0.operation == .adding }).map({$0.section})
+        //let sectionDeletes = sectionChanges.filter({ $0.operation == .deleting }).map({$0.section})
         
         var sectionReloads:[Int] = []
         var actualInserts:[Int] = []
-        for i in inserts {
+        for i in sectionInserts {
             if Array(0..<old.sections.count).contains(i) {
                 sectionReloads.append(i)
             } else {
@@ -930,13 +987,19 @@ extension FormDataSource {
             }
         }
         
+        print("Inserts: \(inserts)")
+        print("Deletes: \(deletes)")
+        print("Reloads: \(reloads)")
+        
+        print("<<Evaluation\n")
+        
         return Evaluation(
             sets:  Evaluation.Sets(
-                insert: IndexSet(actualInserts),
-                delete: IndexSet(deletes),
-                reload: IndexSet(sectionReloads)
+                insert: inserts.isEmpty ? nil : IndexSet(inserts),
+                delete: deletes.isEmpty ? nil : IndexSet(deletes),
+                reload: reloads.isEmpty ? nil : IndexSet(reloads)
             ),
-            reloads: sectionChanges
+            reloads: sectionChanges.filter({ $0.operation == .reloading })
         )
         
         

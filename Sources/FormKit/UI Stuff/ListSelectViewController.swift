@@ -99,7 +99,7 @@ public final class ListSelectViewController: UITableViewController {
     
     
     // MARK: - ListItem -
-    public struct ListItem: PropertySearchable, Hashable, Equatable {
+    public struct ListItem: PropertySearchable, Hashable, Equatable, DiffAware {
         
         public func hash(into hasher: inout Hasher) {
                return hasher.combine(uuid)
@@ -1504,7 +1504,7 @@ extension ListSelectViewController: UISearchControllerDelegate, UISearchBarDeleg
         searchController.searchResultsUpdater = self
         searchController.searchBar.autocapitalizationType = .none
         searchController.searchBar.autocorrectionType = .no
-        searchController.dimsBackgroundDuringPresentation = false
+       // searchController.dimsBackgroundDuringPresentation = false
         searchController.searchBar.delegate = self
         
         
@@ -1553,11 +1553,13 @@ extension ListSelectViewController: UISearchControllerDelegate, UISearchBarDeleg
                 let new = filterItems(query)
                 let changes = diff(old: old, new: new)
                 self.dataSource = new
+                
                 tableView.reload(changes: changes,
                                  section: 1,
                                  insertionAnimation: .fade,
                                  deletionAnimation: .fade,
                                  replacementAnimation: .fade,
+                                 updateData: {},
                                  completion: nil
                 )
             case .firstRow:
@@ -1572,7 +1574,7 @@ extension ListSelectViewController: UISearchControllerDelegate, UISearchBarDeleg
                                  section: 0,
                                  insertionAnimation: .fade,
                                  deletionAnimation: .fade,
-                                 replacementAnimation: .fade,
+                                 replacementAnimation: .fade, updateData: {},
                                  completion: nil
                 )
             case .bottomSection:
@@ -1584,7 +1586,7 @@ extension ListSelectViewController: UISearchControllerDelegate, UISearchBarDeleg
                                  section: 0,
                                  insertionAnimation: .fade,
                                  deletionAnimation: .fade,
-                                 replacementAnimation: .fade,
+                                 replacementAnimation: .fade, updateData: {},
                                  completion: nil
                 )
             }
@@ -1597,7 +1599,7 @@ extension ListSelectViewController: UISearchControllerDelegate, UISearchBarDeleg
                              section: 0,
                              insertionAnimation: .fade,
                              deletionAnimation: .fade,
-                             replacementAnimation: .fade,
+                             replacementAnimation: .fade, updateData: {},
                              completion: nil
             )
             

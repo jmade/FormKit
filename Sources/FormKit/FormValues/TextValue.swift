@@ -349,7 +349,6 @@ public final class TextCell: UITableViewCell, Activatable {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: .body)
         label.textAlignment = .left
-        label.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         return label
     }()
     
@@ -525,6 +524,7 @@ public final class TextCell: UITableViewCell, Activatable {
     }()
     
     private var selectAllButton:UIBarButtonItem?
+    private var pasteButton:UIBarButtonItem?
     
     public var didResignActiveClosure: (() -> Void)?
     
@@ -572,6 +572,8 @@ public final class TextCell: UITableViewCell, Activatable {
             
             contentStack.addArrangedSubview(inputDescriptionLabel)
             contentStack.addArrangedSubview(validationLabel)
+            
+            
         case .vertical:
             let stack = makeValueStack(.vertical)
             stack.addArrangedSubview(titleLabel)
@@ -595,6 +597,8 @@ public final class TextCell: UITableViewCell, Activatable {
             
             contentStack.addArrangedSubview(inputDescriptionLabel)
             contentStack.addArrangedSubview(validationLabel)
+          
+            
         case .writeIn:
             titleLabel.text = nil
             textField.textAlignment = .left
@@ -667,13 +671,14 @@ public final class TextCell: UITableViewCell, Activatable {
                 )
             }
             
+            pasteButton = .paste(self, #selector(performPaste(_:)))
+            barItems.append(pasteButton!)
             barItems.append(.flexible)
             
             if textValue.characterCount != nil {
                 barItems.append(characterCountBarItem)
                 barItems.append(.flexible)
             }
-            
             
             if #available(iOS 16.0, *) {
                 selectAllButton = .selectAll(self,#selector(performSelectAll(_:)))
@@ -756,6 +761,16 @@ public final class TextCell: UITableViewCell, Activatable {
                 }.startAnimation()
                 textField.setCursorLocation((textField.text ?? "").count)
             }
+        }
+    }
+    
+    
+    @objc
+    func performPaste(_ sender:UIBarButtonItem) {
+        if let pastedText = UIPasteboard.general.string {
+            textField.text = pastedText
+            textField.setCursorLocation((textField.text ?? "").count)
+            textFieldTextChanged()
         }
     }
     
