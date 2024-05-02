@@ -6,6 +6,7 @@
 //  Copyright © 2018 Khoa Pham. All rights reserved.
 //
 
+#if os(iOS) || os(tvOS)
 import UIKit
 
 public extension UICollectionView {
@@ -15,30 +16,30 @@ public extension UICollectionView {
   /// - Parameters:
   ///   - changes: The changes from diff
   ///   - section: The section that all calculated IndexPath belong
+  ///   - updateData: Update your data source model
   ///   - completion: Called when operation completes
-    func reload<T: Hashable>(
+  func reload<T: DiffAware>(
     changes: [Change<T>],
     section: Int = 0,
+    updateData: () -> Void,
     completion: ((Bool) -> Void)? = nil) {
     
     let changesWithIndexPath = IndexPathConverter().convert(changes: changes, section: section)
     
-    // reloadRows needs to be called outside the batch
-    
     performBatchUpdates({
-      internalBatchUpdates(changesWithIndexPath: changesWithIndexPath)
+      updateData()
+      insideUpdate(changesWithIndexPath: changesWithIndexPath)
     }, completion: { finished in
       completion?(finished)
     })
-    
-    changesWithIndexPath.replaces.executeIfPresent {
-      self.reloadItems(at: $0)
-    }
+
+    // reloadRows needs to be called outside the batch
+    outsideUpdate(changesWithIndexPath: changesWithIndexPath)
   }
   
   // MARK: - Helper
   
-  private func internalBatchUpdates(changesWithIndexPath: ChangeWithIndexPath) {
+  private func insideUpdate(changesWithIndexPath: ChangeWithIndexPath) {
     changesWithIndexPath.deletes.executeIfPresent {
       deleteItems(at: $0)
     }
@@ -53,5 +54,11 @@ public extension UICollectionView {
       }
     }
   }
-}
 
+  private func outsideUpdate(changesWithIndexPath: ChangeWithIndexPath) {
+    changesWithIndexPath.replaces.executeIfPresent {
+      self.reloadItems(at: $0)
+    }
+  }
+}
+#endif

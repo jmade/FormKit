@@ -6,6 +6,7 @@
 //  Copyright © 2018 Khoa Pham. All rights reserved.
 //
 
+#if os(iOS) || os(tvOS)
 import Foundation
 
 public struct ChangeWithIndexPath {
@@ -30,9 +31,7 @@ public struct ChangeWithIndexPath {
 
 public class IndexPathConverter {
   
-  public init() {
-    
-  }
+  public init() {}
   
   public func convert<T>(changes: [Change<T>], section: Int) -> ChangeWithIndexPath {
     let inserts = changes.compactMap({ $0.insert }).map({ $0.index.toIndexPath(section: section) })
@@ -60,3 +59,4 @@ extension Int {
     return IndexPath(item: self, section: section)
   }
 }
+#endif
